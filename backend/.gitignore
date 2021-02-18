@@ -3,4 +3,4 @@
 /node_modules
 credentials.json
 .env
-package-lock.json
+/package-lock.json
