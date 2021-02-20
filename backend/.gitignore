@@ -1,6 +1,9 @@
 # dependencies
 /node_modules
+/package-lock.json
+
+# secret files
 credentials.json
 .env
-/package-lock.json
+
 

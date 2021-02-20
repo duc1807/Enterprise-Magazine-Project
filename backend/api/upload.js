@@ -9,8 +9,10 @@ const async = require("async");
 const multer = require("multer");
 const { google, Auth } = require("googleapis");
 
+// Import modules from other files
 const { getAuthClient, getUserProfile } = require("../utils/auth");
 
+// Initialize Storage for file upload
 var Storage = multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, "./temp");
@@ -27,22 +29,16 @@ var upload = multer({
 router.post("/", async (req, res) => {
   let oAuth2Client = getAuthClient();
 
-  //   const oauth2 = google.oauth2({
-  //     auth: oAuth2Client,
-  //     version: "v2",
-  //   });
-
   upload(req, res, function (err) {
     if (err) throw err;
     console.log("files: ", req.files);
-    // console.log("name: ", req.file.filename);
 
     const drive = google.drive({
       version: "v3",
       auth: oAuth2Client,
     });
 
-    var folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
+    const folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
 
     const files = req.files;
 
@@ -65,13 +61,12 @@ router.post("/", async (req, res) => {
         },
         (err, file) => {
           if (err) throw err;
-          // delete the file images folder
+          // Delete the file in temp folder
           fs.unlinkSync(filedata.path);
         }
       );
     });
   });
-  // user info
 
   getUserProfile().then((userProfile) => {
     const { name, picture } = userProfile;
@@ -82,17 +77,6 @@ router.post("/", async (req, res) => {
       //send 404 err
     }
   });
-
-  //   oauth2.userinfo.get((err, response) => {
-  //     if (err) throw err; // Send 404 err
-
-  //     console.log(response.data);
-
-  //     name = response.data.name;
-  //     pic = response.data.picture;
-  //     console.log("trong getinfo: ", pic);
-  //     res.render("success", { name: name, pic: pic, success: true });
-  //   });
 });
 
 module.exports = router;
