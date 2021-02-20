@@ -29,7 +29,7 @@ module.exports.getAuthUrl = () => {
     "https://www.googleapis.com/auth/drive.file " +
     "https://www.googleapis.com/auth/userinfo.profile";
   var url = oAuth2Client.generateAuthUrl({
-    access_type: "offline",
+    access_type: "online",
     scope: SCOPES,
   });
   return url;

@@ -12,6 +12,8 @@ const { google, Auth } = require("googleapis");
 // Import modules from other files
 const { getAuthClient, getUserProfile } = require("../utils/auth");
 
+
+
 // Initialize Storage for file upload
 var Storage = multer.diskStorage({
   destination: function (req, file, callback) {
@@ -25,6 +27,9 @@ var Storage = multer.diskStorage({
 var upload = multer({
   storage: Storage,
 }).any("uploadedImages");
+
+// ***********************************
+
 
 router.post("/", async (req, res) => {
   let oAuth2Client = getAuthClient();
@@ -68,6 +73,7 @@ router.post("/", async (req, res) => {
     });
   });
 
+  // Get user profile
   getUserProfile().then((userProfile) => {
     const { name, picture } = userProfile;
     if (name && picture)

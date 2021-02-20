@@ -1,14 +1,15 @@
+require("dotenv").config();
+
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
-require("dotenv").config();
 const async = require("async")
-
 const { google } = require("googleapis");
 
-const OAuth2Data = require("../credentials.json");
+// Import modules & utils
 const { getAuthUrl, getAuthClient } = require('../utils/auth')
+const OAuth2Data = require("../credentials.json");
 
 router.post("/createfolder", (req, res) => {
   const { folderName } = req.body;
@@ -20,6 +21,7 @@ router.post("/createfolder", (req, res) => {
     auth: oAuth2Client,
   });
 
+  // ** Development code
   var permissions = [
     {
       kind: "drive#permission",
@@ -34,6 +36,7 @@ router.post("/createfolder", (req, res) => {
       emailAddress: "ducdtgch18799@fpt.edu.vn",
     },
   ];
+  // **************************
 
   var fileMetadata = {
     name: folderName,

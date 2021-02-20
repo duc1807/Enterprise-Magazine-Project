@@ -3,7 +3,7 @@ const fs = require("fs");
 const bodyParser = require("body-parser");
 const path = require("path");
 var cors = require("cors");
-const async = require("async")
+const async = require("async");
 
 const app = express();
 
@@ -13,7 +13,7 @@ const { google, Auth } = require("googleapis");
 
 const OAuth2Data = require("./credentials.json");
 
-const { getAuthUrl, getAuthClient } = require('./utils/auth')
+const { getAuthUrl, getAuthClient } = require("./utils/auth");
 
 const CLIENT_ID = OAuth2Data.web.client_id;
 const CLIENT_SECRET = OAuth2Data.web.client_secret;
@@ -71,22 +71,41 @@ app.use("/api/user", require("./api/user"));
 app.use("/api/folder", require("./api/folder"));
 app.use("/api/upload", require("./api/upload"));
 
-app.get("/", (req, res) => {
-  let status = loginStatus()
+app.get("/", async(req, res) => {
+  let status = loginStatus();
   if (!status) {
-
-    var url = getAuthUrl()
+    var url = getAuthUrl();
     console.log(url);
 
     res.render("index", { url: url, clientID: CLIENT_ID });
   } else {
+    let oAuth2Client = getAuthClient();
 
-    let oAuth2Client = getAuthClient()
-    
     var oauth2 = google.oauth2({
       auth: oAuth2Client,
       version: "v2",
     });
+    const data = await oauth2.tokeninfo()
+    const token = data.config.headers.Authorization.split(' ')[1]
+    const tokenInfo = await oAuth2Client.credentials
+    
+    console.log("TOKENNNNN : ", tokenInfo)
+    const token_old = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImZkYjQwZTJmOTM1M2M1OGFkZDY0OGI2MzYzNGU1YmJmNjNlNGY1MDIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTI2MDY3NTk4MzA4NTQxMTkwMjQiLCJhdF9oYXNoIjoiWnFXRmNJWTVCX2M2VjVhTFduemprZyIsIm5hbWUiOiJEdWMgRHVjIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tQk12MGRta3FNQVUvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQU1adXVjbmxNbVJlVGx0RmFqcFBqYldnY2l2LTZ3bXI1QS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiRHVjIiwiZmFtaWx5X25hbWUiOiJEdWMiLCJsb2NhbGUiOiJlbi1HQiIsImlhdCI6MTYxMzgzODQyMSwiZXhwIjoxNjEzODQyMDIxfQ.PcSMjdVAsoN6cYmQpV9O1Mt9QA7eWJ4-H3drBurpMt5K1_H3W7jIEVbXK5OC1dyF11iHTQ-jytrkpbh3tLhyiTiYihw82FYT4NROaT4gLMgMN7Nke4fmSJIP8hvpfceeHHnNgsORoesNVTvgLTT0-oeYvArBvhbIYIcy1J0lIZt6txWdQghMX50KFRtVrbfPlhu88Dt0yOUfA_EkQqnyRXPQLJVseR8H3fK5ub2PHaXCdbLoaAywJYeqDzznelSy-TBiRD4bimbBmDajtRqQFztXTjPogT0hr4zjxIvNrEngehTydTmwQ5Mw28UqlVxnG_0X7vLJBRYNmvaxMC7igA"
+    // await oAuth2Client.revokeToken(token_old).then(console.log("ok go token"))
+    
+    async function verify() {
+      const ticket = await oAuth2Client.verifyIdToken({
+        idToken: tokenInfo.id_token,
+        audience: CLIENT_ID,
+      });
+  
+      const payload = ticket.getPayload();
+      const userid = payload["sub"];
+  
+      console.log("userid: ", payload)
+    }
+    
+    verify().then(console.log("token con hieu luc")).catch(console.log("da go token"))
 
     // user info
 
@@ -109,7 +128,7 @@ app.get("/google/callback", (req, res) => {
   if (code) {
     console.log("codee: ", code);
     // get access token
-    let oAuth2Client = getAuthClient()
+    let oAuth2Client = getAuthClient();
 
     oAuth2Client.getToken(code, (err, tokens) => {
       if (err) {
@@ -128,59 +147,59 @@ app.get("/google/callback", (req, res) => {
   }
 });
 
-// app.post("/upload", (req, res) => {
-//   upload(req, res, function (err) {
-//     if (err) throw err;
-//     console.log("filess: ", req.files)
-//     // console.log("name: ", req.file.filename);
+/* app.post("/upload", (req, res) => {
+  upload(req, res, function (err) {
+    if (err) throw err;
+    console.log("filess: ", req.files)
+    // console.log("name: ", req.file.filename);
 
-//     let oAuth2Client = getAuthClient()
+    let oAuth2Client = getAuthClient()
 
-//     const drive = google.drive({
-//       version: "v3",
-//       auth: oAuth2Client,
-//     });
+    const drive = google.drive({
+      version: "v3",
+      auth: oAuth2Client,
+    });
 
-//     var folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
+    var folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
 
-//     const files = req.files
+    const files = req.files
 
-//     files.map((filedata, index) => {
-//       const filemetadata = {
-//         name: filedata.filename,
-//         parents: [folderId],
-//       };
+    files.map((filedata, index) => {
+      const filemetadata = {
+        name: filedata.filename,
+        parents: [folderId],
+      };
   
-//       const media = {
-//         mimeType: filedata.mimetype,
-//         body: fs.createReadStream(filedata.path),
-//       };
+      const media = {
+        mimeType: filedata.mimetype,
+        body: fs.createReadStream(filedata.path),
+      };
   
-//       drive.files.create(
-//         {
-//           resource: filemetadata,
-//           media: media,
-//           fields: "id",
-//         },
-//         (err, file) => {
-//           if (err) throw err;
+      drive.files.create(
+        {
+          resource: filemetadata,
+          media: media,
+          fields: "id",
+        },
+        (err, file) => {
+          if (err) throw err;
   
-//           console.log("after: ", file);
+          console.log("after: ", file);
   
-//           // delete the file images folder
-//           fs.unlinkSync(filedata.path);
-//         }
-//       );
-//     })
-//     res.render("success", { name: name, pic: pic, success: true });
-//   });
-// });
-
+          // delete the file images folder
+          fs.unlinkSync(filedata.path);
+        }
+      );
+    })
+    res.render("success", { name: name, pic: pic, success: true });
+  });
+});
+*/
 
 app.get("/logout", (req, res) => {
   setLoginStatus(false);
 
-  let oAuth2Client = getAuthClient()
+  let oAuth2Client = getAuthClient();
   oAuth2Client.setCredentials(undefined);
   res.redirect("/");
 });

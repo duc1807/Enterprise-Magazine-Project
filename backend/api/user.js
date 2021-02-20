@@ -1,10 +1,11 @@
+require("dotenv").config();
+
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
-require("dotenv").config();
 
-// Register APi
+// Register API
 router.post("/register", function (req, res) {
   const { username, password, email } = req.body;
   if (
