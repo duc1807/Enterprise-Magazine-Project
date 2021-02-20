@@ -13,17 +13,13 @@ const { google, Auth } = require("googleapis");
 
 const OAuth2Data = require("./credentials.json");
 
+const { getAuthUrl, getAuthClient } = require('./utils/auth')
+
 const CLIENT_ID = OAuth2Data.web.client_id;
 const CLIENT_SECRET = OAuth2Data.web.client_secret;
 const REDIRECT_URI = OAuth2Data.web.redirect_uris[0];
 
 var name, pic;
-
-const oAuth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
 
 let AUTHED = undefined;
 
@@ -35,18 +31,22 @@ const setLoginStatus = (authed) => {
   AUTHED = authed;
 };
 
-var Storage = multer.diskStorage({
-  destination: function (req, file, callback) {
-    callback(null, "./images");
-  },
-  filename: function (req, file, callback) {
-    callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname);
-  },
-});
+// var Storage = multer.diskStorage({
+//   destination: function (req, file, callback) {
+//     callback(null, "./temp");
+//   },
+//   filename: function (req, file, callback) {
+//     callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname);
+//   },
+// });
 
-var upload = multer({
-  storage: Storage,
-}).single("file"); //Field name and max count
+// var upload = multer({
+//   storage: Storage,
+// }).single("file"); //Field name and max count
+
+// var upload = multer({
+//   storage: Storage,
+// }).any('uploadedImages')
 
 const SCOPES =
   "https://www.googleapis.com/auth/drive.file " +
@@ -56,7 +56,7 @@ app.set("view engine", "ejs");
 
 app.use(cors());
 
-// parse application/x-www-form-urlencoded
+// Parse application/x-www-form-urlencoded
 app.use(
   bodyParser.urlencoded({
     extended: true,
@@ -69,17 +69,20 @@ app.use(bodyParser.json());
 // api routes
 app.use("/api/user", require("./api/user"));
 app.use("/api/folder", require("./api/folder"));
+app.use("/api/upload", require("./api/upload"));
 
 app.get("/", (req, res) => {
-  if (!loginStatus()) {
-    var url = oAuth2Client.generateAuthUrl({
-      access_type: "offline",
-      scope: SCOPES,
-    });
+  let status = loginStatus()
+  if (!status) {
+
+    var url = getAuthUrl()
     console.log(url);
 
     res.render("index", { url: url, clientID: CLIENT_ID });
   } else {
+
+    let oAuth2Client = getAuthClient()
+    
     var oauth2 = google.oauth2({
       auth: oAuth2Client,
       version: "v2",
@@ -106,6 +109,8 @@ app.get("/google/callback", (req, res) => {
   if (code) {
     console.log("codee: ", code);
     // get access token
+    let oAuth2Client = getAuthClient()
+
     oAuth2Client.getToken(code, (err, tokens) => {
       if (err) {
         console.log("Authentication error");
@@ -123,126 +128,59 @@ app.get("/google/callback", (req, res) => {
   }
 });
 
-app.post("/upload", (req, res) => {
-  upload(req, res, function (err) {
-    if (err) throw err;
-    console.log("file: ", req.file.path);
-    console.log("name: ", req.file.filename);
+// app.post("/upload", (req, res) => {
+//   upload(req, res, function (err) {
+//     if (err) throw err;
+//     console.log("filess: ", req.files)
+//     // console.log("name: ", req.file.filename);
 
-    const drive = google.drive({
-      version: "v3",
-      auth: oAuth2Client,
-    });
+//     let oAuth2Client = getAuthClient()
 
-    var folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
+//     const drive = google.drive({
+//       version: "v3",
+//       auth: oAuth2Client,
+//     });
 
-    const filemetadata = {
-      name: req.file.filename,
-      parents: [folderId],
-    };
+//     var folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
 
-    const media = {
-      mimeType: req.file.mimetype,
-      body: fs.createReadStream(req.file.path),
-    };
+//     const files = req.files
 
-    drive.files.create(
-      {
-        resource: filemetadata,
-        media: media,
-        fields: "id",
-      },
-      (err, file) => {
-        if (err) throw err;
+//     files.map((filedata, index) => {
+//       const filemetadata = {
+//         name: filedata.filename,
+//         parents: [folderId],
+//       };
+  
+//       const media = {
+//         mimeType: filedata.mimetype,
+//         body: fs.createReadStream(filedata.path),
+//       };
+  
+//       drive.files.create(
+//         {
+//           resource: filemetadata,
+//           media: media,
+//           fields: "id",
+//         },
+//         (err, file) => {
+//           if (err) throw err;
+  
+//           console.log("after: ", file);
+  
+//           // delete the file images folder
+//           fs.unlinkSync(filedata.path);
+//         }
+//       );
+//     })
+//     res.render("success", { name: name, pic: pic, success: true });
+//   });
+// });
 
-        console.log("after: ", file);
-
-        // delete the file images folder
-
-        fs.unlinkSync(req.file.path);
-        res.render("success", { name: name, pic: pic, success: true });
-      }
-    );
-  });
-});
-
-app.post("/createfolder", (req, res) => {
-  const { folderName } = req.body;
-
-  const drive = google.drive({
-    version: "v3",
-    auth: oAuth2Client,
-  });
-
-  var permissions = [
-    {
-      kind: "drive#permission",
-      type: "user",
-      role: "writer",
-      emailAddress: "trungduc.dev@gmail.com",
-    },
-    {
-      kind: "drive#permission",
-      type: "user",
-      role: "writer",
-      emailAddress: "ducdtgch18799@fpt.edu.vn",
-    },
-  ];
-
-  var fileMetadata = {
-    name: folderName,
-    mimeType: "application/vnd.google-apps.folder",
-    // starred: true,
-  };
-
-  drive.files.create(
-    {
-      resource: fileMetadata,
-      fields: "id",
-    },
-    function (err, file) {
-      if (err) {
-        // Handle error
-        console.error(err);
-      } else {
-        console.log("Folder Id: ", file.data.id);
-
-        async.eachSeries(permissions, (permission, callback) => {
-          drive.permissions.create(
-            {
-              fileId: file.data.id,
-              requestBody: permission,
-              fields: "id",
-              sendNotificationEmail: false
-            },
-            function (err, file) {
-              if (err) {
-                console.error(err);
-                callback(err);
-              } else {
-                console.log("done");
-                callback(err);
-              }
-            }
-          );
-        }, (err) => {
-          if (err) {
-            // Handle error
-            console.error(err);
-          } else {
-            // All permissions inserted
-            console.log("All permissions inserted");
-          }
-        });
-      }
-    }
-  );
-
-  console.log("name: ", folderName);
-});
 
 app.get("/logout", (req, res) => {
   setLoginStatus(false);
+
+  let oAuth2Client = getAuthClient()
   oAuth2Client.setCredentials(undefined);
   res.redirect("/");
 });
