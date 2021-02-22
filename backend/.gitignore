@@ -5,5 +5,7 @@
 # secret files
 credentials.json
 .env
+dbconfig.js
+mailerconfig.js
 
 

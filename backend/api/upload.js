@@ -12,7 +12,6 @@ const { google, Auth } = require("googleapis");
 // Import modules from other files
 const { getAuthClient, getUserProfile } = require("../utils/auth");
 
-
 // Initialize Storage for file upload
 var Storage = multer.diskStorage({
   destination: function (req, file, callback) {
@@ -28,7 +27,6 @@ var upload = multer({
 }).any("uploadedImages");
 
 // ***********************************
-
 
 router.post("/", async (req, res) => {
   let oAuth2Client = getAuthClient();
@@ -64,23 +62,32 @@ router.post("/", async (req, res) => {
           fields: "id",
         },
         (err, file) => {
-          if (err) throw err;
+          if (err) {
+            res.json({
+              status: 501,
+              messages: "fail"
+            })
+          };
+          console.log("File id: ", file.data.id)
           // Delete the file in temp folder
           fs.unlinkSync(filedata.path);
+
+          // Get user profile
+          getUserProfile().then((userProfile) => {
+            const { name, picture } = userProfile;
+            if (name && picture)
+            res.json({
+              status: 201,
+              messages: "success"
+            })
+            else {
+              console.log("err");
+              //send 404 err
+            }
+          });
         }
       );
     });
-  });
-
-  // Get user profile
-  getUserProfile().then((userProfile) => {
-    const { name, picture } = userProfile;
-    if (name && picture)
-      res.render("success", { name: name, pic: picture, success: true });
-    else {
-      console.log("err");
-      //send 404 err
-    }
   });
 });
 

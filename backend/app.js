@@ -52,6 +52,7 @@ app.use("/", require("./api/authentication"))
 app.use("/api/user", require("./api/user"));
 app.use("/api/folder", require("./api/folder"));
 app.use("/api/upload", require("./api/upload"));
+app.use("/api/download", require("./api/download"));
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()

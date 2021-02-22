@@ -9,10 +9,10 @@ const async = require("async");
 const multer = require("multer");
 const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
+const path = require('path')
 
 // Import modules from other files
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
-
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
@@ -29,7 +29,11 @@ router.get("/", async (req, res) => {
     Boolean(Object.keys(oAuth2Client.credentials).length)
   );
 
-  if (!Object.keys(oAuth2Client.credentials).length) {
+  if (
+    oAuth2Client.credentials &&
+    !Object.keys(oAuth2Client.credentials).length &&
+    oAuth2Client.credentials.constructor == Object
+  ) {
     var url = getAuthUrl();
     console.log(url);
 
@@ -119,12 +123,47 @@ router.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ****************** FOR ADMIN ****************** \\
-//
-//
-//
-//
-// ****************** FOR ADMIN ****************** \\
+// router.get("/download", (req, res) => {
+//   // 1yEnOfJzvD9nrlSQVbJEHLwIHqm9QzgKu
+  
 
+//   // let oAuth2Client = getAuthClient();
+
+//   // const drive = google.drive({
+//   //   version: "v2",
+//   //   auth: oAuth2Client,
+//   // });
+
+//   // var dest = fs.createWriteStream("./download_temp/test.png");
+//   // var fileId = "1srUPEQ8YNP4R7ln06I7w1VMmfA9abqiq";
+
+//   // drive.files
+//   //   .get({
+//   //     fileId: fileId,
+//   //     alt: "media",
+//   //   }, {responseType: 'stream'}, (err, res) => {
+//   //     console.log("data: ", res)
+//   //     res.data
+//   //  .on('end', () => {
+//   //     console.log('Done');
+//   //  })
+//   //  .on('error', err => {
+//   //     console.log('Error', err);
+//   //  })
+//   //  .pipe(dest);
+//   //   })
+
+//   var filepath = path.join(__dirname, '../download_temp') + '/' + 'test.png' 
+//   console.log(filepath)
+//   res.sendFile(filepath)
+//   fs.unlinkSync(filepath)
+// });
+
+// ****************** FOR ADMIN ****************** \\
+//
+//
+//
+//
+// ****************** FOR ADMIN ****************** \\
 
 module.exports = router;
