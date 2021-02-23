@@ -9,7 +9,7 @@ const async = require("async");
 const multer = require("multer");
 const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
-const path = require('path')
+const path = require("path");
 
 // Import modules from other files
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
@@ -55,21 +55,20 @@ router.get("/", async (req, res) => {
     const client = new OAuth2Client(oAuth2Client._clientId);
 
     async function verify() {
-      const ticket = await client
-        .verifyIdToken({
-          idToken: token_old,
-          audience: oAuth2Client._clientId,
-        })
-        .then((value) => {
-          return value;
-        })
-        .catch((err) => {
-          console.log(err);
+      const ticket = await client.verifyIdToken({
+        idToken: tokenInfo.id_token,
+        audience: oAuth2Client._clientId,
+      });
+      // .then((value) => {
+      //   resolve(value);
+      // })
+      // .catch((err) => {
+      //   reject(err);
 
-          //   res.sendStatus(401).json({
-          //     meesages: "expired token",
-          //   });
-        });
+      //   //   res.sendStatus(401).json({
+      //   //     meesages: "expired token",
+      //   //   });
+      // });
 
       const payload = ticket.getPayload();
       const userid = payload["sub"];
@@ -78,20 +77,31 @@ router.get("/", async (req, res) => {
     }
 
     verify()
-      .then(console.log("token con hieu luc"))
-      .catch((err) => console.log("err o ngoai cung"));
+      .then(() => {
+        console.log("token con hieu luc");
+        // Get user info
+        oauth2.userinfo.get((err, response) => {
+          if (err) throw err;
 
-    // Get user info
-    oauth2.userinfo.get((err, response) => {
-      if (err) throw err;
+          console.log(response.data);
 
-      console.log(response.data);
+          let name = response.data.name;
+          let pic = response.data.picture;
 
-      let name = response.data.name;
-      let pic = response.data.picture;
-
-      res.render("success", { name: name, pic: pic, success: false });
-    });
+          res.render("success", { name: name, pic: pic, success: false });
+          
+          // res.status(201).json({
+          //   messages: "Authenticated",
+          // });
+        });
+      })
+      .catch((err) => {
+        console.log("err o ngoai cung: ", err);
+        res.status(401).json({
+          messgages: "Please login",
+        });
+        return;
+      });
   }
 });
 
@@ -125,7 +135,6 @@ router.get("/logout", (req, res) => {
 
 // router.get("/download", (req, res) => {
 //   // 1yEnOfJzvD9nrlSQVbJEHLwIHqm9QzgKu
-  
 
 //   // let oAuth2Client = getAuthClient();
 
@@ -153,7 +162,7 @@ router.get("/logout", (req, res) => {
 //   //  .pipe(dest);
 //   //   })
 
-//   var filepath = path.join(__dirname, '../download_temp') + '/' + 'test.png' 
+//   var filepath = path.join(__dirname, '../download_temp') + '/' + 'test.png'
 //   console.log(filepath)
 //   res.sendFile(filepath)
 //   fs.unlinkSync(filepath)
