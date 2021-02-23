@@ -1,6 +1,4 @@
-const connection = require('./dbconfig')
-
-// console.log("conn: ", connection)
+const connection = require('./config/dbconfig')
 
 const createQuery = async(sql) => {
     await connection.query(sql, (err, result) => {
@@ -10,10 +8,20 @@ const createQuery = async(sql) => {
 }
 
 const getQuery = async(sql) => {
-    await connection.query(sql, (err, result) => {
-        if(!!err) throw err
-        console.log("res: ", result)
+    return new Promise((resolve, reject) => {
+        connection.query(sql, (err, result) => {
+            if(!!err) reject(err)
+            console.log("res in query file: ", result)
+            resolve(result)
+            // return result
+        })
     })
+
+    // return connection.query(sql, (err, result) => {
+    //     if(!!err) return Promise.reject(err)
+    //     console.log("res: ", result)
+    //     // return result
+    // })
 }
 
 const updateQuery = async(sql) => {
@@ -30,7 +38,8 @@ const deleteQuery = async(sql) => {
     })
 }
 
-// getQuery("SELECT * FROM test")
+let ress = getQuery("SELECT * FROM admin")
+ress.then(result => console.log("res: ", result)).catch(err => console.log(err))
 
 module.exports = {
     createQuery: createQuery,

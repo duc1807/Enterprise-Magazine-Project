@@ -13,6 +13,7 @@ const path = require("path");
 
 // Import modules from other files
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
+const { getQuery } = require("../utils/dbqueries");
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
@@ -89,7 +90,7 @@ router.get("/", async (req, res) => {
           let pic = response.data.picture;
 
           res.render("success", { name: name, pic: pic, success: false });
-          
+
           // res.status(201).json({
           //   messages: "Authenticated",
           // });
@@ -174,5 +175,54 @@ router.get("/logout", (req, res) => {
 //
 //
 // ****************** FOR ADMIN ****************** \\
+
+const { getAdminAccountByUsername } = require('../utils/dbService/adminService')
+
+router.get("/admin", (req, res) => {
+  // res.json({
+  //   page: "adminlogin",
+  // });
+
+  res.render('admin')
+});
+
+router.post("/admin", async(req, res) => {
+  const { username } = req.body;
+
+  const query = getAdminAccountByUsername(username);
+
+  let queryResult = undefined
+
+  // **** For test
+  let password = "f5bb0c8de146c67b44babbf4e6584cc0"
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+      queryResult = result;
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      res.status(501).json({
+        messages: "Bad request",
+      });
+    });
+
+    if(queryResult.length && queryResult[0].password == password) {
+      // Success
+      console.log("tk dung")
+      res.status(201).json({
+        messages: "Successfull",
+        username: queryResult[0].username
+      });
+    }
+    else {
+      // Fail (Wrong password)
+      console.log("sai mk")
+      res.status(401).json({
+        messages: "Failed",
+      });
+    }
+});
 
 module.exports = router;

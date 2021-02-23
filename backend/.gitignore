@@ -1,11 +1,12 @@
 # dependencies
 /node_modules
 /package-lock.json
+/ZIP
+/download_temp
 
 # secret files
 credentials.json
 .env
-dbconfig.js
-mailerconfig.js
+/utils/config
 
 
