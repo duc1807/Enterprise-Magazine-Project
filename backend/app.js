@@ -47,12 +47,19 @@ app.use(
 // parse application/json
 app.use(bodyParser.json());
 
-// api routes
+app.use(express.static(path.join(__dirname, '../frontend/src')))
+
+// api controllers
 app.use("/", require("./api/authentication"))
 app.use("/api/user", require("./api/user"));
 app.use("/api/folder", require("./api/folder"));
 app.use("/api/upload", require("./api/upload"));
 app.use("/api/download", require("./api/download"));
+app.use('/api/notification', require('./api/mailnotification'))
+
+app.get('*', (req, res) =>  {
+  res.sendFile(path.join(__dirname, 'src/index.html'))
+})
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()

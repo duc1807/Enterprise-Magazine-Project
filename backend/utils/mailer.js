@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 
 // Import Node mailer configuration
-const { mailerConfig } = require("./mailerconfig");
+const { mailerConfig } = require("./config/mailerconfig");
 
 // Create the transporter with service configuration
 const transporter = nodemailer.createTransport(mailerConfig);
