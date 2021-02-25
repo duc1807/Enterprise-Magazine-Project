@@ -8,18 +8,10 @@ const webToken = require("jsonwebtoken");
 // Login API
 
 router.get('/login', (req, res) => {
-  console.log("jea: ", req.headers)
-  res.setHeader('X-Content-Type-Options','nosniff','X-XSS-Protection','1;mode=block')
-  res.json({
-      test: "test"
-  })
-})
-
-router.get('/test', (req, res) => {
-  console.log("jea: ", req.headers)
-  res.json({
-      test: "test"
-  })
+    console.log("jea: ", req.headers)
+    res.json({
+        test: "test"
+    })
 })
 
 router.post("/login", function (req, res) {

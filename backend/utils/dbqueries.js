@@ -38,8 +38,8 @@ const deleteQuery = async(sql) => {
     })
 }
 
-let ress = getQuery("SELECT * FROM admin")
-ress.then(result => console.log("res: ", result)).catch(err => console.log(err))
+// let ress = getQuery("SELECT * FROM admin")
+// ress.then(result => console.log("res: ", result)).catch(err => console.log(err))
 
 module.exports = {
     createQuery: createQuery,

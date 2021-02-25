@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
 const path = require("path");
 var cors = require("cors");
 const async = require("async");
@@ -42,24 +43,29 @@ app.use(
   bodyParser.urlencoded({
     extended: true,
   })
-);
+).use(cookieParser());
 
 // parse application/json
 app.use(bodyParser.json());
 
-app.use(express.static(path.join(__dirname, '../frontend/src')))
+// app.use(express.static(path.join(__dirname, '../frontend/src')))
 
 // api controllers
-app.use("/", require("./api/authentication"))
-app.use("/api/user", require("./api/user"));
-app.use("/api/folder", require("./api/folder"));
-app.use("/api/upload", require("./api/upload"));
-app.use("/api/download", require("./api/download"));
-app.use('/api/notification', require('./api/mailnotification'))
+app
+  .use("/", require("./api/authentication"))
+  // Authentication API
+  .use("/api/admin", require("./api/Authentication/admin"))
+  .use("/api/user", require("./api/user"))
 
-app.get('*', (req, res) =>  {
-  res.sendFile(path.join(__dirname, 'src/index.html'))
-})
+
+  .use("/api/folder", require("./api/folder"))
+  .use("/api/upload", require("./api/upload"))
+  .use("/api/download", require("./api/download"))
+  .use("/api/notification", require("./api/mailnotification"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/src/index.html"));
+});
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()
@@ -80,23 +86,23 @@ app.get('*', (req, res) =>  {
 //     const data = await oauth2.tokeninfo()
 //     const token = data.config.headers.Authorization.split(' ')[1]
 //     const tokenInfo = await oAuth2Client.credentials
-    
+
 //     console.log("TOKENNNNN : ", tokenInfo)
 //     const token_old = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImZkYjQwZTJmOTM1M2M1OGFkZDY0OGI2MzYzNGU1YmJmNjNlNGY1MDIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTI2MDY3NTk4MzA4NTQxMTkwMjQiLCJhdF9oYXNoIjoiWnFXRmNJWTVCX2M2VjVhTFduemprZyIsIm5hbWUiOiJEdWMgRHVjIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tQk12MGRta3FNQVUvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQU1adXVjbmxNbVJlVGx0RmFqcFBqYldnY2l2LTZ3bXI1QS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiRHVjIiwiZmFtaWx5X25hbWUiOiJEdWMiLCJsb2NhbGUiOiJlbi1HQiIsImlhdCI6MTYxMzgzODQyMSwiZXhwIjoxNjEzODQyMDIxfQ.PcSMjdVAsoN6cYmQpV9O1Mt9QA7eWJ4-H3drBurpMt5K1_H3W7jIEVbXK5OC1dyF11iHTQ-jytrkpbh3tLhyiTiYihw82FYT4NROaT4gLMgMN7Nke4fmSJIP8hvpfceeHHnNgsORoesNVTvgLTT0-oeYvArBvhbIYIcy1J0lIZt6txWdQghMX50KFRtVrbfPlhu88Dt0yOUfA_EkQqnyRXPQLJVseR8H3fK5ub2PHaXCdbLoaAywJYeqDzznelSy-TBiRD4bimbBmDajtRqQFztXTjPogT0hr4zjxIvNrEngehTydTmwQ5Mw28UqlVxnG_0X7vLJBRYNmvaxMC7igA"
 //     // await oAuth2Client.revokeToken(token_old).then(console.log("ok go token"))
-    
+
 //     async function verify() {
 //       const ticket = await oAuth2Client.verifyIdToken({
 //         idToken: tokenInfo.id_token,
 //         audience: CLIENT_ID,
 //       });
-  
+
 //       const payload = ticket.getPayload();
 //       const userid = payload["sub"];
-  
+
 //       console.log("userid: ", payload)
 //     }
-    
+
 //     verify().then(console.log("token con hieu luc")).catch(console.log("da go token"))
 
 //     // user info

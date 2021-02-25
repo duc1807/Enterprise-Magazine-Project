@@ -11,6 +11,7 @@ const { google, Auth } = require("googleapis");
 
 // Import modules from other files
 const { getAuthClient, getUserProfile } = require("../utils/auth");
+const SERVICE_KEY = require('../private_key.json')
 
 // Initialize Storage for file upload
 var Storage = multer.diskStorage({

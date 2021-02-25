@@ -6,6 +6,7 @@
 
 # secret files
 credentials.json
+private_key.json
 .env
 /utils/config
 

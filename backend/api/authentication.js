@@ -38,6 +38,11 @@ router.get("/", async (req, res) => {
     var url = getAuthUrl();
     console.log(url);
 
+    // res.json({
+    //   success: false,
+    //   url: url
+    // })
+
     res.render("index", { url: url, clientID: oAuth2Client._clientId });
   } else {
     var oauth2 = google.oauth2({
@@ -92,14 +97,15 @@ router.get("/", async (req, res) => {
           res.render("success", { name: name, pic: pic, success: false });
 
           // res.status(201).json({
-          //   messages: "Authenticated",
+          //   success: true,
           // });
         });
       })
       .catch((err) => {
         console.log("err o ngoai cung: ", err);
         res.status(401).json({
-          messgages: "Please login",
+          success: false,
+          messgages: "Token expired, please login",
         });
         return;
       });
@@ -178,20 +184,20 @@ router.get("/logout", (req, res) => {
 
 const { getAdminAccountByUsername } = require('../utils/dbService/adminService')
 
-router.get("/admin", (req, res) => {
-  // res.json({
-  //   page: "adminlogin",
-  // });
+// router.get("/admin", (req, res) => {
+//   res.json({
+//     page: "adminlogin",
+//   });
 
-  res.render('admin')
-});
+//   // res.render('admin')
+// });
 
 router.post("/admin", async(req, res) => {
   const { username } = req.body;
 
   const query = getAdminAccountByUsername(username);
 
-  let queryResult = undefined
+  let queryResult = []
 
   // **** For test
   let password = "f5bb0c8de146c67b44babbf4e6584cc0"
@@ -203,7 +209,7 @@ router.post("/admin", async(req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      res.status(501).json({
+      return res.status(501).json({
         messages: "Bad request",
       });
     });
@@ -212,7 +218,8 @@ router.post("/admin", async(req, res) => {
       // Success
       console.log("tk dung")
       res.status(201).json({
-        messages: "Successfull",
+        success: true,
+        status: res.statusCode,
         username: queryResult[0].username
       });
     }
@@ -220,7 +227,9 @@ router.post("/admin", async(req, res) => {
       // Fail (Wrong password)
       console.log("sai mk")
       res.status(401).json({
-        messages: "Failed",
+        success: false,
+        status: res.statusCode,
+        message: "Invalid login information"
       });
     }
 });
