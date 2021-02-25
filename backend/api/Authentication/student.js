@@ -5,13 +5,29 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 
-// Login API
+// Import middleware authorization
+const { studentValidation } = require('../middleware/verification')
+// const {  } = require('../../utils/dbService/studentService')
 
-router.get('/login', (req, res) => {
-    console.log("jea: ", req.headers)
-    res.json({
-        test: "test"
-    })
+// Import modules from other files
+const { getAuthClient, getUserProfile, getAuthUrl } = require("../../utils/auth");
+
+// Using middleware
+router.use(studentValidation)
+
+const _ROUTER_ROLE = "student"
+
+// Login API
+router.get('/login',(req, res) => {
+  console.log("data", res.locals.data)
+  const data = res.locals.data
+  // res.cookie("Token", accessToken, { httpOnly: true })
+  res.status(200).json({
+    status: res.statusCode,
+      success: true,
+      role: _ROUTER_ROLE,
+      data: data
+  })
 })
 
 router.post("/login", function (req, res) {

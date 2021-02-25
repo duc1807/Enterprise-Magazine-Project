@@ -112,6 +112,14 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get('/test', async (req, res) => {
+  const oAuth2Client = getAuthClient();
+
+  let url = getAuthUrl()
+
+  res.render("index", { url: url, clientID: oAuth2Client._clientId });
+})
+
 router.get("/google/callback", (req, res) => {
   const code = req.query.code;
 
@@ -119,16 +127,49 @@ router.get("/google/callback", (req, res) => {
     // Get access token
     let oAuth2Client = getAuthClient();
 
-    oAuth2Client.getToken(code, (err, tokens) => {
+    const client = new OAuth2Client(oAuth2Client._clientId);
+
+    oAuth2Client.getToken(code, async(err, tokens) => {
       if (err) {
         console.log("Authentication error");
         console.log(err);
+        res.status(401).json({
+          messages: "error"
+        });
       } else {
         console.log("Authentication successful");
         console.log(tokens);
-        oAuth2Client.setCredentials(tokens);
 
-        res.redirect("/");
+        await client.verifyIdToken({
+          idToken: tokens.id_token,
+          audience: oAuth2Client._clientId,
+        }).then(result => {
+          let userDetail = { gapiToken: {}} 
+          console.log("testtt", tokens)
+          userDetail.gapiToken.id_token = tokens.id_token
+          userDetail.gapiToken.access_token = tokens.access_token
+          userDetail.gapiToken.expiry_date = tokens.expiry_date
+          userDetail.info = result.payload
+          userDetail.role = "student" 
+
+          const token = webToken.sign(userDetail, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: "10s",
+          });
+    
+          res.cookie("Token", token, { httpOnly: true, /*secure: true*/  })
+          res.redirect('/api/student/login')
+
+        }).catch(err => console.log("err", err))
+
+        
+
+        // oAuth2Client.setCredentials(tokens);
+
+        // res.status(200).json({
+        //   messages: "success"
+        // });
+
+        // res.redirect('/')
       }
     });
   }

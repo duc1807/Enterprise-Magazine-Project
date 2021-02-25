@@ -22,6 +22,7 @@ router.get('/login',(req, res) => {
   res.sendStatus(200).json({
     status: res.statusCode,
       success: true,
+      role: _ROUTER_ROLE,
       data: data
   })
 })
@@ -67,7 +68,9 @@ router.post("/login", async (req, res) => {
       const token = webToken.sign(userDetail, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "900s",
       });
+
       res.cookie("Token", token, { httpOnly: true, /*secure: true*/  })
+
       res.status(200).json({
         status: res.statusCode,
         message: "Logged In successfully",

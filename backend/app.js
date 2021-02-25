@@ -55,6 +55,8 @@ app
   .use("/", require("./api/authentication"))
   // Authentication API
   .use("/api/admin", require("./api/Authentication/admin"))
+  .use("/api/student", require("./api/Authentication/student"))
+
   .use("/api/user", require("./api/user"))
 
 
