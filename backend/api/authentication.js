@@ -157,6 +157,8 @@ router.get("/google/callback", (req, res) => {
           });
     
           res.cookie("Token", token, { httpOnly: true, /*secure: true*/  })
+
+          // Redirect to get Login
           res.redirect('/api/student/login')
 
         }).catch(err => console.log("err", err))

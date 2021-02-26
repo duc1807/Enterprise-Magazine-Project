@@ -6,6 +6,12 @@ const archiver = require("archiver");
 const { google, Auth } = require("googleapis");
 
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
+const key = require("../private_key.json");
+
+const SCOPES =
+  "https://www.googleapis.com/auth/drive.file " +
+  "https://www.googleapis.com/auth/userinfo.profile " +
+  "https://www.googleapis.com/auth/drive.metadata ";
 
 router.get("/", (req, res) => {
   const { fileID } = req.body;
@@ -38,7 +44,7 @@ router.get("/", (req, res) => {
   //  .pipe(dest);
   //   })
 
-  var filepath = path.join(__dirname, "../download_temp") + "/" + "test.png";
+  let filepath = path.join(__dirname, "../download_temp") + "/" + "test.png";
   console.log(filepath);
   res.sendFile(filepath);
 
@@ -60,12 +66,12 @@ router.get("/", (req, res) => {
     );
   });
 
-  output.on('end', function() {
-    console.log('Data has been drained');
+  output.on("end", function () {
+    console.log("Data has been drained");
   });
 
-  archive.on('warning', function(err) {
-    if (err.code === 'ENOENT') {
+  archive.on("warning", function (err) {
+    if (err.code === "ENOENT") {
       // log warning
     } else {
       // throw error
@@ -75,11 +81,102 @@ router.get("/", (req, res) => {
 
   archive.pipe(output);
 
-  archive.directory('./download_temp', false);
+  archive.directory("./download_temp", false);
 
-  archive.finalize()
+  archive.finalize();
   // *********************************
+});
 
+router.get("/testdownloadselectedarticles", (req, res) => {
+  const jwToken = new google.auth.JWT(
+    key.client_email,
+    null,
+    key.private_key,
+    SCOPES,
+    null
+  );
+  jwToken.authorize((err) => {
+    if (err) console.log("err: ", err);
+    else console.log("Authorization successful");
+  });
+
+  const drive = google.drive({
+    version: "v3",
+    auth: jwToken,
+  });
+
+  // var dest = fs.createWriteStream("./download_temp");
+  const fileId = "1LE66TBX2vqqdijNAnty1N6IR43LybXRP";
+
+  drive.files.list(
+    {
+      corpora: "user",
+      // q: "mimeType='application/vnd.google-apps.folder'",
+      includeRemoved: false,
+      auth: jwToken,
+      spaces: "drive",
+      fileId: fileId,
+      supportsAllDrives: true,
+      fields: "nextPageToken, files(id, name, mimeType)",
+      // fields: "files(id)",
+      q: `'${fileId}' in parents`,
+    },
+    function (err, response) {
+      // TODO handle response
+      console.log("drive folder: ", response.data.files);
+
+      const files = response.data.files;
+
+      // *************************************************** ZIP files
+      const output = fs.createWriteStream(
+        "../backend/ZIP" + `/${Date.now()}.zip`
+      );
+
+      const archive = archiver("zip", {
+        zlib: { level: 9 }, // Sets the compression level.
+      });
+
+      output.on("close", function () {
+        console.log(archive.pointer() + " total bytes");
+        console.log(
+          "Archiver has been finalized."
+        );
+      });
+
+      output.on("end", function () {
+        console.log("Data has been drained");
+      });
+
+      archive.on("warning", function (err) {
+        if (err.code === "ENOENT") {
+          // log warning
+        } else {
+          // throw error
+          throw err;
+        }
+      });
+
+      archive.pipe(output);
+
+      files.map((item) => console.log(item.name));
+    }
+  );
+
+  // drive.files
+  //   .get({
+  //     fileId: fileId,
+  //     alt: "media",
+  //   }, {responseType: 'stream'}, (err, res) => {
+  //     console.log("data: ", res)
+  //     res.data
+  //  .on('end', () => {
+  //     console.log('Done');
+  //  })
+  //  .on('error', err => {
+  //     console.log('Error', err);
+  //  })
+  //  .pipe(dest);
+  //   })
 });
 
 module.exports = router;
