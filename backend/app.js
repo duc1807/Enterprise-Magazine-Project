@@ -52,27 +52,27 @@ app.use(bodyParser.json());
 
 // api controllers
 app
-  .use("/", require("./api/authentication"))
-  // Authentication API
-  .use("/api/admin", require("./api/Authentication/admin"))
-  .use("/api/student", require("./api/Authentication/student"))
+  // Login validation API 
+  .use("/api/authentication", require("./api/authentication"))
 
   // Faculty api
   .use("/api/faculty", require("./api/faculty"))
 
-
-  
-  .use("/api/user", require("./api/user"))
-
-
+  // Event API (Event: Drive folder inside Faculty)
   .use("/api/folder", require("./api/folder"))
+
   .use("/api/upload", require("./api/upload"))
   .use("/api/download", require("./api/download"))
-  .use("/api/notification", require("./api/mailnotification"));
+  .use("/api/user", require("./api/user"))
+  .use("/api/notification", require("./api/mailnotification"))
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/src/index.html"));
-});
+  // Authentication API (ignored temporarily)
+  .use("/api/admin", require("./api/Authentication/admin"))
+  .use("/api/student", require("./api/Authentication/student"))
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../frontend/src/index.html"));
+// });
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()

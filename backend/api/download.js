@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const router = express.Router();
 const path = require("path");
@@ -8,10 +10,10 @@ const { google, Auth } = require("googleapis");
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
 const key = require("../private_key.json");
 
-const SCOPES =
-  "https://www.googleapis.com/auth/drive.file " +
-  "https://www.googleapis.com/auth/userinfo.profile " +
-  "https://www.googleapis.com/auth/drive.metadata ";
+// const SCOPES =
+//   "https://www.googleapis.com/auth/drive.file " +
+//   "https://www.googleapis.com/auth/userinfo.profile " +
+//   "https://www.googleapis.com/auth/drive.metadata ";
 
 router.get("/", (req, res) => {
   const { fileID } = req.body;
@@ -92,7 +94,7 @@ router.get("/testdownloadselectedarticles", (req, res) => {
     key.client_email,
     null,
     key.private_key,
-    SCOPES,
+    process.env.SERVICE_ACCOUNT_SCOPES,
     null
   );
   jwToken.authorize((err) => {
@@ -118,7 +120,6 @@ router.get("/testdownloadselectedarticles", (req, res) => {
       fileId: fileId,
       supportsAllDrives: true,
       fields: "nextPageToken, files(id, name, mimeType)",
-      // fields: "files(id)",
       q: `'${fileId}' in parents`,
     },
     function (err, response) {
