@@ -14,7 +14,7 @@ const loginValidation = (req, res, next) => {
       status: res.statusCode,
       success: false,
       path: "/",
-      messenger: "Please login",
+      message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
@@ -24,7 +24,7 @@ const loginValidation = (req, res, next) => {
         status: res.statusCode,
         success: false,
         path: "/",
-        messenger: "Session expired! Please login",
+        message: "Session expired! Please login",
       });
     // If the user permission is not admin, throw the 401 error to prevent unauthorised access
     res.locals.data = data;
@@ -41,9 +41,7 @@ const adminValidation = (req, res, next) => {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
-      role: "admin",
-      path: "/",
-      messenger: "Please login",
+      message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
@@ -52,9 +50,7 @@ const adminValidation = (req, res, next) => {
       return res.status(403).json({
         status: res.statusCode,
         success: false,
-        role: "admin",
-        path: "/",
-        messenger: "Session expired! Please login",
+        message: "Session expired! Please login",
       });
     // If the user permission is not admin, throw the 401 error to prevent unauthorised access
     res.locals.data = data;
@@ -71,8 +67,7 @@ const studentValidation = (req, res, next) => {
       status: res.statusCode,
       success: false,
       role: "student",
-      path: "/",
-      messenger: "Please login",
+      message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
@@ -83,7 +78,7 @@ const studentValidation = (req, res, next) => {
         success: false,
         role: "student",
         path: "/",
-        messenger: "Session expired! Please login",
+        message: "Session expired! Please login",
       });
     // If the user permission is not admin, throw the 401 error to prevent unauthorised access
     res.locals.data = data;
@@ -101,7 +96,7 @@ const managerValidation = (req, res, next) => {
       status: res.statusCode,
       success: false,
       // path: "/",
-      messenger: "Please login",
+      message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
@@ -110,7 +105,7 @@ const managerValidation = (req, res, next) => {
       return res.status(403).json({
         status: res.statusCode,
         success: false,
-        messenger: "Session expired! Please login",
+        message: "Session expired! Please login",
       });
     // If the user permission is not manager, throw the 401 error to prevent unauthorised access
     if (data.userInfo.FK_role_id !== _MANAGER_ROLE_ID) {
@@ -118,7 +113,7 @@ const managerValidation = (req, res, next) => {
         status: res.statusCode,
         success: false,
         // path: "/",
-        messenger: "Manager permission required",
+        message: "Manager permission required",
       });
     } else {
       res.locals.data = data;
@@ -137,7 +132,7 @@ const gwAccountValidation = (req, res, next) => {
       status: res.statusCode,
       success: false,
       // path: "/",
-      messenger: "Please login",
+      message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
@@ -146,7 +141,7 @@ const gwAccountValidation = (req, res, next) => {
       return res.status(403).json({
         status: res.statusCode,
         success: false,
-        messenger: "Session expired! Please login",
+        message: "Session expired! Please login",
       });
     // If the user permission is not manager, throw the 401 error to prevent unauthorised access
     if (!_GW_GROUP_ROLE_ID.includes(data.userInfo.FK_role_id)) {
@@ -154,7 +149,7 @@ const gwAccountValidation = (req, res, next) => {
         status: res.statusCode,
         success: false,
         // path: "/",
-        messenger: "Permission required",
+        message: "Permission required",
       });
     } else {
       res.locals.data = data;

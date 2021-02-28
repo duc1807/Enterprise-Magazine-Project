@@ -61,8 +61,11 @@ app
   // Event API (Event: Drive folder inside Faculty)
   .use("/api/folder", require("./api/folder"))
 
-  .use("/api/upload", require("./api/upload"))
+  // Download API to get articles
   .use("/api/download", require("./api/download"))
+
+  .use("/api/upload", require("./api/upload"))
+  
   .use("/api/user", require("./api/user"))
   .use("/api/notification", require("./api/mailnotification"))
 

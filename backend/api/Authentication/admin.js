@@ -10,16 +10,16 @@ const { adminValidation } = require('../middleware/verification')
 const { authorizationAdmin } = require('../../utils/dbService/adminService')
 
 // Using middleware
-router.use(adminValidation)
+// router.use(adminValidation)
 
 const _ROUTER_ROLE = "admin"
 
 // Login API
-router.get('/login',(req, res) => {
+router.get('/', adminValidation, (req, res) => {
   console.log("data", res.locals.data)
   const data = res.locals.data
-  // res.cookie("Token", accessToken, { httpOnly: true })
-  res.sendStatus(200).json({
+
+  res.status(200).json({
     status: res.statusCode,
       success: true,
       role: _ROUTER_ROLE,
@@ -33,15 +33,15 @@ router.post("/login", async (req, res) => {
   if (
     !password && password == "" ||
     password == undefined ||
-    email == "" ||
-    email == undefined
+    username == "" ||
+    username == undefined
   ) {
     res.status(401).json({
       message: "Fill All Fields",
       status: res.statusCode,
     });
   } else {
-    // check mail in db or not
+    // Check mail in db or not
     const query = authorizationAdmin(username, password);
     let queryResult = []
 
@@ -59,13 +59,13 @@ router.post("/login", async (req, res) => {
 
     if(queryResult.length) {
       // Success
-      console.log("tk dung")
+      console.log("Signin successful")
 
-      let userDetail = {} 
-      userDetail.username = queryResult[0].username
-      userDetail.role = _ROUTER_ROLE 
+      let userInfo = {} 
+      userInfo.username = queryResult[0].username
+      userInfo.role = _ROUTER_ROLE 
 
-      const token = webToken.sign(userDetail, process.env.ACCESS_TOKEN_SECRET, {
+      const token = webToken.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "900s",
       });
 
@@ -73,21 +73,20 @@ router.post("/login", async (req, res) => {
 
       res.status(200).json({
         status: res.statusCode,
-        message: "Logged In successfully",
         success: true,
-        userDetail: userDetail,
-        path: "/"
+        message: "Logged In successfully",
+        userInfo: userInfo,
       });
 
-      res.status(201).json({
-        success: true,
-        status: res.statusCode,
-        username: queryResult[0].username
-      });
+      // res.status(201).json({
+      //   success: true,
+      //   status: res.statusCode,
+      //   username: queryResult[0].username
+      // });
     }
     else {
       // Fail
-      console.log("sai mk")
+      console.log("Signin failed")
       res.status(401).json({
         success: false,
         status: res.statusCode,
