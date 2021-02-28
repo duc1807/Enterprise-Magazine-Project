@@ -7,13 +7,26 @@ const webToken = require("jsonwebtoken");
 const async = require("async");
 const { google } = require("googleapis");
 
+// Import database service
 const {
   getEventsByFacultyName,
   getAllFaculty,
-  getSelectedArticlesOfEvent,
+  getPostedArticlesOfEvent,
 } = require("../utils/dbService/index");
 
-router.get("/", async (req, res) => {
+// Import middleware
+const {
+  managerValidation,
+  gwAccountValidation,
+} = require("../api/middleware/verification");
+
+// Constants
+const _MANAGER_ROLE_ID = 3;
+
+/* Get all Faculty information permission: 
+    - Manager 
+*/
+router.get("/", managerValidation, async (req, res) => {
   const query = getAllFaculty();
   let queryResult = undefined;
 
@@ -23,6 +36,7 @@ router.get("/", async (req, res) => {
       queryResult = result;
       res.status(200).json({
         faculties: queryResult,
+        test: consname,
       });
     })
     .catch((err) => {
@@ -33,9 +47,26 @@ router.get("/", async (req, res) => {
     });
 });
 
-// Test get faculty info
-router.get("/:facultyName", async (req, res) => {
+/* Get events of a Faculty permission: 
+    - Manager 
+    - Coordinators with exact faculty
+    - Students with exact faculty
+*/
+router.get("/:facultyName", gwAccountValidation, async (req, res) => {
   const facultyName = req.params.facultyName;
+  const data = res.locals.data;
+
+  if (
+    data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
+    data.userInfo.faculty_name.toLowerCase() != facultyName.toLowerCase()
+  ) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      // path: "/",
+      messenger: "Faculty access permission required",
+    });
+  }
 
   const query = getEventsByFacultyName(facultyName);
   let queryResult = [];
@@ -70,11 +101,29 @@ router.get("/:facultyName", async (req, res) => {
   }
 });
 
-router.get("/:facultyName/:eventId", async (req, res) => {
+/* Get event information of a faculty permission: 
+    - Manager 
+    - Coordinators
+    - Students
+*/
+
+// Future development ============================================================
+
+
+
+/* Get posted articles of an event permission:    (Not yet set permission)
+    - Manager 
+    - Coordinators
+    - Students
+    - Guest ???
+*/
+router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
   const facultyName = req.params.facultyName;
   const eventId = req.params.eventId;
 
-  const query = getSelectedArticlesOfEvent(eventId);
+  console.log("ngoai: ", eventId + " " + facultyName)
+
+  const query = getPostedArticlesOfEvent(eventId, facultyName);
   let queryResult = [];
 
   await query
@@ -82,24 +131,32 @@ router.get("/:facultyName/:eventId", async (req, res) => {
       console.log("result: ", result);
       queryResult = result;
       res.status(200).json({
-        events: queryResult,
+        //  eventCode: "",          ????????????????????
+        articles: queryResult,
       });
     })
     .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        messages: "Bad request",
-      });
+      if (err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
+      } else {
+        return res.status(404).json({
+          messages: "Event not found",
+        });
+      }
     });
 });
+
 
 router.post("/:facultyName/:eventId/download", (req, res) => {
   const facultyName = req.params.facultyName;
   const eventId = req.params.eventId;
 
   res.json({
-      test: "hihi"
-  })
+    test: "hihi",
+  });
 });
 
 router.post("/", async (req, res) => {

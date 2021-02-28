@@ -150,7 +150,7 @@ router.post("/login", async (req, res) => {
           status: res.statusCode,
           message: "Signed in successfully",
           success: true,
-          data: {
+          user: {
             userInfo: _data.userInfo,
             googleAccountInfo: _data.googleAccountInfo,
           },

@@ -17,10 +17,10 @@ const getDataBaseConnection = () => {
 const getEventsByFacultyName = async (facultyName) => {
     let db = getDataBaseConnection();
   
-    const sql = `SELECT *, Faculty.name, Faculty.id
+    const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
                   FROM ${TABLE}
-                  JOIN Faculty ON Event.faculty_id = Faculty.id
-                  WHERE Faculty.name = '${facultyName}'`;
+                  JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
+                  WHERE Faculty.faculty_name = '${facultyName}'`;
     return new Promise((resolve, reject) => {
       db.query(sql, (err, result) => {
         if (!!err) reject(err);
