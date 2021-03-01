@@ -4,6 +4,7 @@ const webToken = require("jsonwebtoken");
 
 const _MANAGER_ROLE_ID = 3;
 const _GW_GROUP_ROLE_ID = [1, 2, 3]
+const _ADMIN_ROLE = "admin"
 
 const loginValidation = (req, res, next) => {
   // Retrieve the token from cookies
@@ -52,6 +53,13 @@ const adminValidation = (req, res, next) => {
         success: false,
         message: "Session expired! Please login",
       });
+    else if (data.userInfo.role_name != _ADMIN_ROLE) {
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Admin permission required",
+      });
+    }
     // If the user permission is not admin, throw the 401 error to prevent unauthorised access
     res.locals.data = data;
     next();

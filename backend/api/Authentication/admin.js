@@ -22,8 +22,7 @@ router.get('/', adminValidation, (req, res) => {
   res.status(200).json({
     status: res.statusCode,
       success: true,
-      role: _ROUTER_ROLE,
-      data: data
+      user: data
   })
 })
 
