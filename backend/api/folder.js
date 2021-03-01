@@ -15,7 +15,9 @@ const key = require("../private_key.json");
 const {
   getCoordinatorAccountByFaculty,
   getStudentAccountByFaculty,
+  getFacultyById,
 } = require("../utils/dbService/index");
+const { managerValidation } = require("./middleware/verification");
 
 // const SCOPES =
 //   "https://www.googleapis.com/auth/drive.file " +
@@ -166,7 +168,7 @@ router.get("/testt", async (req, res) => {
     });
 });
 
-router.get("/createEvent", async (req, res) => {
+router.post("/createEvent", managerValidation, async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
   const {
     title,
@@ -195,11 +197,38 @@ router.get("/createEvent", async (req, res) => {
   //     });
   //   });
 
-  // Get student account of a faculty
-  const query2 = getStudentAccountByFaculty("2");
+  // Get faculty information
+  const query = getFacultyById(facultyId);
+  let facultyInfo = [];
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+      // Not sure ===========================================================
+      facultyInfo = result;
+    })
+    .catch((err) => {
+      // If database error
+      if (!!err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
+      } else {
+        // If no faculty found
+        console.log("Err: ", err);
+        return res.status(404).json({
+          messages: "Faculty not found",
+        });
+      }
+    });
+
+  // Get student account of a faculty to gain permission to all articles folder ???
+  // Should provide permission for student ????? -> To able to preview the articles?? Dont need bcs student only can view the posted articles
+  const query1 = getStudentAccountByFaculty(facultyId);
   let studentAccounts = [];
 
-  await query2
+  await query1
     .then((result) => {
       console.log("result: ", result);
       studentAccounts = result;
@@ -211,13 +240,18 @@ router.get("/createEvent", async (req, res) => {
       });
     });
 
+  // Get the current time
+  const currentTime = new Date();
+
+  // Create event data to INSERT into database
   const eventData = {
-    // title: title,
+    title: title,
     // content: content,
-    // startDate: startDate,
-    // endDate: endDate,
-    // lastUpdate: lastUpdate,
-    // facultyId: facultyId,
+    // startDate: currentTimetoLocaleDateString(),
+    endDate: endDate,
+    // createdAt: currentTimetoLocaleString(),
+    // lastUpdate: currentTimetoLocaleString(),
+    facultyId: facultyId,
     file_eventId: "",
     file_acceptedArticlesId: eventFolderConstants.acceptedArticles,
     file_allArticlesId: eventFolderConstants.allArticles,
@@ -241,11 +275,12 @@ router.get("/createEvent", async (req, res) => {
   });
 
   const fileMetadata = {
-    name: `Events name: ${Date.now().toString()}`,
+    name: `${currentTime.toLocaleDateString()}: ${eventData.title}`,
     mimeType: "application/vnd.google-apps.folder",
-    parents: ["1XcpJGtgrr_F-tsynzX6hrWD9dotwMqT6"],
+    parents: [facultyInfo.faculty_folderId],
   };
 
+  // Default subfolder of each Event folder
   const eventSubFolders = [
     {
       name: eventFolderConstants.acceptedArticlesFolderName,
@@ -387,6 +422,7 @@ router.get("/createEvent", async (req, res) => {
             allArticlesId: "",
           };
 
+          // Create the subfolder in Event folder
           eventSubFolders.map((folder) => {
             const _eventSubFolder = {
               name: folder.name,
@@ -407,6 +443,7 @@ router.get("/createEvent", async (req, res) => {
                 } else {
                   console.log(`${_eventSubFolder.name} Id: `, file.data.id);
 
+                  // If folder is all articles, insert the permission for student
                   if (
                     _eventSubFolder.name ==
                     eventFolderConstants.allArticlesFolderName
@@ -420,13 +457,20 @@ router.get("/createEvent", async (req, res) => {
                     eventFolderConstants.acceptedArticlesFolderName
                   ) {
                     _subFolderId.acceptedArticlesId = file.data.id;
-                    if(_subFolderId.acceptedArticlesId != "" && _subFolderId.allArticlesId != "") {
-                      resolve(_subFolderId)
+                    // If the id of all folders are set, resolve promise and return value
+                    if (
+                      _subFolderId.acceptedArticlesId != "" &&
+                      _subFolderId.allArticlesId != ""
+                    ) {
+                      resolve(_subFolderId);
                     }
                   } else {
                     _subFolderId.allArticlesId = file.data.id;
-                    if(_subFolderId.acceptedArticlesId != "" && _subFolderId.allArticlesId != "") {
-                      resolve(_subFolderId)
+                    if (
+                      _subFolderId.acceptedArticlesId != "" &&
+                      _subFolderId.allArticlesId != ""
+                    ) {
+                      resolve(_subFolderId);
                     }
                   }
                 }
@@ -442,10 +486,10 @@ router.get("/createEvent", async (req, res) => {
 
             // Insert event info vao database
             console.log("event: ", eventData);
-            
+
             res.status(201).json({
-              eventInfo: eventData
-            })
+              eventInfo: eventData,
+            });
           })
           .catch((err) => console.log(err));
       }

@@ -61,8 +61,8 @@ const getPostedArticlesOfEvent = async (eventId, facultyName) => {
         }
       }
 
-      // Return result at the last position (Articles)
-      resolve(result[result.length - 1]);
+      // Return result at the last position (Event info & Posted articles)
+      resolve([result[result.length - 2], result[result.length - 1]]);
       db.end();
     });
   });

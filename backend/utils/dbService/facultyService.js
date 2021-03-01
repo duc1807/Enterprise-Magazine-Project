@@ -28,22 +28,25 @@ const getAllFaculty = async () => {
   });
 };
 
-// const getFacultyById = async (facultyID) => {
-//   const sql = `SELECT * FROM ${TABLE} WHERE id = '${facultyID}'`;
-//   return new Promise((resolve, reject) => {
-//     connection.query(sql, (err, result) => {
-//       if (!!err) reject(err);
-//       resolve(result);
+const getFacultyById = async (facultyID) => {
+  const sql = `SELECT * FROM ${TABLE} WHERE faculty_id = '${facultyID}'`;
+  return new Promise((resolve, reject) => {
+    connection.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false)
+      }
+      resolve(result);
 
-//       // connection.destroy();
-//       // return result
-//     });
-//   });
-// };
+      // connection.destroy();
+      // return result
+    });
+  });
+};
 
 // getEventsByFacultyName("IT").then(result => console.log(result))
 
 module.exports = {
-  // getFacultyById: getFacultyById,
+  getFacultyById: getFacultyById,
   getAllFaculty: getAllFaculty,
 };

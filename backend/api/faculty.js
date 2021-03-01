@@ -36,7 +36,6 @@ router.get("/", managerValidation, async (req, res) => {
       queryResult = result;
       res.status(200).json({
         faculties: queryResult,
-        test: consname,
       });
     })
     .catch((err) => {
@@ -107,11 +106,10 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
     - Students
 */
 
-// Future development ============================================================
+// Future development ============================================== ?????????????
 
 
-
-/* Get posted articles of an event permission:    (Not yet set permission)
+/* Get event info and posted articles of an event permission:    (Not yet set permission)
     - Manager 
     - Coordinators
     - Students
@@ -121,18 +119,17 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
   const facultyName = req.params.facultyName;
   const eventId = req.params.eventId;
 
-  console.log("ngoai: ", eventId + " " + facultyName)
-
   const query = getPostedArticlesOfEvent(eventId, facultyName);
   let queryResult = [];
 
   await query
     .then((result) => {
       console.log("result: ", result);
-      queryResult = result;
+
       res.status(200).json({
         //  eventCode: "",          ????????????????????
-        articles: queryResult,
+        event: result[result.length - 2][0],   // Because event is only 1, so dont need to pass array to FE
+        articles: result[result.length - 1],
       });
     })
     .catch((err) => {
