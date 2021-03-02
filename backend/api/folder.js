@@ -267,7 +267,9 @@ router.post("/createEvent", managerValidation, async(req, res) => {
     console.log("faculty tra ve: ", facultyInfo);
 
     const fileMetadata = {
-        name: `${currentTime.toLocaleDateString()}: ${eventData.title} - ${currentTime.getTime()}`,
+        name: `${currentTime.toLocaleDateString()}: ${
+      eventData.title
+    } - ${currentTime.getTime()}`,
         mimeType: "application/vnd.google-apps.folder",
         parents: [facultyInfo.faculty_folderId],
     };
@@ -475,30 +477,124 @@ router.post("/createEvent", managerValidation, async(req, res) => {
                         // Insert event info vao database
                         console.log("event: ", eventData);
 
-                        createNewEvent(eventData).then((result) => {
-                            console.log("ket qua neee: ", result)
-                            res.status(201).json({
-                                eventInfo: eventData,
+                        createNewEvent(eventData)
+                            .then((result) => {
+                                console.log("ket qua neee: ", result);
+                                res.status(201).json({
+                                    eventInfo: eventData,
+                                });
+                            })
+                            .catch((err) => {
+                                if (!!err) {
+                                    console.log(err);
+                                    res.status(500).json({
+                                        success: false,
+                                        message: "Server error!",
+                                    });
+                                } else {
+                                    res.status(404).json({
+                                        success: false,
+                                        message: "Faculty not found!",
+                                    });
+                                }
                             });
-                        }).catch(err => {
-                            if (!!err) {
-                                console.log(err)
-                                res.status(500).json({
-                                    success: false,
-                                    message: "Server error!"
-                                })
-                            } else {
-                                res.status(404).json({
-                                    success: false,
-                                    message: "Faculty not found!"
-                                })
-                            }
-                        });
                     })
                     .catch((err) => console.log(err));
             }
         }
     );
+});
+
+router.get("/uploadimage", (req, res) => {
+    res.render("imageUpload");
+});
+
+// =============================== TEST UPLOAD
+
+const multer = require("multer");
+const fs = require("fs");
+const mysql = require("mysql2");
+const { dbconfig } = require("../utils/config/dbconfig");
+
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './temp');
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+var upload = multer({ storage: storage });
+
+router.post("/uploadimage", upload.single("file"), (req, res) => {
+    console.log("chay vao router");
+    const connection = mysql.createConnection(dbconfig);
+
+    connection.connect(function(err) {
+        if (!!err) console.log(err);
+        else console.log("Database connected");
+    });
+
+    // const imageFilter = (req, file, cb) => {
+    //     if (file.mimetype.startsWith("image")) {
+    //         cb(null, true);
+    //     } else {
+    //         cb("Please upload only images.", false);
+    //     }
+    // };
+
+    var img = fs.readFileSync(req.file.path);
+    var encode_image = img.toString("base64");
+
+    var finalImg = {
+        contentType: req.file.mimetype,
+        image: new Buffer.from(encode_image, 'base64')
+    };
+
+    console.log("finalll: ", finalImg);
+
+    let sql = `INSERT INTO Test (image)
+              VALUES ('${finalImg}')`
+
+    connection.query(sql, (err, result) => {
+        if (err) throw err;
+        // Check if the Faculty is existed or not
+        console.log("resultt: ", result);
+        fs.unlinkSync(req.file.path)
+        res.contentType('image/jpeg')
+        res.send(finalImg.image);
+    });
+
+    // uploadFile.single()
+
+    const uploadFiles = async(file) => {
+        console.log(file);
+        // try {
+
+        //   if (req.file == undefined) {
+        //     return res.send(`You must select a file.`);
+        //   }
+
+        //   Image.create({
+        //     type: req.file.mimetype,
+        //     name: req.file.originalname,
+        //     data: fs.readFileSync(
+        //       __basedir + "/resources/static/assets/uploads/" + req.file.filename
+        //     ),
+        //   }).then((image) => {
+        //     fs.writeFileSync(
+        //       __basedir + "/resources/static/assets/tmp/" + image.name,
+        //       image.data
+        //     );
+
+        //     return res.send(`File has been uploaded.`);
+        //   });
+        // } catch (error) {
+        //   console.log(error);
+        //   return res.send(`Error when trying upload images: ${error}`);
+        // }
+    };
 });
 
 // Update folder (Rename)
