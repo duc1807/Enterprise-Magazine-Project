@@ -29,9 +29,11 @@ const getAllFaculty = async () => {
 };
 
 const getFacultyById = async (facultyID) => {
+  let db = getDataBaseConnection();
+
   const sql = `SELECT * FROM ${TABLE} WHERE faculty_id = '${facultyID}'`;
   return new Promise((resolve, reject) => {
-    connection.query(sql, (err, result) => {
+    db.query(sql, (err, result) => {
       if (!!err) reject(err);
       if (!result.length) {
         reject(false)

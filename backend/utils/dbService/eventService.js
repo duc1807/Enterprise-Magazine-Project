@@ -5,33 +5,75 @@ const { dbconfig } = require("../config/dbconfig");
 const TABLE = "Event";
 
 const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
+    const connection = mysql.createConnection(dbconfig);
 
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
+    connection.connect(function(err) {
+        if (!!err) console.log(err);
+        else console.log("Database connected");
+    });
+    return connection;
 };
 
-const getEventsByFacultyName = async (facultyName) => {
+const getEventsByFacultyName = async(facultyName) => {
     let db = getDataBaseConnection();
-  
+
     const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
                   FROM ${TABLE}
                   JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
                   WHERE Faculty.faculty_name = '${facultyName}'`;
     return new Promise((resolve, reject) => {
-      db.query(sql, (err, result) => {
-        if (!!err) reject(err);
-        resolve(result);
-        db.end();
-        // connection.destroy();
-        // return result
-      });
+        db.query(sql, (err, result) => {
+            if (!!err) reject(err);
+            resolve(result);
+            db.end();
+            // connection.destroy();
+            // return result
+        });
     });
-  }
+};
 
-  module.exports = {
-    getEventsByFacultyName: getEventsByFacultyName
-  };
+const createNewEvent = async(eventInfo) => {
+    const {
+        title,
+        content,
+        startDate,
+        endDate,
+        createdAt,
+        lastUpdate,
+        folderId,
+        selectedArticles,
+        allArticles,
+        FK_faculty_id,
+    } = eventInfo;
+    let db = getDataBaseConnection();
+
+    const sql = `SELECT * FROM Faculty
+    WHERE faculty_id = ${FK_faculty_id};`;
+
+    const sql1 = `INSERT INTO 
+                  Event (event_title, event_content, event_startDate, event_endDate, event_createdAt,
+                  event_lastUpdate, event_folderId, folderId_selectedArticles, folderId_allArticles, FK_faculty_id)
+                  VALUES ('${title}', '${content}', '${startDate}', '${endDate}', '${createdAt}', '${lastUpdate}', '${folderId}', '${selectedArticles}', '${allArticles}', '${FK_faculty_id}')`;
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (!!err) reject(err);
+            // Check if the Faculty is existed or not
+            if (!result.length) {
+                reject(false);
+            } else {
+                db.query(sql1, (err, result) => {
+                    if (!!err) reject(err);
+                    resolve(result);
+                    // db.end();
+                    // connection.destroy();
+                });
+            }
+            db.end();
+        });
+    });
+};
+
+module.exports = {
+    getEventsByFacultyName: getEventsByFacultyName,
+    createNewEvent: createNewEvent,
+};
