@@ -73,7 +73,56 @@ const createNewEvent = async(eventInfo) => {
     });
 };
 
+const updateEvent = async(eventInfo) => {
+    const {
+        id,
+        title,
+        content,
+        startDate,
+        endDate,
+        lastUpdate,
+        folderId,
+        FK_faculty_id,
+    } = eventInfo;
+
+    let db = getDataBaseConnection();
+
+    const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
+                FROM Event
+                INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
+                WHERE event_id = ${id} AND Faculty.faculty_id = '${FK_faculty_id}'`;
+
+    const sql1 = `UPDATE Event 
+                  SET
+                  event_title = '${title}', 
+                  event_content = '${content}', 
+                  event_startDate = '${startDate}', 
+                  event_endDate = '${endDate}', 
+                  event_lastUpdate = '${lastUpdate}'
+                  WHERE 
+                  event_id = ${id}`;
+
+    return new Promise((resolve, reject) => {
+        db.query(sql, (err, result) => {
+            if (!!err) reject(err);
+            // Check if the Faculty is existed or not
+            if (!result.length) {
+                reject(false);
+            } else {
+                db.query(sql1, (err, result) => {
+                    if (!!err) reject(err);
+                    resolve(result);
+                    // db.end();
+                    // connection.destroy();
+                });
+            }
+            db.end();
+        });
+    });
+};
+
 module.exports = {
     getEventsByFacultyName: getEventsByFacultyName,
     createNewEvent: createNewEvent,
+    updateEvent: updateEvent
 };

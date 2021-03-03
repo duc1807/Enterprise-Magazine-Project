@@ -17,6 +17,7 @@ const {
     getStudentAccountByFaculty,
     getFacultyById,
     createNewEvent,
+    updateEvent
 } = require("../utils/dbService/index");
 const { managerValidation } = require("./middleware/verification");
 
@@ -505,11 +506,7 @@ router.post("/createEvent", managerValidation, async(req, res) => {
     );
 });
 
-router.get("/uploadimage", (req, res) => {
-    res.render("imageUpload");
-});
-
-// =============================== TEST UPLOAD
+// ========================================= TEST UPLOAD
 
 const multer = require("multer");
 const fs = require("fs");
@@ -518,7 +515,7 @@ const { dbconfig } = require("../utils/config/dbconfig");
 
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './temp');
+        cb(null, "./temp");
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);
@@ -526,6 +523,56 @@ var storage = multer.diskStorage({
 });
 
 var upload = multer({ storage: storage });
+
+router.get("/updateEvent", (req, res) => {
+    res.render("updateEvent");
+});
+
+router.post("/updateEvent", upload.single("file"), (req, res) => {
+    const {
+        id,
+        title,
+        content,
+        startDate,
+        endDate,
+        lastUpdate,
+        folderId,
+        FK_faculty_id,
+    } = req.body;
+
+    /// Image base64 encoded upload
+
+    // var img = fs.readFileSync(req.file.path);
+    // console.log("path: ", req.file);
+    // var encode_image = img.toString("base64");
+
+    // var finalImg = {
+    //     contentType: req.file.mimetype,
+    //     image: new Buffer.from(encode_image, "base64"),
+    // };
+
+    // console.log("finalll: ", finalImg);
+
+    const currentTime = new Date();
+    const data = {
+        id: id,
+        title: title,
+        content: content,
+        startDate: startDate,
+        endDate: endDate,
+        lastUpdate: currentTime.toLocaleString(),
+        // folderId,
+        FK_faculty_id: FK_faculty_id,
+    };
+
+    console.log(data);
+
+    updateEvent(data).then(result => console.log(result)).catch(err => console.log(err))
+});
+
+router.get("/uploadimage", (req, res) => {
+    res.render("imageUpload");
+});
 
 router.post("/uploadimage", upload.single("file"), (req, res) => {
     console.log("chay vao router");
@@ -549,20 +596,20 @@ router.post("/uploadimage", upload.single("file"), (req, res) => {
 
     var finalImg = {
         contentType: req.file.mimetype,
-        image: new Buffer.from(encode_image, 'base64')
+        image: new Buffer.from(encode_image, "base64"),
     };
 
     console.log("finalll: ", finalImg);
 
     let sql = `INSERT INTO Test (image)
-              VALUES ('${finalImg}')`
+              VALUES ('${finalImg}')`;
 
     connection.query(sql, (err, result) => {
         if (err) throw err;
         // Check if the Faculty is existed or not
         console.log("resultt: ", result);
-        fs.unlinkSync(req.file.path)
-        res.contentType('image/jpeg')
+        fs.unlinkSync(req.file.path);
+        res.contentType("image/jpeg");
         res.send(finalImg.image);
     });
 
