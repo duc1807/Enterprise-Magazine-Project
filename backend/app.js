@@ -1,15 +1,9 @@
 const express = require("express");
-const fs = require("fs");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 const path = require("path");
 var cors = require("cors");
 const async = require("async");
-const multer = require("multer");
-const { google, Auth } = require("googleapis");
-
-const OAuth2Data = require("./credentials.json");
-const { getAuthUrl, getAuthClient } = require("./utils/auth");
 
 const app = express();
 
@@ -39,11 +33,13 @@ app.set("view engine", "ejs");
 app.use(cors());
 
 // Parse application/x-www-form-urlencoded
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-).use(cookieParser());
+app
+  .use(
+    bodyParser.urlencoded({
+      extended: true,
+    })
+  )
+  .use(cookieParser());
 
 // parse application/json
 app.use(bodyParser.json());
@@ -52,7 +48,7 @@ app.use(bodyParser.json());
 
 // api controllers
 app
-  // Login validation API 
+  // Login validation API
   .use("/api/authentication", require("./api/authentication"))
 
   // Faculty api
@@ -64,17 +60,24 @@ app
   // Download API to get articles
   .use("/api/download", require("./api/download"))
 
+  // Image display API
+  .use("/api/image", require("./api/image"))
+
   .use("/api/upload", require("./api/upload"))
-  
+
   .use("/api/user", require("./api/user"))
   .use("/api/notification", require("./api/mailnotification"))
 
   // Authentication API (ignored temporarily)
   .use("/api/admin", require("./api/Authentication/admin"))
-  .use("/api/student", require("./api/Authentication/student"))
+  .use("/api/student", require("./api/Authentication/student"));
+
+// Serve static index.html file
+
+// app.use(express.static("dist/project"))
 
 // app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "../frontend/src/index.html"));
+//   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
 
 // app.get("/", async(req, res) => {
@@ -211,6 +214,10 @@ app
 //   oAuth2Client.setCredentials({});
 //   res.redirect("/");
 // });
+
+app.get("/test", (req, res) => {
+  res.render("admin");
+});
 
 app.listen(5000, () => {
   console.log("App started on port 5000");
