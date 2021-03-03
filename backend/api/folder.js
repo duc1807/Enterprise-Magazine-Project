@@ -13,13 +13,14 @@ const OAuth2Data = require("../credentials.json");
 const key = require("../private_key.json");
 
 const {
-    getCoordinatorAccountByFaculty,
+    getCoordinatorAccountsByFaculty,
     getStudentAccountByFaculty,
     getFacultyById,
     createNewEvent,
     updateEvent
 } = require("../utils/dbService/index");
 const { managerValidation } = require("./middleware/verification");
+const { insertPermissionsToFolderId, getAuthServiceJwt } = require('../utils/driveAPI')
 
 // const SCOPES =
 //   "https://www.googleapis.com/auth/drive.file " +
@@ -173,26 +174,26 @@ router.post("/createEvent", managerValidation, async(req, res) => {
 
     // Get coordinator account of a faculty
 
-    // const query1 = getCoordinatorAccountByFaculty("1");
-    // let coordinatorAccounts = [];
-
-    // await query1
-    //   .then((result) => {
-    //     console.log("result: ", result);
-    //     coordinatorAccounts = result;
-    //   })
-    //   .catch((err) => {
-    //     console.log("Err: ", err);
-    //     return res.status(501).json({
-    //       messages: "Bad request",
-    //     });
-    //   });
-
-    // Get faculty information
-    const query = getFacultyById(facultyId);
-    let facultyInfo = [];
+    const query = getCoordinatorAccountsByFaculty(facultyId);
+    let coordinatorAccounts = [];
 
     await query
+      .then((result) => {
+        console.log("result: ", result);
+        coordinatorAccounts = result;
+      })
+      .catch((err) => {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
+      });
+
+    // Get faculty information
+    const query1 = getFacultyById(facultyId);
+    let facultyInfo = [];
+
+    await query1
         .then((result) => {
             console.log("result: ", result);
             // Not sure ===========================================================
@@ -216,10 +217,10 @@ router.post("/createEvent", managerValidation, async(req, res) => {
 
     // Get student account of a faculty to gain permission to all articles folder ???
     // Should provide permission for student ????? -> To able to preview the articles?? Dont need bcs student only can view the posted articles
-    const query1 = getStudentAccountByFaculty(facultyId);
+    const query2 = getStudentAccountByFaculty(facultyId);
     let studentAccounts = [];
 
-    await query1
+    await query2
         .then((result) => {
             console.log("result: ", result);
             studentAccounts = result;
@@ -248,17 +249,7 @@ router.post("/createEvent", managerValidation, async(req, res) => {
         FK_faculty_id: facultyId,
     };
 
-    const jwToken = new google.auth.JWT(
-        key.client_email,
-        null,
-        key.private_key,
-        process.env.SERVICE_ACCOUNT_SCOPES,
-        null
-    );
-    jwToken.authorize((err) => {
-        if (err) console.log("err: ", err);
-        else console.log("Authorization successful");
-    });
+    const jwToken = await getAuthServiceJwt();
 
     const drive = google.drive({
         version: "v3",
@@ -312,28 +303,21 @@ router.post("/createEvent", managerValidation, async(req, res) => {
 
     // Create permission constants
 
-    // let coordinatorPermission = [];
+    let coordinatorPermissions = [];
 
-    // coordinatorAccount.map((coordinator) => {
-    //   coordinatorPermission.push({
-    //     kind: "drive#permission",
-    //     type: "user",
-    //     role: "writer",
-    //     emailAddress: coordinator.email,
-    //     // permissionDetails: [
-    //     //   {
-    //     //     permissionType: "file",
-    //     //     role: "writer",
-    //     //     inherited: false
-    //     //   }
-    //     // ],
-    //   });
-    // });
+    coordinatorAccounts.map((coordinator) => {
+      coordinatorPermissions.push({
+        kind: "drive#permission",
+        type: "user",
+        role: "writer",
+        emailAddress: coordinator.email,
+      });
+    });
 
-    let studentPermission = [];
+    let studentPermissions = [];
 
     studentAccounts.map((student) => {
-        studentPermission.push({
+        studentPermissions.push({
             kind: "drive#permission",
             type: "user",
             role: "writer",
@@ -348,39 +332,39 @@ router.post("/createEvent", managerValidation, async(req, res) => {
         });
     });
 
-    // Asynchronous create students permission for "All Articles" folder
-    const insertPermission = async(allArticlesFolderId) => {
-        async.eachSeries(
-            studentPermission,
-            (permission, callback) => {
-                drive.permissions.create({
-                        fileId: allArticlesFolderId,
-                        requestBody: permission,
-                        fields: "id",
-                        sendNotificationEmail: false,
-                        shared: false,
-                    },
-                    function(err, file) {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            console.log(`Added ${permission.emailAddress} to All Articles`);
-                            // callback(err);           ????????????
-                        }
-                    }
-                );
-            },
-            (err) => {
-                if (err) {
-                    // Handle error
-                    console.error(err);
-                } else {
-                    // All permissions inserted
-                    console.log("All permissions inserted");
-                }
-            }
-        );
-    };
+    // // Asynchronous create students permission for "All Articles" folder
+    // const insertPermission = async(allArticlesFolderId) => {
+    //     async.eachSeries(
+    //         studentPermissions,
+    //         (permission, callback) => {
+    //             drive.permissions.create({
+    //                     fileId: allArticlesFolderId,
+    //                     requestBody: permission,
+    //                     fields: "id",
+    //                     sendNotificationEmail: false,
+    //                     shared: false,
+    //                 },
+    //                 function(err, file) {
+    //                     if (err) {
+    //                         callback(err);
+    //                     } else {
+    //                         console.log(`Added ${permission.emailAddress} to All Articles`);
+    //                         // callback(err);           ????????????
+    //                     }
+    //                 }
+    //             );
+    //         },
+    //         (err) => {
+    //             if (err) {
+    //                 // Handle error
+    //                 console.error(err);
+    //             } else {
+    //                 // All permissions inserted
+    //                 console.log("All permissions inserted");
+    //             }
+    //         }
+    //     );
+    // };
 
     await drive.files.create({
             resource: fileMetadata,
@@ -393,7 +377,7 @@ router.post("/createEvent", managerValidation, async(req, res) => {
             } else {
                 console.log("Event folder Id: ", file.data.id);
 
-                // drive.coordinatorPermission.list(
+                // drive.coordinatorPermissions.list(
                 //   {
                 //     fileId: "1pUXw72L0MO4I3390Gq4t3-7S4s_DSR1S",
                 //   },
@@ -401,10 +385,12 @@ router.post("/createEvent", managerValidation, async(req, res) => {
                 //     if (err) {
                 //       console.error(err);
                 //     } else {
-                //       console.log("Permission: ", res.data.coordinatorPermission);
+                //       console.log("Permission: ", res.data.coordinatorPermissions);
                 //     }
                 //   }
                 // );
+
+                insertPermissionsToFolderId(coordinatorPermissions, file.data.id)
 
                 eventData.folderId = file.data.id;
 
@@ -439,7 +425,7 @@ router.post("/createEvent", managerValidation, async(req, res) => {
                                         _eventSubFolder.name ==
                                         eventFolderConstants.allArticlesFolderName
                                     ) {
-                                        insertPermission(file.data.id);
+                                        // insertPermissionsToFolderId(studentPermissions, file.data.id);
                                     }
 
                                     /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
@@ -480,20 +466,20 @@ router.post("/createEvent", managerValidation, async(req, res) => {
 
                         createNewEvent(eventData)
                             .then((result) => {
-                                console.log("ket qua neee: ", result);
-                                res.status(201).json({
+                                console.log("ket qua: ", result);
+                                return res.status(201).json({
                                     eventInfo: eventData,
                                 });
                             })
                             .catch((err) => {
                                 if (!!err) {
                                     console.log(err);
-                                    res.status(500).json({
+                                    return res.status(500).json({
                                         success: false,
                                         message: "Server error!",
                                     });
                                 } else {
-                                    res.status(404).json({
+                                    return res.status(404).json({
                                         success: false,
                                         message: "Faculty not found!",
                                     });

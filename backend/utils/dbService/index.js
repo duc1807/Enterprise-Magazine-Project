@@ -1,7 +1,7 @@
 const { getEventsByFacultyName, createNewEvent, updateEvent } = require('../../utils/dbService/eventService')
 const { getAllFaculty, getFacultyById } = require('../../utils/dbService/facultyService')
 const { getPostedArticlesOfEvent } = require('../../utils/dbService/articleService')
-const { getCoordinatorAccountByFaculty } = require('../../utils/dbService/coordinatorService')
+const { getCoordinatorAccountsByFaculty } = require('../../utils/dbService/coordinatorService')
 const { getStudentAccountByFaculty } = require('../../utils/dbService/studentService')
 const { getAccountByEmail } = require('../../utils/dbService/accountService')
 
@@ -22,7 +22,7 @@ module.exports = {
     getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 
     // Coordinator Manager
-    getCoordinatorAccountByFaculty: getCoordinatorAccountByFaculty,
+    getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
 
     // Student
     getStudentAccountByFaculty: getStudentAccountByFaculty,
