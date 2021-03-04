@@ -4,6 +4,7 @@ const { getPostedArticlesOfEvent } = require('../../utils/dbService/articleServi
 const { getCoordinatorAccountsByFaculty } = require('../../utils/dbService/coordinatorService')
 const { getStudentAccountByFaculty } = require('../../utils/dbService/studentService')
 const { getAccountByEmail } = require('../../utils/dbService/accountService')
+const { getImageById } = require('../../utils/dbService/imageService')
 
 module.exports = {
     // Account
@@ -26,4 +27,7 @@ module.exports = {
 
     // Student
     getStudentAccountByFaculty: getStudentAccountByFaculty,
+
+    // Image
+    getImageById: getImageById,
 }
