@@ -40,7 +40,7 @@ router.post("/login", async (req, res) => {
       status: res.statusCode,
     });
   } else {
-    // Check mail in db or not
+    // Check email is in db or not
     const query = authorizationAdmin(username, password);
     let queryResult = []
 
@@ -62,9 +62,13 @@ router.post("/login", async (req, res) => {
 
       let userInfo = {} 
       userInfo.username = queryResult[0].username
-      userInfo.role = _ROUTER_ROLE 
+      userInfo.role_name = _ROUTER_ROLE 
 
-      const token = webToken.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, {
+      const payload = {
+        userInfo: userInfo
+      }
+
+      const token = webToken.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "900s",
       });
 
@@ -76,12 +80,6 @@ router.post("/login", async (req, res) => {
         message: "Logged In successfully",
         userInfo: userInfo,
       });
-
-      // res.status(201).json({
-      //   success: true,
-      //   status: res.statusCode,
-      //   username: queryResult[0].username
-      // });
     }
     else {
       // Fail
@@ -92,38 +90,6 @@ router.post("/login", async (req, res) => {
         message: "Invalid login information"
       });
     }
-    
-    userDetail = {
-      email: "duc",
-      password: "duc123",
-    };
-  }
-});
-
-// get UserProfile API
-router.get("/profile", function (req, res) {
-  const authHeader = req.headers["authorization"];
-  if (authHeader) {
-    const token = authHeader.substr("Bearer".length + 1);
-
-    webToken.verify(token, process.env.secret_key, (err, user) => {
-      if (user) {
-        return res.status(200).json({
-          status: res.statusCode,
-          data: user,
-          message: "success",
-        });
-      }
-      res.status(401).json({
-        status: res.statusCode,
-        message: "please Login",
-      });
-    });
-  } else {
-    res.status(401).json({
-      status: res.statusCode,
-      message: "Please Login",
-    });
   }
 });
 

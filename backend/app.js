@@ -7,23 +7,6 @@ const async = require("async");
 
 const app = express();
 
-// var Storage = multer.diskStorage({
-//   destination: function (req, file, callback) {
-//     callback(null, "./temp");
-//   },
-//   filename: function (req, file, callback) {
-//     callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname);
-//   },
-// });
-
-// var upload = multer({
-//   storage: Storage,
-// }).single("file"); //Field name and max count
-
-// var upload = multer({
-//   storage: Storage,
-// }).any('uploadedImages')
-
 const SCOPES =
   "https://www.googleapis.com/auth/drive.file " +
   "https://www.googleapis.com/auth/userinfo.profile";
@@ -41,7 +24,7 @@ app
   )
   .use(cookieParser());
 
-// parse application/json
+// Parse application/json
 app.use(bodyParser.json());
 
 // app.use(express.static(path.join(__dirname, '../frontend/src')))
@@ -70,7 +53,8 @@ app
 
   // Authentication API (ignored temporarily)
   .use("/api/admin", require("./api/Authentication/admin"))
-  .use("/api/student", require("./api/Authentication/student"));
+
+  // .use("/api/student", require("./api/Authentication/student"));
 
 // Serve static index.html file
 
@@ -79,6 +63,30 @@ app
 // app.get("*", (req, res) => {
 //   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
+
+app.listen(5000, () => {
+  console.log("App started on port 5000");
+});
+
+// ============================================ OLD CODE
+
+// var Storage = multer.diskStorage({
+//   destination: function (req, file, callback) {
+//     callback(null, "./temp");
+//   },
+//   filename: function (req, file, callback) {
+//     callback(null, file.fieldname + "_" + Date.now() + "_" + file.originalname);
+//   },
+// });
+
+// var upload = multer({
+//   storage: Storage,
+// }).single("file"); //Field name and max count
+
+// var upload = multer({
+//   storage: Storage,
+// }).any('uploadedImages')
+
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()
@@ -215,10 +223,8 @@ app
 //   res.redirect("/");
 // });
 
-app.get("/test", (req, res) => {
-  res.render("admin");
-});
+// app.get("/test", (req, res) => {
+//   res.render("admin");
+// });
 
-app.listen(5000, () => {
-  console.log("App started on port 5000");
-});
+

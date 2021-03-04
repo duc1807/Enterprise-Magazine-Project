@@ -13,8 +13,7 @@ const path = require("path");
 
 // Import modules from other files
 const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
-const { getQuery } = require("../utils/dbqueries");
-const { loginValidation } = require("../api/middleware/verification");
+const { loginValidation, gwAccountValidation } = require("../api/middleware/verification");
 const { getAccountByEmail } = require("../utils/dbService/accountService");
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
@@ -24,97 +23,9 @@ const { getAccountByEmail } = require("../utils/dbService/accountService");
 //
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 
-// router.get("/", async (req, res) => {
-//   const oAuth2Client = getAuthClient();
 
-//   console.log(
-//     "Credentials: ",
-//     Boolean(Object.keys(oAuth2Client.credentials).length)
-//   );
-
-//   if (
-//     oAuth2Client.credentials &&
-//     !Object.keys(oAuth2Client.credentials).length &&
-//     oAuth2Client.credentials.constructor == Object
-//   ) {
-//     var url = getAuthUrl();
-//     console.log(url);
-
-//     // res.json({
-//     //   success: false,
-//     //   url: url
-//     // })
-
-//     res.render("index", { url: url, clientID: oAuth2Client._clientId });
-//   } else {
-//     var oauth2 = google.oauth2({
-//       auth: oAuth2Client,
-//       version: "v2",
-//     });
-//     // const data = oauth2.tokeninfo();
-//     // const token = data.config.headers.Authorization.split(" ")[1];
-//     const tokenInfo = oAuth2Client.credentials;
-
-//     console.log("TOKENNNNN : ", tokenInfo);
-//     const token_old =
-//       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImZkYjQwZTJmOTM1M2M1OGFkZDY0OGI2MzYzNGU1YmJmNjNlNGY1MDIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTI2MDY3NTk4MzA4NTQxMTkwMjQiLCJhdF9oYXNoIjoiVFBuS2ZLTERoRENXM0ZfUURtTUk5dyIsIm5hbWUiOiJEdWMgRHVjIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tQk12MGRta3FNQVUvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQU1adXVjbmxNbVJlVGx0RmFqcFBqYldnY2l2LTZ3bXI1QS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiRHVjIiwiZmFtaWx5X25hbWUiOiJEdWMiLCJsb2NhbGUiOiJlbi1HQiIsImlhdCI6MTYxMzkxODk4NCwiZXhwIjoxNjEzOTIyNTg0fQ.b7SLAkjUBixbbm26jAirJVMKd-PGS_iwKRhSs5Xs0E_xgvcKjLq1iSyVOBWPeS_v-bAOcKqRymJHgr8BrMAYBJQaV9eM_n7-MBoz9Cij3ZTSH3gniQztxUcHPgPfnTmlsC8r6tfRjbeiH1Gh9Xae6cMRqEbAJX2gowKvEb8hJFUR9D3Jof4Qn7EmTcRCPvDX0I3Uwts2NkSL-TngG6j7Dlkj_0cIknevpHDP7WphTEHLLsRB2UvM4Xcy88dYULUIrSfPAgNfNGrIRTGTGZWEfGrcD9zVZ5I_cdS5ZA525wOPWZgegd3VAXzjkwxbqZRa_9MWjWllx1AH8i8E1GeWKA";
-//     // await oAuth2Client.revokeToken(token_old).then(console.log("ok go token"))
-
-//     const client = new OAuth2Client(oAuth2Client._clientId);
-
-//     async function verify() {
-//       const ticket = await client.verifyIdToken({
-//         idToken: tokenInfo.id_token,
-//         audience: oAuth2Client._clientId,
-//       });
-//       // .then((value) => {
-//       //   resolve(value);
-//       // })
-//       // .catch((err) => {
-//       //   reject(err);
-
-//       //   //   res.sendStatus(401).json({
-//       //   //     meesages: "expired token",
-//       //   //   });
-//       // });
-
-//       const payload = ticket.getPayload();
-//       const userid = payload["sub"];
-
-//       console.log("Userid: ", userid);
-//     }
-
-//     verify()
-//       .then(() => {
-//         console.log("token con hieu luc");
-//         // Get user info
-//         oauth2.userinfo.get((err, response) => {
-//           if (err) throw err;
-
-//           console.log(response.data);
-
-//           let name = response.data.name;
-//           let pic = response.data.picture;
-
-//           res.render("success", { name: name, pic: pic, success: false });
-
-//           // res.status(201).json({
-//           //   success: true,
-//           // });
-//         });
-//       })
-//       .catch((err) => {
-//         console.log("err o ngoai cung: ", err);
-//         res.status(401).json({
-//           success: false,
-//           messgages: "Token expired, please login",
-//         });
-//         return;
-//       });
-//   }
-// });
-
-router.get("/", loginValidation, (req, res) => {
+// GET: Get login information for manager, coordinator and student
+router.get("/", gwAccountValidation, (req, res) => {
   const data = res.locals.data;
   res.status(200).json({
     status: res.statusCode,
@@ -123,6 +34,7 @@ router.get("/", loginValidation, (req, res) => {
   });
 });
 
+// POST: Login (!!! CORS problems)
 router.post("/login", async (req, res) => {
   const { email } = req.body;
 
@@ -168,6 +80,12 @@ router.post("/login", async (req, res) => {
       });
     });
 });
+
+
+
+
+// ============================================ OLD CODE
+
 
 router.get("/test", async (req, res) => {
   let userDetail = {};
@@ -324,45 +242,138 @@ const {
 //   // res.render('admin')
 // });
 
-router.post("/admin", async (req, res) => {
-  const { username } = req.body;
 
-  const query = getAdminAccountByUsername(username);
+// router.post("/admin", async (req, res) => {
+//   const { username } = req.body;
 
-  let queryResult = [];
+//   const query = getAdminAccountByUsername(username);
 
-  // **** For test
-  let password = "f5bb0c8de146c67b44babbf4e6584cc0";
+//   let queryResult = [];
 
-  await query
-    .then((result) => {
-      console.log("result: ", result);
-      queryResult = result;
-    })
-    .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        messages: "Bad request",
-      });
-    });
+//   // **** For test
+//   let password = "f5bb0c8de146c67b44babbf4e6584cc0";
 
-  if (queryResult.length && queryResult[0].password == password) {
-    // Success
-    console.log("tk dung");
-    res.status(201).json({
-      success: true,
-      status: res.statusCode,
-      username: queryResult[0].username,
-    });
-  } else {
-    // Fail (Wrong password)
-    console.log("sai mk");
-    res.status(401).json({
-      success: false,
-      status: res.statusCode,
-      message: "Invalid login information",
-    });
-  }
-});
+//   await query
+//     .then((result) => {
+//       console.log("result: ", result);
+//       queryResult = result;
+//     })
+//     .catch((err) => {
+//       console.log("Err: ", err);
+//       return res.status(501).json({
+//         messages: "Bad request",
+//       });
+//     });
+
+//   if (queryResult.length && queryResult[0].password == password) {
+//     // Success
+//     console.log("tk dung");
+//     res.status(201).json({
+//       success: true,
+//       status: res.statusCode,
+//       username: queryResult[0].username,
+//     });
+//   } else {
+//     // Fail (Wrong password)
+//     console.log("sai mk");
+//     res.status(401).json({
+//       success: false,
+//       status: res.statusCode,
+//       message: "Invalid login information",
+//     });
+//   }
+// });
+
+
+// ========================================== OLD CODE ================================
+// router.get("/", async (req, res) => {
+//   const oAuth2Client = getAuthClient();
+
+//   console.log(
+//     "Credentials: ",
+//     Boolean(Object.keys(oAuth2Client.credentials).length)
+//   );
+
+//   if (
+//     oAuth2Client.credentials &&
+//     !Object.keys(oAuth2Client.credentials).length &&
+//     oAuth2Client.credentials.constructor == Object
+//   ) {
+//     var url = getAuthUrl();
+//     console.log(url);
+
+//     // res.json({
+//     //   success: false,
+//     //   url: url
+//     // })
+
+//     res.render("index", { url: url, clientID: oAuth2Client._clientId });
+//   } else {
+//     var oauth2 = google.oauth2({
+//       auth: oAuth2Client,
+//       version: "v2",
+//     });
+//     // const data = oauth2.tokeninfo();
+//     // const token = data.config.headers.Authorization.split(" ")[1];
+//     const tokenInfo = oAuth2Client.credentials;
+
+//     console.log("TOKENNNNN : ", tokenInfo);
+//     const token_old =
+//       "eyJhbGciOiJSUzI1NiIsImtpZCI6ImZkYjQwZTJmOTM1M2M1OGFkZDY0OGI2MzYzNGU1YmJmNjNlNGY1MDIiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MDE3Mjg0NDg0MzctcTVjdWx0c2p0ZjNoajQyZGJlaGg2ZHZmZzE1ZTlrM2UuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTI2MDY3NTk4MzA4NTQxMTkwMjQiLCJhdF9oYXNoIjoiVFBuS2ZLTERoRENXM0ZfUURtTUk5dyIsIm5hbWUiOiJEdWMgRHVjIiwicGljdHVyZSI6Imh0dHBzOi8vbGg0Lmdvb2dsZXVzZXJjb250ZW50LmNvbS8tQk12MGRta3FNQVUvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvQU1adXVjbmxNbVJlVGx0RmFqcFBqYldnY2l2LTZ3bXI1QS9zOTYtYy9waG90by5qcGciLCJnaXZlbl9uYW1lIjoiRHVjIiwiZmFtaWx5X25hbWUiOiJEdWMiLCJsb2NhbGUiOiJlbi1HQiIsImlhdCI6MTYxMzkxODk4NCwiZXhwIjoxNjEzOTIyNTg0fQ.b7SLAkjUBixbbm26jAirJVMKd-PGS_iwKRhSs5Xs0E_xgvcKjLq1iSyVOBWPeS_v-bAOcKqRymJHgr8BrMAYBJQaV9eM_n7-MBoz9Cij3ZTSH3gniQztxUcHPgPfnTmlsC8r6tfRjbeiH1Gh9Xae6cMRqEbAJX2gowKvEb8hJFUR9D3Jof4Qn7EmTcRCPvDX0I3Uwts2NkSL-TngG6j7Dlkj_0cIknevpHDP7WphTEHLLsRB2UvM4Xcy88dYULUIrSfPAgNfNGrIRTGTGZWEfGrcD9zVZ5I_cdS5ZA525wOPWZgegd3VAXzjkwxbqZRa_9MWjWllx1AH8i8E1GeWKA";
+//     // await oAuth2Client.revokeToken(token_old).then(console.log("ok go token"))
+
+//     const client = new OAuth2Client(oAuth2Client._clientId);
+
+//     async function verify() {
+//       const ticket = await client.verifyIdToken({
+//         idToken: tokenInfo.id_token,
+//         audience: oAuth2Client._clientId,
+//       });
+//       // .then((value) => {
+//       //   resolve(value);
+//       // })
+//       // .catch((err) => {
+//       //   reject(err);
+
+//       //   //   res.sendStatus(401).json({
+//       //   //     meesages: "expired token",
+//       //   //   });
+//       // });
+
+//       const payload = ticket.getPayload();
+//       const userid = payload["sub"];
+
+//       console.log("Userid: ", userid);
+//     }
+
+//     verify()
+//       .then(() => {
+//         console.log("token con hieu luc");
+//         // Get user info
+//         oauth2.userinfo.get((err, response) => {
+//           if (err) throw err;
+
+//           console.log(response.data);
+
+//           let name = response.data.name;
+//           let pic = response.data.picture;
+
+//           res.render("success", { name: name, pic: pic, success: false });
+
+//           // res.status(201).json({
+//           //   success: true,
+//           // });
+//         });
+//       })
+//       .catch((err) => {
+//         console.log("err o ngoai cung: ", err);
+//         res.status(401).json({
+//           success: false,
+//           messgages: "Token expired, please login",
+//         });
+//         return;
+//       });
+//   }
+// });
 
 module.exports = router;

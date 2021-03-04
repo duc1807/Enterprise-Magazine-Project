@@ -36,6 +36,7 @@ const createNewEvent = async(eventInfo) => {
     const {
         title,
         content,
+        // imageData,
         startDate,
         endDate,
         createdAt,
@@ -45,15 +46,18 @@ const createNewEvent = async(eventInfo) => {
         allArticles,
         FK_faculty_id,
     } = eventInfo;
+
+    let imageData = "test"
+    
     let db = getDataBaseConnection();
 
     const sql = `SELECT * FROM Faculty
     WHERE faculty_id = ${FK_faculty_id};`;
 
     const sql1 = `INSERT INTO 
-                  Event (event_title, event_content, event_startDate, event_endDate, event_createdAt,
+                  Event (event_title, event_content, event_image, event_startDate, event_endDate, event_createdAt,
                   event_lastUpdate, event_folderId, folderId_selectedArticles, folderId_allArticles, FK_faculty_id)
-                  VALUES ('${title}', '${content}', '${startDate}', '${endDate}', '${createdAt}', '${lastUpdate}', '${folderId}', '${selectedArticles}', '${allArticles}', '${FK_faculty_id}')`;
+                  VALUES ('${title}', '${content}', '${imageData}', '${startDate}', '${endDate}', '${createdAt}', '${lastUpdate}', '${folderId}', '${selectedArticles}', '${allArticles}', '${FK_faculty_id}')`;
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result) => {
             if (!!err) reject(err);
