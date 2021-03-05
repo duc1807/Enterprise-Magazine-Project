@@ -7,12 +7,10 @@ const async = require("async");
 
 const app = express();
 
-const SCOPES =
-  "https://www.googleapis.com/auth/drive.file " +
-  "https://www.googleapis.com/auth/userinfo.profile";
-
+// Set the view engine to ejs
 app.set("view engine", "ejs");
 
+// allow cross-origin resource sharing (temporally)
 app.use(cors());
 
 // Parse application/x-www-form-urlencoded
@@ -22,17 +20,21 @@ app
       extended: true,
     })
   )
+  // Allow cookie
   .use(cookieParser());
 
 // Parse application/json
 app.use(bodyParser.json());
 
-// app.use(express.static(path.join(__dirname, '../frontend/src')))
+app.get('/testUpload', (req,res) => {
+  res.render('success', { name:"test", pic: "hi", success: true})
+})
 
-// api controllers
+// API controllers
 app
   // Login validation API for student and staff
   .use("/api/authentication", require("./api/Authentication/googleAuth"))
+
   // Authentication API for admin
   .use("/api/admin", require("./api/Authentication/admin"))
 
@@ -48,6 +50,7 @@ app
   // Image display API
   .use("/api/image", require("./api/image"))
 
+  // API for student to upload articles
   .use("/api/upload", require("./api/upload"))
 
   .use("/api/user", require("./api/user"))

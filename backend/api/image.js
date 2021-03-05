@@ -3,22 +3,27 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 
-// Import modules
-const { getImageById } = require('../utils/dbService/index')
+// Import database service
+const { getImageById } = require("../utils/dbService/index");
 
-/* Get the image by event id and render */
+/**
+ * @description This API is to get the image by event id and render to display
+ * @params 
+ *        - imageId (req.body || query param) 
+ * @return
+ *        - bufferData with content type (image/jpeg)
+ */
 router.get("/:imageId", async (req, res) => {
-    const { imageId } = req.params
+  const { imageId } = req.params;
 
-    // JUST FOR TEST
-    // In the future will get image data in Event table
-    let query = getImageById(imageId)
-    let queryResult = []
+  // JUST FOR TEST
+  // In the future will get image data in Event table
+  let query = getImageById(imageId);
+  let queryResult = [];
 
-    await query
+  await query
     .then((result) => {
       console.log("result: ", result);
-      query = getImageById()
       queryResult = result[0];
     })
     .catch((err) => {
@@ -27,11 +32,11 @@ router.get("/:imageId", async (req, res) => {
         messages: "Bad request",
       });
     });
-    
-    // Convert base64 to Buffer and send 
-    const bufferData = new Buffer.from(queryResult.image, "base64")
-    res.contentType("image/jpeg");
-    res.send(bufferData);
+
+  // Convert base64 to Buffer, set response contentType and send to client
+  const bufferData = new Buffer.from(queryResult.image, "base64");
+  res.contentType("image/jpeg");
+  res.send(bufferData);
 });
 
-module.exports = router
+module.exports = router;

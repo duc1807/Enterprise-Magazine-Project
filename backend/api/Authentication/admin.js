@@ -5,74 +5,121 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 
-// Import middleware authorization
-const { adminValidation } = require('../middleware/verification')
-const { authorizationAdmin } = require('../../utils/dbService/adminService')
+// Import middleware authorization for admin
+const { adminValidation } = require("../middleware/verification");
+
+// Import database service
+const { authorizationAdmin } = require("../../utils/dbService/adminService");
 
 // Using middleware
 // router.use(adminValidation)
 
-const _ROUTER_ROLE = "admin"
+const _ROUTER_ROLE = "admin";
 
-// Login API
-router.get('/', adminValidation, (req, res) => {
-  console.log("data", res.locals.data)
-  const data = res.locals.data
+/** 
+ * @method GET
+ * @description Login API for admin
+ * @param null
+ * @returns
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ *      - data: Object
+ *          - userInfo: Object
+ *              + username: String
+ *              + role_name: String
+ *          - iat: Int
+ *          - exp: Int
+ * @note 
+ *      - (!!! CORS problems)
+ */
+router.get("/", adminValidation, (req, res) => {
+  console.log("data", res.locals.data);
+  const data = res.locals.data;
+
+  res.setHeader('X-Content-Type-Options','nosniff','X-XSS-Protection','1;mode=block')
 
   res.status(200).json({
     status: res.statusCode,
-      success: true,
-      user: data
-  })
-})
+    success: true,
+    data: data,
+  });
+});
 
+/**
+ * @method POST
+ * @description API route to signin the user
+ * @param
+ *    - username: String       
+ *    - password: String
+ * @returns 
+ *    - status: statusCode
+ *    - success: Boolean
+ *    - message: String
+ *    - user information (JSON format)
+ */
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
+  // Using Regex to test input
+  // const regex = new RegExp("^[a-zA-Z0-9 ]*$", 'gi');
+  // if(!!regex.test(username) || !!regex.test(password)) {
+  //   res.status(401).json({
+  //     status: res.statusCode,
+  //     success: false,
+  //     message: "Invalid input"
+  //   })
+  // }
+
   if (
-    !password && password == "" ||
+    (!password && password == "") ||
     password == undefined ||
     username == "" ||
     username == undefined
   ) {
     res.status(401).json({
-      message: "Fill All Fields",
+      message: "Fill all fields",
       status: res.statusCode,
     });
   } else {
-    // Check email is in db or not
+    // Check if email is in database or not
     const query = authorizationAdmin(username, password);
-    let queryResult = []
+    let queryResult = [];
 
     await query
-    .then((result) => {
-      console.log("result: ", result);
-      queryResult = result;
-    })
-    .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        messages: "Bad request",
+      .then((result) => {
+        console.log("result: ", result);
+        queryResult = result;
+      })
+      .catch((err) => {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
       });
-    });
 
-    if(queryResult.length) {
+    if (queryResult.length) {
       // Success
-      console.log("Signin successful")
+      console.log("Signin successful");
 
-      let userInfo = {} 
-      userInfo.username = queryResult[0].username
-      userInfo.role_name = _ROUTER_ROLE 
+      // Create userInfo Object
+      let userInfo = {};
+      userInfo.username = queryResult[0].username;
+      userInfo.role_name = _ROUTER_ROLE;
 
+      // Pass userInfo to payload
       const payload = {
-        userInfo: userInfo
-      }
+        userInfo: userInfo,
+      };
 
+      // Generate token with userInfo payload
       const token = webToken.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "900s",
       });
 
-      res.cookie("Token", token, { httpOnly: true, /*secure: true*/  })
+      // Storing Token in cookie, with httpOnly and secure set to true 
+      // (only allow token on secure website)
+      res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
       res.status(200).json({
         status: res.statusCode,
@@ -80,14 +127,13 @@ router.post("/login", async (req, res) => {
         message: "Logged In successfully",
         userInfo: userInfo,
       });
-    }
-    else {
-      // Fail
-      console.log("Signin failed")
+    } else {
+      // Failed
+      console.log("Signin failed");
       res.status(401).json({
         success: false,
         status: res.statusCode,
-        message: "Invalid login information"
+        message: "Invalid login information",
       });
     }
   }

@@ -12,10 +12,24 @@ const { OAuth2Client } = require("google-auth-library");
 const path = require("path");
 
 // Import modules from other files
-const { getAuthClient, getUserProfile, getAuthUrl } = require("../../utils/auth");
-const { loginValidation, gwAccountValidation } = require("../middleware/verification");
+const {
+  getAuthClient,
+  getUserProfile,
+  getAuthUrl,
+} = require("../../utils/auth");
+
+// Middleware authentication
+const {
+  loginValidation,
+  gwAccountValidation,
+} = require("../middleware/verification");
+
+// Import database service
 const { getAccountByEmail } = require("../../utils/dbService/accountService");
 
+// Constants
+const _GW_GROUP_ROLE_ID = [1, 2, 3];
+
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
 //
@@ -23,10 +37,34 @@ const { getAccountByEmail } = require("../../utils/dbService/accountService");
 //
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 
-
-// GET: Get login information for manager, coordinator and student
+/**
+ * @method GET
+ * @description Get information for manager, coordinator and student
+ * @params null
+ * @returns
+ *      - status: Int
+ *      - success: Boolean
+ *      - data: Object
+ *          - userInfo: Object
+ *                + account_id: Int
+ *                + email: String
+ *                + FK_role_id: Int
+ *                + FK_faculty_id: Int
+ *                + role_id: Int
+ *                + role_name: String
+ *                + faculty_id: Int
+ *                + faculty_name: String
+ *                + faculty_folderId: String
+ *          - goolgeAccountInfo: Object
+ *          - iat: Int
+ *          - exp: Int
+ * @notes
+ *      - (!!! CORS problems)
+ */
 router.get("/", gwAccountValidation, (req, res) => {
+  // Get data return from middleware
   const data = res.locals.data;
+
   res.status(200).json({
     status: res.statusCode,
     success: true,
@@ -34,10 +72,25 @@ router.get("/", gwAccountValidation, (req, res) => {
   });
 });
 
-// POST: Login (!!! CORS problems)
+/**
+ * @method POST
+ * @description Login API for student and staff
+ * @param
+ *      - Email: String (email format)
+ * @returns
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ *      - userInfo: Object
+ *          + username: String
+ *          + role_name: String
+ * @note
+ *      - (!!! CORS problems)
+ */
 router.post("/login", async (req, res) => {
   const { email } = req.body;
 
+  // Check if the account is in the database or not
   const query = getAccountByEmail(email);
 
   let queryResult = [];
@@ -81,11 +134,7 @@ router.post("/login", async (req, res) => {
     });
 });
 
-
-
-
 // ================================================== OLD CODE
-
 
 router.get("/test", async (req, res) => {
   let userDetail = {};
@@ -242,7 +291,6 @@ const {
 //   // res.render('admin')
 // });
 
-
 // router.post("/admin", async (req, res) => {
 //   const { username } = req.body;
 
@@ -283,7 +331,6 @@ const {
 //     });
 //   }
 // });
-
 
 // ========================================== OLD CODE ================================
 // router.get("/", async (req, res) => {

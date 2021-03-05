@@ -25,7 +25,11 @@ const {
   updateEvent,
   deleteEventById,
 } = require("../utils/dbService/index");
+
+// Import middleware validation
 const { managerValidation } = require("./middleware/verification");
+
+// Import utils
 const {
   insertPermissionsToFolderId,
   getAuthServiceJwt,
@@ -37,12 +41,26 @@ const { upload } = require("../utils/multerStorage");
 //   "https://www.googleapis.com/auth/userinfo.profile " +
 //   "https://www.googleapis.com/auth/drive.metadata ";
 
+// Constants
 const eventFolderConstants = {
   acceptedArticlesFolderName: "Selected Articles",
   allArticlesFolderName: "All Articles",
 };
 
-// POST: Create new event
+/** 
+ * @method POST
+ * @description API for creating new event
+ * @params 
+ *      - title: Int
+ *      - content: Boolean
+ *      - imageData: file
+ *      - endDate: Date (yyyy-mm-dd)
+ *      - facultyId: Int
+ * @return
+ *      
+ * @notes 
+ *      - event image upload not implemented
+ */
 router.post(
   "/createEvent",
   managerValidation,
@@ -51,8 +69,7 @@ router.post(
     // Not sure if file is retrieved by req.files or req.body
     const { title, content, startDate, endDate, facultyId } = req.body;
 
-    // Get coordinator account of a faculty
-
+    // Get coordinator accounts of a faculty
     const query = getCoordinatorAccountsByFaculty(facultyId);
     let coordinatorAccounts = [];
 
@@ -79,14 +96,14 @@ router.post(
         facultyInfo = result[0];
       })
       .catch((err) => {
-        // If database error
+        // If database error, return 501 error
         if (!!err) {
           console.log("Err: ", err);
           return res.status(501).json({
             messages: "Bad request",
           });
         } else {
-          // If no faculty found
+          // If no faculty found, return 404 error
           console.log("Err: ", err);
           return res.status(404).json({
             messages: "Faculty not found",
@@ -111,15 +128,13 @@ router.post(
         });
       });
 
+      
     /* Image processing
-    
-    // const imageData = fs.readFileSync(req.file.path, "base64")
-
-    // console.log("anh :", imageBase64);
-
+    // const imageData = fs.readFileSync(req.file.path, "base64"
+    // console.log("image base64 string :", imageBase64);
     **/
 
-    // Input end date processing
+    // Input endDate processing (from date format to timestamps)
     let splittedDate = endDate.split("-");
     const newEndDate = new Date(
       splittedDate[0],
@@ -131,7 +146,7 @@ router.post(
     // Get the current time
     const currentTime = new Date();
 
-    // Create event data to INSERT into database
+    // Create event object data to INSERT into database
     const eventData = {
       title: title,
       content: content,
@@ -140,14 +155,17 @@ router.post(
       endDate: newEndDate,
       createdAt: currentTime.getTime(),
       lastUpdate: currentTime.getTime(),
+      // folderId, selectedArticles and allArticles temporarily has default value and will be changed after create folders
       folderId: "",
       selectedArticles: eventFolderConstants.acceptedArticles,
       allArticles: eventFolderConstants.allArticles,
       FK_faculty_id: facultyId,
     };
 
+    // Get the auth service
     const jwToken = await getAuthServiceJwt();
 
+    // Create drive service
     const drive = google.drive({
       version: "v3",
       auth: jwToken,
@@ -155,7 +173,8 @@ router.post(
 
     console.log("faculty tra ve: ", facultyInfo);
 
-    const fileMetadata = {
+    // The fileMetadata for event folder, with parent folder is folderId of its Faculty
+    const eventFolderMetadata = {
       name: `${currentTime.toLocaleDateString()}: ${
         eventData.title
       } - ${currentTime.getTime()}`,
@@ -163,7 +182,7 @@ router.post(
       parents: [facultyInfo.faculty_folderId],
     };
 
-    // Default subfolder of each Event folder
+    // Default subfolder of Event folder (selected articles and all articles folders)
     const eventSubFolders = [
       {
         name: eventFolderConstants.acceptedArticlesFolderName,
@@ -199,8 +218,8 @@ router.post(
     //   },
     // ];
 
-    // Create permission constants
 
+    // Create coordinators permission data
     let coordinatorPermissions = [];
 
     coordinatorAccounts.map((coordinator) => {
@@ -212,6 +231,7 @@ router.post(
       });
     });
 
+    // Create student permission data (???? needed or not?)
     let studentPermissions = [];
 
     studentAccounts.map((student) => {
@@ -220,13 +240,6 @@ router.post(
         type: "user",
         role: "writer",
         emailAddress: student.email,
-        // permissionDetails: [
-        //   {
-        //     permissionType: "file",
-        //     role: "writer",
-        //     inherited: false
-        //   }
-        // ],
       });
     });
 
@@ -264,9 +277,10 @@ router.post(
     //     );
     // };
 
+    // Create event folder
     await drive.files.create(
       {
-        resource: fileMetadata,
+        resource: eventFolderMetadata,
         fields: "id",
       },
       function (err, file) {
@@ -289,11 +303,15 @@ router.post(
           //   }
           // );
 
+          // Insert coordinator permission to event folder by id
           insertPermissionsToFolderId(coordinatorPermissions, file.data.id);
 
+          // Assign event folderId to eventData
           eventData.folderId = file.data.id;
 
+          // Create the subfolder of event folder (allArticles & selectedArticles)
           const createEventSubfolder = new Promise((resolve, reject) => {
+            // Generate Object for storing subfolderId
             let _subFolderId = {
               acceptedArticlesId: "",
               allArticlesId: "",
@@ -328,21 +346,26 @@ router.post(
                       // insertPermissionsToFolderId(studentPermissions, file.data.id);
                     }
 
+
                     /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
+                    // If the folder is selected articles, assign the folderId to '_subFolderId' Object
                     if (
                       folder.name ==
                       eventFolderConstants.acceptedArticlesFolderName
                     ) {
                       _subFolderId.acceptedArticlesId = file.data.id;
-                      // If the id of all folders are set, resolve promise and return value
+                      // If the id of all fields in '_subFolderId' are set, resolve promise and return value
                       if (
                         _subFolderId.acceptedArticlesId != "" &&
                         _subFolderId.allArticlesId != ""
                       ) {
                         resolve(_subFolderId);
                       }
-                    } else {
+                    } 
+                    // Else if the folder is all articles, asssign folderId to '_subFolderId' Object
+                    else {
                       _subFolderId.allArticlesId = file.data.id;
+                      // If the id of all fields in '_subFolderId' are set, resolve promise and return value
                       if (
                         _subFolderId.acceptedArticlesId != "" &&
                         _subFolderId.allArticlesId != ""
@@ -356,17 +379,19 @@ router.post(
             });
           });
 
+          // Handle createSubfolder promise return
           createEventSubfolder
             .then((result) => {
+              // Assign the subfolder's folderId returned from result to event Object
               eventData.selectedArticles = result.acceptedArticlesId;
               eventData.allArticles = result.allArticlesId;
 
-              // Insert event info vao database
+              // Insert eventData into database
               console.log("event: ", eventData);
 
               createNewEvent(eventData)
                 .then((result) => {
-                  console.log("ket qua: ", result);
+                  console.log("Result: ", result);
                   return res.status(201).json({
                     eventInfo: eventData,
                   });
@@ -379,6 +404,7 @@ router.post(
                       message: "Server error!",
                     });
                   } else {
+                    // If err = false, return faculty not found error
                     return res.status(404).json({
                       success: false,
                       message: "Faculty not found!",
@@ -393,7 +419,28 @@ router.post(
   }
 );
 
-// POST: Update event
+/** 
+ * @method POST
+ * @description API for updating event
+ * @params 
+ *      - id: Int
+ *      - title: Int
+ *      - content: Boolean
+ *      - imageData: file
+ *      - endDate: Date (yyyy-mm-dd)
+ *      - folderId: String (???? needed?)
+ *      - facultyId: Int
+ * @return
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ *      - userInfo: Object
+ *          + username: String
+ *          + role_name: String
+ * @notes 
+ *      - Image data not implemented
+ *      - Startdate needed?
+ */
 router.post(
   "/updateEvent",
   managerValidation,
@@ -425,7 +472,7 @@ router.post(
 
     // console.log("finalll: ", finalImg);
 
-    // Input start and end date processing
+    // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
     let splittedStartDate = startDate.split("-");
     const newStartDate = new Date(
       splittedStartDate[0],
@@ -442,6 +489,7 @@ router.post(
     ).getTime();
     console.log(newEndDate);
 
+    // Get current time constants and create data Object
     const currentTime = new Date();
     const data = {
       id: id,
@@ -457,9 +505,10 @@ router.post(
 
     console.log(data);
 
+    // Update event by passing data Object
     updateEvent(data)
       .then((result) => {
-        return res.status(500).json({
+        return res.status(200).json({
           success: true,
           message: `Event ${title} updated successfully.`,
         });
@@ -472,6 +521,7 @@ router.post(
             message: "Server error!",
           });
         } else {
+          // If err = false return eventId not found
           return res.status(404).json({
             success: false,
             message: "Not found!",
@@ -481,10 +531,19 @@ router.post(
   }
 );
 
-// POST: Delete event
+/** 
+ * @method POST
+ * @description API for deleting event
+ * @params 
+ *      - eventId: Int
+ * @return null
+ * @notes 
+ *      - Delete event on drive??? Or not??
+ */
 router.post("/deleteEvent", managerValidation, (req, res) => {
   const { eventId } = req.body;
 
+  // Delete event by eventId
   const query = deleteEventById(eventId);
   query
     .then((result) => {
@@ -501,6 +560,7 @@ router.post("/deleteEvent", managerValidation, (req, res) => {
           message: "Server error!",
         });
       } else {
+        // If err = false, return event not found
         return res.status(404).json({
           success: false,
           message: "Event not found!",
@@ -508,6 +568,8 @@ router.post("/deleteEvent", managerValidation, (req, res) => {
       }
     });
 });
+
+
 
 // ================================================================ TEST UPLOAD
 

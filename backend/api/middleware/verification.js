@@ -2,10 +2,16 @@ require("dotenv").config();
 
 const webToken = require("jsonwebtoken");
 
+// Constants
 const _MANAGER_ROLE_ID = 3;
 const _GW_GROUP_ROLE_ID = [1, 2, 3]
 const _ADMIN_ROLE = "admin"
 
+/** 
+ * @description Middleware validation for admin
+ * @params null
+ * @returns next()
+ */
 const adminValidation = (req, res, next) => {
   // Retrieve the token from cookies
   const token = req.cookies["Token"];
@@ -25,6 +31,7 @@ const adminValidation = (req, res, next) => {
         success: false,
         message: "Session expired! Please login",
       });
+    // If the account's role_name is not "admin" return 401
     else if (data.userInfo.role_name != _ADMIN_ROLE) {
       return res.status(401).json({
         status: res.statusCode,
@@ -32,7 +39,7 @@ const adminValidation = (req, res, next) => {
         message: "Admin permission required",
       });
     }
-    // If the user permission is not admin, throw the 401 error to prevent unauthorised access
+    // Pass the data to API
     res.locals.data = data;
     next();
   });
@@ -95,7 +102,7 @@ const gwAccountValidation = (req, res, next) => {
       });
     // If the user is unrelated to Greenwich, throw the 401 error to prevent unauthorised access
     console.log("info: ", data);
-    if (data.userInfo.FK_role_id && !_GW_GROUP_ROLE_ID.includes(data.userInfo.FK_role_id)) {
+    if (!data.userInfo.FK_role_id && !_GW_GROUP_ROLE_ID.includes(data.userInfo.FK_role_id)) {
       return res.status(401).json({
         status: res.statusCode,
         success: false,
