@@ -12,9 +12,9 @@ const { OAuth2Client } = require("google-auth-library");
 const path = require("path");
 
 // Import modules from other files
-const { getAuthClient, getUserProfile, getAuthUrl } = require("../utils/auth");
-const { loginValidation, gwAccountValidation } = require("../api/middleware/verification");
-const { getAccountByEmail } = require("../utils/dbService/accountService");
+const { getAuthClient, getUserProfile, getAuthUrl } = require("../../utils/auth");
+const { loginValidation, gwAccountValidation } = require("../middleware/verification");
+const { getAccountByEmail } = require("../../utils/dbService/accountService");
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
@@ -84,7 +84,7 @@ router.post("/login", async (req, res) => {
 
 
 
-// ============================================ OLD CODE
+// ================================================== OLD CODE
 
 
 router.get("/test", async (req, res) => {
@@ -232,7 +232,7 @@ router.post("/logout", (req, res) => {
 
 const {
   getAdminAccountByUsername,
-} = require("../utils/dbService/adminService");
+} = require("../../utils/dbService/adminService");
 
 // router.get("/admin", (req, res) => {
 //   res.json({

@@ -13,11 +13,17 @@ const OAuth2Data = require("../credentials.json");
 const key = require("../private_key.json");
 
 const {
+  // Account service
   getCoordinatorAccountsByFaculty,
   getStudentAccountByFaculty,
+
+  // Faculty service
   getFacultyById,
+
+  // Event service
   createNewEvent,
   updateEvent,
+  deleteEventById,
 } = require("../utils/dbService/index");
 const { managerValidation } = require("./middleware/verification");
 const {
@@ -475,6 +481,33 @@ router.post(
   }
 );
 
+// POST: Delete event
+router.post("/deleteEvent", managerValidation, (req, res) => {
+  const { eventId } = req.body;
+
+  const query = deleteEventById(eventId);
+  query
+    .then((result) => {
+      return res.status(202).json({
+        success: true,
+        message: `Event ${result.event_title} deleted successfully`,
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: "Server error!",
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Event not found!",
+        });
+      }
+    });
+});
 
 // ================================================================ TEST UPLOAD
 
@@ -581,7 +614,6 @@ router.post("/createfolder", (req, res) => {
 
   console.log("name: ", folderName);
 });
-
 
 router.get("/testt", async (req, res) => {
   const jwToken = new google.auth.JWT(

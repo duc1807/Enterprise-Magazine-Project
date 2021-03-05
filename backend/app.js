@@ -31,14 +31,16 @@ app.use(bodyParser.json());
 
 // api controllers
 app
-  // Login validation API
-  .use("/api/authentication", require("./api/authentication"))
+  // Login validation API for student and staff
+  .use("/api/authentication", require("./api/Authentication/googleAuth"))
+  // Authentication API for admin
+  .use("/api/admin", require("./api/Authentication/admin"))
 
   // Faculty api
   .use("/api/faculty", require("./api/faculty"))
 
   // Event API (Event: Drive folder inside Faculty)
-  .use("/api/folder", require("./api/folder"))
+  .use("/api/event", require("./api/event"))
 
   // Download API to get articles
   .use("/api/download", require("./api/download"))
@@ -51,8 +53,6 @@ app
   .use("/api/user", require("./api/user"))
   .use("/api/notification", require("./api/mailnotification"))
 
-  // Authentication API (ignored temporarily)
-  .use("/api/admin", require("./api/Authentication/admin"))
 
   // .use("/api/student", require("./api/Authentication/student"));
 
