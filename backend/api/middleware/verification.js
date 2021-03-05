@@ -120,7 +120,6 @@ const studentValidation = (req, res, next) => {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
-      role: "student",
       message: "Please login",
     });
   }
@@ -130,8 +129,6 @@ const studentValidation = (req, res, next) => {
       return res.status(403).json({
         status: res.statusCode,
         success: false,
-        role: "student",
-        path: "/",
         message: "Session expired! Please login",
       });
     // If the user permission is not student, throw the 401 error to prevent unauthorised access

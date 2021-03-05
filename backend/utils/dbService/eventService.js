@@ -32,6 +32,24 @@ const getEventsByFacultyName = async (facultyName) => {
   });
 };
 
+const getEventById = (eventId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${TABLE}
+                WHERE event_id = ${eventId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if(!result.length) {
+        reject(false)
+      }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
 const createNewEvent = async (eventInfo) => {
   const {
     title,
@@ -153,6 +171,7 @@ const deleteEventById = (eventId) => {
 
 module.exports = {
   getEventsByFacultyName: getEventsByFacultyName,
+  getEventById: getEventById,
   createNewEvent: createNewEvent,
   updateEvent: updateEvent,
   deleteEventById: deleteEventById,
