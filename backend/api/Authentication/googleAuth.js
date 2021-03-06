@@ -76,21 +76,77 @@ router.get("/", gwAccountValidation, (req, res) => {
  * @method POST
  * @description Login API for student and staff
  * @param
- *      - Email: String (email format)
+ *      - id_token: Token from client request headers
  * @returns
  *      - status: Int
  *      - success: Boolean
  *      - message: String
- *      - userInfo: Object
- *          + username: String
- *          + role_name: String
+ *      - user: Object
+ *          - userInfo: Object
+ *              + username: String
+ *              + role_name: String
+ *          - oAuthInfo: Object
+ *              +
  * @note
  *      - (!!! CORS problems)
  */
 router.post("/login", async (req, res) => {
-  const { email } = req.body;
+  const { id_token } = req.body;
+  let email = "";
+  let oauthUser = undefined
 
-  // Check if the account is in the database or not
+  // STEP 1: Verify the token from client POST request
+  const oAuth2Client = getAuthClient();
+
+  // Generate new client service
+  const client = new OAuth2Client(oAuth2Client._clientId);
+
+  async function verify() {
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: oAuth2Client._clientId,
+    });
+
+    // Get userInfo from payload if id_token is valid
+    const payload = ticket.getPayload();
+    oauthUser = payload["sub"];
+
+    // Get email of user and assign to 'email'
+    email = "test"; ////////// ============================= Test
+
+    console.log("User: ", user);
+  }
+
+  // Return err in catch
+  await verify()
+    // .then(() => {
+    //   console.log("token con hieu luc");
+    //   // Get user info
+    //   oauth2.userinfo.get((err, response) => {
+    //     if (err) throw err;
+
+    //     console.log(response.data);
+
+    //     let name = response.data.name;
+    //     let pic = response.data.picture;
+
+    //     res.render("success", { name: name, pic: pic, success: false });
+
+    //     // res.status(201).json({
+    //     //   success: true,
+    //     // });
+    //   });
+    // })
+    .catch((err) => {
+      console.error(err);
+      res.status(401).json({
+        success: false,
+        messgages: "Token expired, please login",
+      });
+    });
+
+  // STEP 2: Check if the account is in the database or not (info from token_id)
+  console.log("Chay vao query") // Testing code
   const query = getAccountByEmail(email);
 
   let queryResult = [];
@@ -100,32 +156,38 @@ router.post("/login", async (req, res) => {
       console.log("result: ", result);
       queryResult = result;
 
+      // STEP 3: If user is valid, assign the data to payload and signing token
       if (queryResult.length) {
         let _data = {};
         _data.userInfo = result[0];
-        _data.googleAccountInfo = "null";
+        _data.oAuthInfo = oauthUser;
 
         const token = webToken.sign(_data, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: "900s",
+          // Token will expire in 30mins
+          expiresIn: "1800s",
         });
 
+        // STEP 4: Send token to client cookie
         res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
+        // STEP 5: Return userInfo if login successful
         res.status(200).json({
           status: res.statusCode,
           message: "Signed in successfully",
           success: true,
           user: {
             userInfo: _data.userInfo,
-            googleAccountInfo: _data.googleAccountInfo,
+            oAuthInfo: _data.oAuthInfo,
           },
         });
       } else {
+        // If the user not found in database -> throw permission required notification
         res.status(401).json({
           messages: "This account doesn't have permission to the website!",
         });
       }
     })
+    // Catch database error
     .catch((err) => {
       console.log("Err: ", err);
       return res.status(500).json({
