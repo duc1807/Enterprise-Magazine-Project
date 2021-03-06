@@ -59,7 +59,6 @@ const _GW_GROUP_ROLE_ID = [1, 2, 3];
  *          - iat: Int
  *          - exp: Int
  * @notes
- *      - (!!! CORS problems)
  */
 router.get("/", gwAccountValidation, (req, res) => {
   // Get data return from middleware
@@ -72,12 +71,13 @@ router.get("/", gwAccountValidation, (req, res) => {
   });
 });
 
+
 /**
  * @method POST
  * @description Login API for student and staff
- * @param
+ * @params
  *      - id_token: Token from client request headers
- * @returns
+ * @return
  *      - status: Int
  *      - success: Boolean
  *      - message: String
@@ -87,19 +87,29 @@ router.get("/", gwAccountValidation, (req, res) => {
  *              + role_name: String
  *          - oAuthInfo: Object
  *              +
- * @note
+ * @notes
  *      - (!!! CORS problems)
+ *      - Function verify doesnt have resolve reject?
  */
 router.post("/login", async (req, res) => {
   const { id_token } = req.body;
   let email = "";
   let oauthUser = undefined
 
+  // Check if id_token is exist or not
+  if(!id_token) {
+    return res.status(500).json({
+      status: res.statusCode,
+      success: false,
+      message: "Bad request"
+    })
+  }
+
   // STEP 1: Verify the token from client POST request
   const oAuth2Client = getAuthClient();
 
   // Generate new client service
-  const client = new OAuth2Client(oAuth2Client._clientId);
+  const client = new OAuth2Client(oAuth2Client._clientId, oAuth2Client._clientSecret);
 
   async function verify() {
     const ticket = await client.verifyIdToken({
@@ -109,6 +119,8 @@ router.post("/login", async (req, res) => {
 
     // Get userInfo from payload if id_token is valid
     const payload = ticket.getPayload();
+
+    // Only storing 
     oauthUser = payload["sub"];
 
     // Get email of user and assign to 'email'
@@ -139,7 +151,7 @@ router.post("/login", async (req, res) => {
     // })
     .catch((err) => {
       console.error(err);
-      res.status(401).json({
+      return res.status(401).json({
         success: false,
         messgages: "Token expired, please login",
       });
@@ -194,6 +206,37 @@ router.post("/login", async (req, res) => {
         messages: "Server error",
       });
     });
+});
+
+
+/** 
+ * @method POST
+ * @description API for logging out user
+ * @params null
+ * @return
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ * @notes 
+ */
+router.post("/logout", (req, res) => {
+  const token = req.cookies["Token"];
+  // If the token is not existed, throw 401 error
+  if (!token) {
+    return res.status(500).json({
+      status: res.statusCode,
+      success: false,
+      message: "Bad request",
+    });
+  }
+
+  res.clearCookie("Token");
+
+  res.status(200).json({
+    status: res.statusCode,
+    success: true,
+    message: "Signed out",
+  });
 });
 
 // ================================================== OLD CODE
@@ -277,26 +320,6 @@ router.get("/google/callback", (req, res) => {
       }
     });
   }
-});
-
-router.post("/logout", (req, res) => {
-  const token = req.cookies["Token"];
-  // If the token is not existed, throw 401 error
-  if (!token) {
-    return res.status(500).json({
-      status: res.statusCode,
-      success: false,
-      message: "Bad request",
-    });
-  }
-
-  res.clearCookie("Token");
-
-  res.status(200).json({
-    status: res.statusCode,
-    success: true,
-    message: "Signed out",
-  });
 });
 
 // router.get("/download", (req, res) => {

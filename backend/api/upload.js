@@ -17,7 +17,28 @@ const SERVICE_KEY = require("../private_key.json");
 
 const STUDENT_ROLE_ID = 1;
 
-// POST: Upload articles
+/** 
+ * @method POST
+ * @description API for upload article submissions for students
+ * @params 
+ *      - eventId: Int
+ *      - title: Int
+ *      - content: Boolean
+ *      - imageData: file
+ *      - endDate: Date (yyyy-mm-dd)
+ *      - folderId: String (???? needed?)
+ *      - facultyId: Int
+ * @return
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ *      - userInfo: Object
+ *          + username: String
+ *          + role_name: String
+ * @notes 
+ *      - Image data not implemented
+ *      - Startdate needed?
+ */
 router.post("/", gwAccountValidation, async (req, res) => {
   // Get params from request body
   const { eventId } = req.body;
@@ -35,6 +56,8 @@ router.post("/", gwAccountValidation, async (req, res) => {
       message: "Student permission required.",
     });
   }
+
+  // Check if student faculty is correct or not?????
 
   // STEP 3: If student and event are correct, assign data to studentInfo
   const studentInfo = data;
@@ -109,7 +132,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
     }
   );
 
-  // STEP 7: Upload articles into student's folder above
+  // STEP 7: Upload files into student's folder above
   const uploadMultiple = upload.any("uploadedImages");
 
   uploadMultiple(req, res, function (err) {

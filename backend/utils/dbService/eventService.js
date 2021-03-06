@@ -17,15 +17,22 @@ const getDataBaseConnection = () => {
 const getEventsByFacultyName = async (facultyName) => {
   let db = getDataBaseConnection();
 
-  const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
-                  FROM ${TABLE}
-                  JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-                  WHERE Faculty.faculty_name = '${facultyName}'`;
+  const sql = ` SELECT * FROM Faculty
+                WHERE faculty_name = '${facultyName}';  
+                SELECT *, Faculty.faculty_name, Faculty.faculty_id
+                FROM ${TABLE}
+                JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
+                WHERE Faculty.faculty_name = '${facultyName}'`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      resolve(result);
-      db.end();
+      // If the faculty is not existed, return false
+      if (!result[0].length) {
+        reject(false);
+      }
+      // If faculty is valid, return the final query (get events by faculty)
+      resolve(result[result.length - 1]);
+
       // connection.destroy();
       // return result
     });
@@ -41,8 +48,8 @@ const getEventById = (eventId) => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      if(!result.length) {
-        reject(false)
+      if (!result.length) {
+        reject(false);
       }
       resolve(result);
       db.end();

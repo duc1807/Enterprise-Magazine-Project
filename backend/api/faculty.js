@@ -23,9 +23,16 @@ const {
 // Constants
 const _MANAGER_ROLE_ID = 3;
 
-/* Get all Faculty information permission: 
-    - Manager 
-*/
+/**
+ * @method GET
+ * @permissions Manager
+ * @description API for getting all Faculties information
+ * @params null
+ * @return
+ *      - faculties: Array[]
+ *          +
+ * @notes
+ */
 router.get("/", managerValidation, async (req, res) => {
   const query = getAllFaculty();
   let queryResult = undefined;
@@ -46,15 +53,25 @@ router.get("/", managerValidation, async (req, res) => {
     });
 });
 
-/* Get events of a Faculty permission: 
-    - Manager 
-    - Coordinators with exact faculty
-    - Students with exact faculty
-*/
+/**
+ * @method GET
+ * @permissions
+ *      - Manager
+ *      - Coordinators (exact faculty)
+ *      - Students (exact faculty)
+ * @description API for getting all events information of a faculty
+ * @params
+ *      - facultyName: String (req.params)
+ * @return
+ *      - events: Array[]
+ *          + .................................. ???
+ * @notes
+ */
 router.get("/:facultyName", gwAccountValidation, async (req, res) => {
   const facultyName = req.params.facultyName;
   const data = res.locals.data;
 
+  // If the user role is student || coordinator, check if their faculty is valid or not
   if (
     data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
     data.userInfo.faculty_name.toLowerCase() != facultyName.toLowerCase()
@@ -62,11 +79,11 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
-      // path: "/",
       messenger: "Faculty access permission required",
     });
   }
 
+  // Get all events by faculty name from params
   const query = getEventsByFacultyName(facultyName);
   let queryResult = [];
 
@@ -74,30 +91,31 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
     .then((result) => {
       console.log("result: ", result);
       queryResult = result;
+
+      // Response event's infomations
+      res.header("Content-Type", "application/json");
+      res.status(200).json({
+        events: queryResult,
+      });
     })
     .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        messages: "Bad request",
-      });
+      if(!!err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
+      } else {
+        // If err = false, return faculty not found
+        return res.status(404).json({
+          messages: "Faculty not found",
+        });
+      }
     });
 
-  if (queryResult.length) {
-    res.header("Content-Type", "application/json");
-    res.status(200).json({
-      events: queryResult,
-    });
-
-    // Prettier json response?
-    // res.status(200).json(JSON.stringify({
-    //     events: queryResult,
-    //   }, null, 4));
-  } else {
-    res.status(404).json({
-      status: res.statusCode,
-      message: "Not found",
-    });
-  }
+  // Prettier json response?
+  // res.status(200).json(JSON.stringify({
+  //     events: queryResult,
+  //   }, null, 4));
 });
 
 /* Get event information of a faculty permission: 
@@ -108,17 +126,36 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
 
 // Future development ============================================== ?????????????
 
-
 /* Get event info and posted articles of an event permission:    (Not yet set permission)
     - Manager 
     - Coordinators
     - Students
     - Guest ???
 */
+
+/**
+ * @method GET
+ * @permissions
+ *      - Manager
+ *      - Coordinators (exact faculty)
+ *      - Students (exact faculty)
+ *      - Guest ???
+ * @description API for getting event information and its posted articles (news)
+ * @params
+ *      - facultyName: String (req.params)
+ *      - eventId: Int (req.params)
+ * @return
+ *      - events: Array[]
+ *          + .................................. ???
+ *      - articles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
 router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
   const facultyName = req.params.facultyName;
   const eventId = req.params.eventId;
 
+  // Get event info and its posted articles by eventId and facultyName
   const query = getPostedArticlesOfEvent(eventId, facultyName);
   let queryResult = [];
 
@@ -128,7 +165,8 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
 
       res.status(200).json({
         //  eventCode: "",          ????????????????????
-        event: result[result.length - 2][0],   // Because event is only 1, so dont need to pass array to FE
+        // Because event is only 1, so dont need to pass array to FrontEnd
+        event: result[result.length - 2][0], 
         articles: result[result.length - 1],
       });
     })
@@ -139,6 +177,7 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
           messages: "Bad request",
         });
       } else {
+        // Ì er = false => Event not found
         return res.status(404).json({
           messages: "Event not found",
         });
@@ -146,6 +185,7 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
     });
 });
 
+// =================================================== TEST CODE
 
 router.post("/:facultyName/:eventId/download", (req, res) => {
   const facultyName = req.params.facultyName;
