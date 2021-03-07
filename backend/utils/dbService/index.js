@@ -5,8 +5,12 @@ const { getCoordinatorAccountsByFaculty } = require('../../utils/dbService/coord
 const { getStudentAccountByFaculty } = require('../../utils/dbService/studentService')
 const { getAccountByEmail } = require('../../utils/dbService/accountService')
 const { getImageById } = require('../../utils/dbService/imageService')
+const { getAdminAccountByUsername } = require('../../utils/dbService/adminService')
 
 module.exports = {
+    // Admin
+    getAdminAccountByUsername: getAdminAccountByUsername,
+
     // Account
     getAccountByEmail: getAccountByEmail,
 

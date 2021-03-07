@@ -9,14 +9,11 @@ const webToken = require("jsonwebtoken");
 const { adminValidation } = require("../middleware/verification");
 
 // Import database service
-const { authorizationAdmin } = require("../../utils/dbService/adminService");
-
-// Using middleware
-// router.use(adminValidation)
+const { getAdminAccountByUsername } = require("../../utils/dbService/index");
 
 const _ROUTER_ROLE = "admin";
 
-/** 
+/**
  * @method GET
  * @description Login API for admin
  * @param null
@@ -30,14 +27,19 @@ const _ROUTER_ROLE = "admin";
  *              + role_name: String
  *          - iat: Int
  *          - exp: Int
- * @note 
+ * @note
  *      - (!!! CORS problems)
  */
 router.get("/", adminValidation, (req, res) => {
   console.log("data", res.locals.data);
   const data = res.locals.data;
 
-  res.setHeader('X-Content-Type-Options','nosniff','X-XSS-Protection','1;mode=block')
+  res.setHeader(
+    "X-Content-Type-Options",
+    "nosniff",
+    "X-XSS-Protection",
+    "1;mode=block"
+  );
 
   res.status(200).json({
     status: res.statusCode,
@@ -50,9 +52,9 @@ router.get("/", adminValidation, (req, res) => {
  * @method POST
  * @description API route to signin the user
  * @param
- *    - username: String       
+ *    - username: String
  *    - password: String
- * @returns 
+ * @returns
  *    - status: statusCode
  *    - success: Boolean
  *    - message: String
@@ -61,15 +63,16 @@ router.get("/", adminValidation, (req, res) => {
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  // Using Regex to test input
-  // const regex = new RegExp("^[a-zA-Z0-9 ]*$", 'gi');
-  // if(!!regex.test(username) || !!regex.test(password)) {
-  //   res.status(401).json({
-  //     status: res.statusCode,
-  //     success: false,
-  //     message: "Invalid input"
-  //   })
-  // }
+  // Using Regex to test input contain special characters or not
+  const regex = new RegExp(`[\s!@#$%^&*(),.\\?-_":{}|<>/=]`, "g");
+
+  if (regex.test(username) || regex.test(password)) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Invalid input",
+    });
+  }
 
   if (
     (!password && password == "") ||
@@ -77,65 +80,115 @@ router.post("/login", async (req, res) => {
     username == "" ||
     username == undefined
   ) {
-    res.status(401).json({
-      message: "Fill all fields",
+    return res.status(401).json({
       status: res.statusCode,
+      success: false,
+      message: "Fill all fields",
     });
   } else {
     // Check if email is in database or not
-    const query = authorizationAdmin(username, password);
-    let queryResult = [];
+    const query = getAdminAccountByUsername(username);
+    // let queryResult = [];
 
     await query
-      .then((result) => {
+      .then(async (result) => {
         console.log("result: ", result);
-        queryResult = result;
+
+        // Check if the username is found and the password is correct
+        if (
+          result.length &&
+          (await bcrypt.compare(password, result[0].password))
+        ) {
+          // Success
+          console.log("Admin signin successful");
+
+          // Create userInfo Object to pass to payload
+          let userInfo = {};
+          userInfo.username = result[0].username;
+          userInfo.role_name = _ROUTER_ROLE;
+
+          // Pass userInfo to payload
+          const payload = {
+            userInfo: userInfo,
+          };
+
+          // Generate token with userInfo payload
+          const token = webToken.sign(
+            payload,
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+              expiresIn: "900s",
+            }
+          );
+
+          // Storing Token in cookie, with httpOnly and secure set to true
+          // (only allow token on secure website)
+          res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+
+          res.status(200).json({
+            status: res.statusCode,
+            success: true,
+            message: "Logged In successfully",
+            userInfo: userInfo,
+          });
+        } else {
+          console.log("Signin failed");
+          res.status(401).json({
+            status: res.statusCode,
+            success: false,
+            message: "Invalid login information",
+          });
+        }
       })
       .catch((err) => {
         console.log("Err: ", err);
         return res.status(501).json({
+          status: res.statusCode,
+          success: false,
           messages: "Bad request",
         });
       });
 
-    if (queryResult.length) {
-      // Success
-      console.log("Signin successful");
+    // Old authentication way
 
-      // Create userInfo Object
-      let userInfo = {};
-      userInfo.username = queryResult[0].username;
-      userInfo.role_name = _ROUTER_ROLE;
+    // if (queryResult.length) {
+    //   // Success
+    //   console.log("Signin successful");
 
-      // Pass userInfo to payload
-      const payload = {
-        userInfo: userInfo,
-      };
+    //   // Create userInfo Object
+    //   let userInfo = {};
+    //   userInfo.username = queryResult[0].username;
+    //   userInfo.role_name = _ROUTER_ROLE;
 
-      // Generate token with userInfo payload
-      const token = webToken.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "900s",
-      });
+    //   // Pass userInfo to payload
+    //   const payload = {
+    //     userInfo: userInfo,
+    //   };
 
-      // Storing Token in cookie, with httpOnly and secure set to true 
-      // (only allow token on secure website)
-      res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+    //   // Generate token with userInfo payload
+    //   const token = webToken.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    //     expiresIn: "900s",
+    //   });
 
-      res.status(200).json({
-        status: res.statusCode,
-        success: true,
-        message: "Logged In successfully",
-        userInfo: userInfo,
-      });
-    } else {
-      // Failed
-      console.log("Signin failed");
-      res.status(401).json({
-        success: false,
-        status: res.statusCode,
-        message: "Invalid login information",
-      });
-    }
+    //   // Storing Token in cookie, with httpOnly and secure set to true
+    //   // (only allow token on secure website)
+    //   res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+
+    //   res.status(200).json({
+    //     status: res.statusCode,
+    //     success: true,
+    //     message: "Logged In successfully",
+    //     userInfo: userInfo,
+    //   });
+    // } else {
+    //   // Failed
+    //   console.log("Signin failed");
+    //   res.status(401).json({
+    //     success: false,
+    //     status: res.statusCode,
+    //     message: "Invalid login information",
+    //   });
+    // }
   }
 });
 

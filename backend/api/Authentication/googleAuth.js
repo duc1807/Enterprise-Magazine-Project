@@ -67,7 +67,7 @@ router.get("/", gwAccountValidation, (req, res) => {
   res.status(200).json({
     status: res.statusCode,
     success: true,
-    data: data,
+    user: data,
   });
 });
 
@@ -152,6 +152,7 @@ router.post("/login", async (req, res) => {
     .catch((err) => {
       console.error(err);
       return res.status(401).json({
+        status: res.statusCode,
         success: false,
         messgages: "Token expired, please login",
       });
@@ -185,8 +186,8 @@ router.post("/login", async (req, res) => {
         // STEP 5: Return userInfo if login successful
         res.status(200).json({
           status: res.statusCode,
-          message: "Signed in successfully",
           success: true,
+          message: "Signed in successfully",
           user: {
             userInfo: _data.userInfo,
             oAuthInfo: _data.oAuthInfo,
@@ -195,6 +196,8 @@ router.post("/login", async (req, res) => {
       } else {
         // If the user not found in database -> throw permission required notification
         res.status(401).json({
+          status: res.statusCode,
+          success: false,
           messages: "This account doesn't have permission to the website!",
         });
       }
@@ -203,6 +206,8 @@ router.post("/login", async (req, res) => {
     .catch((err) => {
       console.log("Err: ", err);
       return res.status(500).json({
+        status: res.statusCode,
+        successs: false,
         messages: "Server error",
       });
     });
