@@ -89,7 +89,17 @@ router.get("/", (req, res) => {
   // *********************************
 });
 
-router.get("/testdownloadselectedarticles", (req, res) => {
+/** 
+ * @method POST
+ * @description API for deleting event
+ * @params 
+ *      - eventId: Int
+ * @return 
+ *      - ZIP files for download
+ * @notes 
+ *      - Redirect user to drive folder???
+ */
+router.post("/testdownloadselectedarticles", (req, res) => {
   const jwToken = new google.auth.JWT(
     key.client_email,
     null,

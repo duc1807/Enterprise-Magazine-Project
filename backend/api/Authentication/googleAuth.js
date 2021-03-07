@@ -124,9 +124,9 @@ router.post("/login", async (req, res) => {
     oauthUser = payload["sub"];
 
     // Get email of user and assign to 'email'
-    email = "test"; ////////// ============================= Test
+    email = payload.email; ////////// ============================= Test
 
-    console.log("User: ", user);
+    console.log("User: ", payload);
   }
 
   // Return err in catch

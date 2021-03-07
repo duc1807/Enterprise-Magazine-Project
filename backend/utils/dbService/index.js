@@ -1,4 +1,4 @@
-const { getEventsByFacultyName, createNewEvent, updateEvent, deleteEventById } = require('../../utils/dbService/eventService')
+const { getEventsByFacultyName, getEventById, createNewEvent, updateEvent, deleteEventById } = require('../../utils/dbService/eventService')
 const { getAllFaculty, getFacultyById } = require('../../utils/dbService/facultyService')
 const { getPostedArticlesOfEvent } = require('../../utils/dbService/articleService')
 const { getCoordinatorAccountsByFaculty } = require('../../utils/dbService/coordinatorService')
@@ -15,6 +15,7 @@ module.exports = {
     getFacultyById: getFacultyById,
 
     // Event
+    getEventById: getEventById,
     getEventsByFacultyName: getEventsByFacultyName,
     createNewEvent: createNewEvent,
     updateEvent: updateEvent,

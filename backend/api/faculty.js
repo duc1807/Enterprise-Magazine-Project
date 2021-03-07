@@ -12,6 +12,7 @@ const {
   getEventsByFacultyName,
   getAllFaculty,
   getPostedArticlesOfEvent,
+  getEventById
 } = require("../utils/dbService/index");
 
 // Import middleware
@@ -59,7 +60,7 @@ router.get("/", managerValidation, async (req, res) => {
  *      - Manager
  *      - Coordinators (exact faculty)
  *      - Students (exact faculty)
- * @description API for getting all events information of a faculty
+ * @description API for getting all events of a faculty
  * @params
  *      - facultyName: String (req.params)
  * @return
@@ -124,14 +125,64 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
     - Students
 */
 
-// Future development ============================================== ?????????????
+/**
+ * @method GET
+ * @permissions
+ *      - Students (exact faculty)
+ * @description API for getting event information for students
+ * @params
+ *      - facultyName: String (req.params)    ??? 
+ *      - eventId: Int (req.params)
+ * @return
+ *      - events: Array[]
+ *          + .................................. 
+ * @notes
+ *      - Need facultyName      ????
+ */
+ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
+  const facultyName = req.params.facultyName;  // needed?
+  const eventId = req.params.eventId;
 
-/* Get event info and posted articles of an event permission:    (Not yet set permission)
-    - Manager 
-    - Coordinators
-    - Students
-    - Guest ???
-*/
+  const user = res.locals.data
+
+  // Check if the account has permission to access or not
+  if(user.userInfo.faculty_name != facultyName) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Permission required"
+    })
+  }
+
+  // Get event info 
+  const query = getEventById(eventId);
+  let queryResult = [];
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+
+      res.status(200).json({
+        //  eventCode: "",          ????????????????????
+        // Because event is only 1, so dont need to pass array to FrontEnd
+        event: result, 
+      });
+    })
+    .catch((err) => {
+      if (err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          messages: "Bad request",
+        });
+      } else {
+        // Ì er = false => Event not found
+        return res.status(404).json({
+          messages: "Event not found",
+        });
+      }
+    });
+});
+
 
 /**
  * @method GET

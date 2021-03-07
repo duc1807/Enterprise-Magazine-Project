@@ -67,6 +67,11 @@ app
 //   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
 
+// Test 
+app.get("/google", (req, res) => {
+  res.render('index', {clientID:"701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com" })
+})
+
 app.listen(5000, () => {
   console.log("App started on port 5000");
 });
