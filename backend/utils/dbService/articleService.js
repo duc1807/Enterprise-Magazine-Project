@@ -1,5 +1,3 @@
-// const connection = require("../config/dbconfig");
-const { query } = require("express");
 const mysql = require("mysql2");
 const { dbconfig } = require("../config/dbconfig");
 

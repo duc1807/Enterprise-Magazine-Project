@@ -58,7 +58,7 @@ router.get("/", adminValidation, (req, res) => {
  *    - status: statusCode
  *    - success: Boolean
  *    - message: String
- *    - user information (JSON format)
+ *    - user: JSON
  */
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -74,6 +74,7 @@ router.post("/login", async (req, res) => {
     });
   }
 
+  // Check if username & password is invalid
   if (
     (!password && password == "") ||
     password == undefined ||
@@ -88,21 +89,17 @@ router.post("/login", async (req, res) => {
   } else {
     // Check if email is in database or not
     const query = getAdminAccountByUsername(username);
-    // let queryResult = [];
 
     await query
       .then(async (result) => {
-        console.log("result: ", result);
 
         // Check if the username is found and the password is correct
         if (
           result.length &&
           (await bcrypt.compare(password, result[0].password))
         ) {
-          // Success
-          console.log("Admin signin successful");
 
-          // Create userInfo Object to pass to payload
+          // If success, create userInfo Object to pass to payload
           let userInfo = {};
           userInfo.username = result[0].username;
           userInfo.role_name = _ROUTER_ROLE;
@@ -123,13 +120,13 @@ router.post("/login", async (req, res) => {
 
           // Storing Token in cookie, with httpOnly and secure set to true
           // (only allow token on secure website)
-          res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+          res.cookie("Token", token, { httpOnly: true, /*secure: true*/ });
 
           res.status(200).json({
             status: res.statusCode,
             success: true,
             message: "Logged In successfully",
-            userInfo: userInfo,
+            user: userInfo,
           });
         } else {
           console.log("Signin failed");

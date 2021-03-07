@@ -6,11 +6,12 @@ const webToken = require("jsonwebtoken");
 const _MANAGER_ROLE_ID = 3;
 const _GW_GROUP_ROLE_ID = [1, 2, 3]
 const _ADMIN_ROLE = "admin"
+const env = process.env
 
 /** 
  * @description Middleware validation for admin
  * @params null
- * @returns next()
+ * @return next()
  */
 const adminValidation = (req, res, next) => {
   // Retrieve the token from cookies
@@ -24,7 +25,7 @@ const adminValidation = (req, res, next) => {
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
     if (err)
       return res.status(403).json({
         status: res.statusCode,
@@ -53,12 +54,11 @@ const managerValidation = (req, res, next) => {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
-      // path: "/",
       message: "Please login",
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
     if (err)
       return res.status(403).json({
         status: res.statusCode,
@@ -70,7 +70,6 @@ const managerValidation = (req, res, next) => {
       return res.status(401).json({
         status: res.statusCode,
         success: false,
-        // path: "/",
         message: "Manager permission required",
       });
     } else {
@@ -93,7 +92,7 @@ const gwAccountValidation = (req, res, next) => {
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
     if (err)
       return res.status(403).json({
         status: res.statusCode,
@@ -131,7 +130,7 @@ const studentValidation = (req, res, next) => {
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
     if (err)
       return res.status(403).json({
         status: res.statusCode,
@@ -158,7 +157,7 @@ const loginValidation = (req, res, next) => {
     });
   }
   // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
     if (err)
       return res.status(403).json({
         status: res.statusCode,

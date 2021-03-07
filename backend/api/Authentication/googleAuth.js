@@ -6,16 +6,13 @@ const fs = require("fs");
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 const async = require("async");
-const multer = require("multer");
 const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
-const path = require("path");
 
 // Import modules from other files
 const {
   getAuthClient,
   getUserProfile,
-  getAuthUrl,
 } = require("../../utils/auth");
 
 // Middleware authentication
@@ -26,9 +23,6 @@ const {
 
 // Import database service
 const { getAccountByEmail } = require("../../utils/dbService/accountService");
-
-// Constants
-const _GW_GROUP_ROLE_ID = [1, 2, 3];
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
@@ -121,7 +115,7 @@ router.post("/login", async (req, res) => {
     const payload = ticket.getPayload();
 
     // Only storing 
-    oauthUser = payload["sub"];
+    oauthUser = payload;
 
     // Get email of user and assign to 'email'
     email = payload.email; ////////// ============================= Test
@@ -129,7 +123,7 @@ router.post("/login", async (req, res) => {
     console.log("User: ", payload);
   }
 
-  // Return err in catch
+  // Promise response handling
   await verify()
     // .then(() => {
     //   console.log("token con hieu luc");
@@ -154,7 +148,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({
         status: res.statusCode,
         success: false,
-        messgages: "Token expired, please login",
+        message: "Token expired, please login",
       });
     });
 
@@ -181,7 +175,7 @@ router.post("/login", async (req, res) => {
         });
 
         // STEP 4: Send token to client cookie
-        res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+        res.cookie("Token", token, { httpOnly: true, /*secure: true*/ });
 
         // STEP 5: Return userInfo if login successful
         res.status(200).json({
@@ -198,7 +192,7 @@ router.post("/login", async (req, res) => {
         res.status(401).json({
           status: res.statusCode,
           success: false,
-          messages: "This account doesn't have permission to the website!",
+          message: "This account doesn't have permission to the website!",
         });
       }
     })
@@ -207,8 +201,8 @@ router.post("/login", async (req, res) => {
       console.log("Err: ", err);
       return res.status(500).json({
         status: res.statusCode,
-        successs: false,
-        messages: "Server error",
+        success: false,
+        message: "Server error",
       });
     });
 });
