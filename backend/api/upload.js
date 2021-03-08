@@ -11,7 +11,7 @@ const { google, Auth } = require("googleapis");
 const { getAuthClient, getUserProfile } = require("../utils/auth");
 const { gwAccountValidation } = require("./middleware/verification");
 const { getAuthServiceJwt } = require("../utils/driveAPI");
-const { getEventById } = require("../utils/dbService/eventService");
+const { getEventById, uploadFile } = require('../utils/dbService/index')
 const { upload } = require("../utils/multerStorage");
 const SERVICE_KEY = require("../private_key.json");
 
@@ -22,12 +22,7 @@ const STUDENT_ROLE_ID = 1;
  * @description API for upload article submissions for students
  * @params 
  *      - eventId: Int
- *      - title: Int
- *      - content: Boolean
- *      - imageData: file
- *      - endDate: Date (yyyy-mm-dd)
- *      - folderId: String (???? needed?)
- *      - facultyId: Int
+ *      - files: Array[]
  * @return
  *      - status: Int
  *      - success: Boolean
@@ -38,12 +33,22 @@ const STUDENT_ROLE_ID = 1;
  * @notes 
  *      - Image data not implemented
  *      - Startdate needed?
+ *      - Complexity on uploadMultiple function
  */
 router.post("/", gwAccountValidation, async (req, res) => {
-  // Get params from request body
+  // Get eventId from request body
   const { eventId } = req.body;
 
+  // Create eventInfo variable
   let eventInfo = undefined;
+
+  // Create articleInfo Object to store article information
+  const articleInfo = {
+    articleSubmissionDate: undefined,
+    articleFolderId: "",
+    FK_account_id: undefined,
+    FK_event_id: undefined
+  }
 
   // STEP 1: Get user info passed from middleware
   const data = res.locals.data;
@@ -57,7 +62,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
     });
   }
 
-  // Check if student faculty is correct or not?????
+  // Check if student faculty is correct or not   ?????????????????
 
   // STEP 3: If student and event are correct, assign data to studentInfo
   const studentInfo = data;
@@ -67,12 +72,15 @@ router.post("/", gwAccountValidation, async (req, res) => {
 
   await query
     .then((result) => {
+      // Assign query result to eventInfo
       eventInfo = result[0];
-      if (eventInfo.FK_faculty_id != data.userInfo.FK_faculty_id) {
+
+      // Check if student have permission to submit to the event
+      if (eventInfo.FK_faculty_id != studentInfo.userInfo.FK_faculty_id) {
         res.status(401).json({
           success: false,
           message:
-            "You don't have submitting permission to this event's faculty",
+            "You don't have submit permission to this event's faculty",
         });
       }
     })
@@ -106,11 +114,10 @@ router.post("/", gwAccountValidation, async (req, res) => {
   const currentTime = new Date();
 
   const studentFolderMetadata = {
-    name: `${studentInfo.email} | ${currentTime.getTime()}`,
+    name: `${studentInfo.userInfo.email} | ${currentTime.getTime()}`,
     mimeType: "application/vnd.google-apps.folder",
     parents: [eventInfo.folderId_allArticles],
   };
-  let studentFolderId = undefined;
 
   await drive.files.create(
     {
@@ -127,12 +134,18 @@ router.post("/", gwAccountValidation, async (req, res) => {
         })
       } else {
         console.log("Student folder Id: ", file.data.id);
-        studentFolderId = file.data.id;
+
+        // Insert data to articleInfo Object
+        articleInfo.articleSubmissionDate = new Date().getTime()
+        articleInfo.articleFolderId = file.data.id
+        articleInfo.FK_account_id = studentInfo.userInfo.FK_account_id
+        articleInfo.FK_event_id = eventInfo.event_id
       }
     }
   );
 
   // STEP 7: Upload files into student's folder above
+
   const uploadMultiple = upload.any("uploadedImages");
 
   uploadMultiple(req, res, function (err) {
@@ -147,7 +160,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
     files.map((filedata) => {
       const filemetadata = {
         name: filedata.filename,
-        parents: [studentFolderId],
+        parents: [articleInfo.articleFolderId],
       };
 
       const media = {
@@ -161,7 +174,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
           media: media,
           fields: "id",
         },
-        (err, file) => {
+        async (err, file) => {
           if (err) {
             res.json({
               status: 501,
@@ -170,8 +183,29 @@ router.post("/", gwAccountValidation, async (req, res) => {
             });
             fs.unlinkSync(filedata.path);
           }
+
           // STEP 8: Get the file id and insert into database
           console.log("File id: ", file.data.id);
+
+          const fileInfo = {
+            mimeType: filedata.mimetype,
+            fileId: file.data.id,
+            FK_article_id: articleInfo.articleFolderId     // ??? Using articleFolderId or unique id??
+          }
+          const query1 = uploadFile(fileInfo)
+
+          await query1.then(result => {
+            console.log(filedata.filename + " uploaded successfully")
+          }).catch(err => {
+            console.log(err)
+
+            // Return err ?
+            // return res.status(500).json({
+            //   status: res.statusCode,
+            //   success: false,
+            //   message: "Error when uploading files"
+            // })
+          })
 
 
           // Delete the file in temp folder

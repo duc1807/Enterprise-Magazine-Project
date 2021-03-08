@@ -6,6 +6,7 @@ const { getStudentAccountByFaculty } = require('../../utils/dbService/studentSer
 const { getAccountByEmail } = require('../../utils/dbService/accountService')
 const { getImageById } = require('../../utils/dbService/imageService')
 const { getAdminAccountByUsername } = require('../../utils/dbService/adminService')
+const { uploadFile } = require('../../utils/dbService/fileService')
 
 module.exports = {
     // Admin
@@ -27,6 +28,9 @@ module.exports = {
 
     // Article
     getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+
+    // File
+    uploadFile: uploadFile, 
 
     // Coordinator Manager
     getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
