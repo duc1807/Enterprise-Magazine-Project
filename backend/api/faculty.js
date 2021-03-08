@@ -12,7 +12,8 @@ const {
   getEventsByFacultyName,
   getAllFaculty,
   getPostedArticlesOfEvent,
-  getEventById
+  getEventById,
+  getSubmittedArticles,
 } = require("../utils/dbService/index");
 
 // Import middleware
@@ -100,7 +101,7 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
       });
     })
     .catch((err) => {
-      if(!!err) {
+      if (!!err) {
         console.log("Err: ", err);
         return res.status(501).json({
           messages: "Bad request",
@@ -131,30 +132,30 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
  *      - Students (exact faculty)
  * @description API for getting event information for students
  * @params
- *      - facultyName: String (req.params)    ??? 
+ *      - facultyName: String (req.params)    ???
  *      - eventId: Int (req.params)
  * @return
  *      - events: Array[]
- *          + .................................. 
+ *          + ..................................
  * @notes
  *      - Need facultyName      ????
  */
- router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
-  const facultyName = req.params.facultyName;  // needed?
+router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
+  const facultyName = req.params.facultyName; // needed?
   const eventId = req.params.eventId;
 
-  const user = res.locals.data
+  const user = res.locals.data;
 
   // Check if the account has permission to access or not
-  if(user.userInfo.faculty_name != facultyName) {
+  if (user.userInfo.faculty_name != facultyName) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
-      message: "Permission required"
-    })
+      message: "Permission required",
+    });
   }
 
-  // Get event info 
+  // Get event info
   const query = getEventById(eventId);
   let queryResult = [];
 
@@ -165,7 +166,7 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
       res.status(200).json({
         //  eventCode: "",          ????????????????????
         // Because event is only 1, so dont need to pass array to FrontEnd
-        event: result, 
+        event: result,
       });
     })
     .catch((err) => {
@@ -182,7 +183,6 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
       }
     });
 });
-
 
 /**
  * @method GET
@@ -201,6 +201,7 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
  *      - articles: Array[]
  *          + ........................... ???
  * @notes
+ *      - Should check faculty valid before query -> Optimize
  */
 router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
   const facultyName = req.params.facultyName;
@@ -217,7 +218,7 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
       res.status(200).json({
         //  eventCode: "",          ????????????????????
         // Because event is only 1, so dont need to pass array to FrontEnd
-        event: result[result.length - 2][0], 
+        event: result[result.length - 2][0],
         articles: result[result.length - 1],
       });
     })
@@ -233,6 +234,58 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
           messages: "Event not found",
         });
       }
+    });
+});
+
+/**
+ * @method GET
+ * @permissions
+ *      - Coordinators (exact faculty)
+ * @description API for getting new submission of a faculty
+ * @params
+ *      - facultyName: String (req.params)
+ *      - eventId: Int (req.params)
+ * @return
+ *      - submittedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
+
+router.get("/:facultyName/:eventId/newSubmission", async (req, res) => {
+  const facultyName = req.params.facultyName;
+  const eventId = req.params.eventId;
+
+  // const data = res.locals.data;
+
+  // Check if the faculty of the coordinator is valid or not
+  // if (data.userInfo.faculty_name != facultyName) {
+  //   return res.status(401).json({
+  //     status: res.statusCode,
+  //     success: false,
+  //     message: "Permission required to access to this faculty."
+  //   })
+  // }
+
+  // Get event new submission
+  const query = getSubmittedArticles(eventId);
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        submittedArticles: result,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        messages: "Bad request",
+      });
     });
 });
 

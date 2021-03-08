@@ -24,27 +24,25 @@ const getDataBaseConnection = () => {
 const getPostedArticlesOfEvent = async (eventId, facultyName) => {
   let db = getDataBaseConnection();
 
-  console.log("test: ", eventId + " " + facultyName)
+  console.log("test: ", eventId + " " + facultyName);
 
   const sql = //Check if faculty exist
-             `SELECT * FROM Faculty
-              WHERE faculty_name = '${facultyName}';`
-
-              // Check if faculty exist event
-            + `SELECT *, Faculty.faculty_name, Faculty.faculty_id
+    `SELECT * FROM Faculty
+              WHERE faculty_name = '${facultyName}';` +
+    // Check if faculty exist event
+    `SELECT *, Faculty.faculty_name, Faculty.faculty_id
               FROM Event
               INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-              WHERE event_id = ${eventId} AND Faculty.faculty_name = '${facultyName}';`
+              WHERE event_id = ${eventId} AND Faculty.faculty_name = '${facultyName}';` +
+    //   // Check if event exist
+    // + `SELECT * FROM Event
+    //   WHERE event_id = ${eventId};`
 
-            //   // Check if event exist
-            // + `SELECT * FROM Event
-            //   WHERE event_id = ${eventId};`
-              
-              // Get articles (nullable)
-            + `SELECT * FROM ${DB_TABLE} 
+    // Get articles (nullable)
+    `SELECT * FROM ${DB_TABLE} 
               WHERE FK_event_id = ${eventId}`;
-              // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
-              // `;
+  // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
+  // `;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -66,8 +64,56 @@ const getPostedArticlesOfEvent = async (eventId, facultyName) => {
   });
 };
 
+const createNewArticle = (articleInfo) => {
+  const {
+    articleSubmissionDate,
+    articleFolderId,
+    FK_account_id,
+    FK_event_id,
+  } = articleInfo;
+
+  let db = getDataBaseConnection();
+
+  const sql = `INSERT INTO ${DB_TABLE}
+              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
+              VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
+              ${FK_account_id}, ${FK_event_id})`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+const getSubmittedArticlesByEventId = (eventId) => {
+  const db = getDataBaseConnection();
+
+  // Select all articles of an event that status = pending, innerjoin with table "File"
+  const sql = `SELECT *
+              FROM ${DB_TABLE}
+              INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+              WHERE FK_event_id = ${eventId} 
+              AND article_status = '${ARTICLE_STATUS.pending}'`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      else {
+        console.log("kqua tim: ", result);
+      }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
 // getArticlesOfEvent("IT").then(result => console.log(result))
 
 module.exports = {
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+  createNewArticle: createNewArticle,
+  getSubmittedArticles: getSubmittedArticlesByEventId,
 };
