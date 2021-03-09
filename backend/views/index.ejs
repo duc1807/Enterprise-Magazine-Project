@@ -24,7 +24,6 @@
 
             <p>Login or Register with:</p>
 
-            <a href="<%=url%>" class="btn btn-danger"><span class="fa fa-google-plus"></span> Google</a>
 
             <div class="g-signin2" data-onsuccess="onSignIn"></div>
 
@@ -37,15 +36,15 @@
         function onSignIn(googleUser) {
             
             // var profile = googleUser.getAuthInstance();
-            googleUser.grantOfflineAccess({
-                scope: 'profile email'
-            })
+            // googleUser.grantOfflineAccess({
+            //     scope: 'profile email'
+            // })
             // auth2.grantOfflineAccess({
             //     scope: 'profile email'
             // })
             var auth2 = gapi.auth2.getAuthInstance();
 
-            console.log("authh: ", auth2)
+            console.log("authh: ", googleUser.getAuthResponse())
             // console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
             // console.log('Name: ' + profile.getName());
             // console.log('Image URL: ' + profile.getImageUrl());
