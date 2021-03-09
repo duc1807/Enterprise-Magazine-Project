@@ -37,6 +37,7 @@ const _MANAGER_ROLE_ID = 3;
  * @notes
  */
 router.get("/", managerValidation, async (req, res) => {
+  // Get all faculties
   const query = getAllFaculty();
   let queryResult = undefined;
 
@@ -45,12 +46,16 @@ router.get("/", managerValidation, async (req, res) => {
       console.log("result: ", result);
       queryResult = result;
       res.status(200).json({
+        status: res.statusCode,
+        success: true,
         faculties: queryResult,
       });
     })
     .catch((err) => {
       console.log("Err: ", err);
       return res.status(501).json({
+        status: res.statusCode,
+        success: false,
         messages: "Bad request",
       });
     });
@@ -95,9 +100,11 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
       console.log("result: ", result);
       queryResult = result;
 
-      // Response event's infomations
+      // Response event's infomations if success
       res.header("Content-Type", "application/json");
       res.status(200).json({
+        status: res.statusCode,
+        success: true,
         events: queryResult,
       });
     })
@@ -105,11 +112,15 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
       if (!!err) {
         console.log("Err: ", err);
         return res.status(501).json({
+          status: res.statusCode,
+          success: false,
           messages: "Bad request",
         });
       } else {
         // If err = false, return faculty not found
         return res.status(404).json({
+          status: res.statusCode,
+          success: false,
           messages: "Faculty not found",
         });
       }
@@ -131,7 +142,7 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
  *      - Need facultyName      ????
  */
 router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
-  const facultyName = req.params.facultyName; // needed?
+  const facultyName = req.params.facultyName;
   const eventId = req.params.eventId;
 
   const user = res.locals.data;
@@ -155,8 +166,7 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
       res.status(200).json({
         status: res.statusCode,
         success: true,
-        // Because event is only 1, so dont need to pass array to FrontEnd
-        event: result,
+        event: result[0], ///// Not sure if its work
       });
     })
     .catch((err) => {
@@ -168,7 +178,7 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
           messages: "Bad request",
         });
       } else {
-        // Ì er = false => Event not found
+        // If er == false => Event not found
         return res.status(404).json({
           status: res.statusCode,
           success: false,
@@ -190,7 +200,7 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
  *      - facultyName: String (req.params)
  *      - eventId: Int (req.params)
  * @return
- *      - events: Array[]
+ *      - event: Array[]
  *          + .................................. ???
  *      - articles: Array[]
  *          + ........................... ???
@@ -203,15 +213,15 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
 
   // Get event info and its posted articles by eventId and facultyName
   const query = getPostedArticlesOfEvent(eventId, facultyName);
-  let queryResult = [];
 
   await query
     .then((result) => {
       console.log("result: ", result);
 
       res.status(200).json({
-        //  eventCode: "",          ????????????????????
-        // Because event is only 1, so dont need to pass array to FrontEnd
+        status: res.statusCode,
+        success: true,
+        // Because event is only 1, so dont need to pass array to Frontend
         event: result[result.length - 2][0],
         articles: result[result.length - 1],
       });
@@ -220,11 +230,15 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
       if (err) {
         console.log("Err: ", err);
         return res.status(501).json({
+          status: res.statusCode,
+          success: false,
           messages: "Bad request",
         });
       } else {
-        // Ì er = false => Event not found
+        // If er= = false => Event not found
         return res.status(404).json({
+          status: res.statusCode,
+          success: false,
           messages: "Event not found",
         });
       }
@@ -353,6 +367,7 @@ router.get(
           }
         });
 
+        // Finally, response the submittedArticles[]
         res.status(200).json({
           status: res.statusCode,
           success: true,
