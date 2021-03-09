@@ -1,63 +1,62 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const path = require("path");
-var cors = require("cors");
-const async = require("async");
+const express = require('express');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const path = require('path');
+var cors = require('cors');
+const async = require('async');
 
 const app = express();
 
 // Set the view engine to ejs
-app.set("view engine", "ejs");
+app.set('view engine', 'ejs');
 
 // allow cross-origin resource sharing (temporally)
 app.use(cors());
 
 // Parse application/x-www-form-urlencoded
-app
-  .use(
-    bodyParser.urlencoded({
-      extended: true,
-    })
-  )
-  // Allow cookie
-  .use(cookieParser());
+app.use(
+	bodyParser.urlencoded({
+		extended: true,
+	})
+)
+	// Allow cookie
+	.use(cookieParser());
 
 // Parse application/json
 app.use(bodyParser.json());
 
-app.get('/testUpload', (req,res) => {
-  res.render('success', { name:"test", pic: "hi", success: true})
-})
+app.get('/testUpload', (req, res) => {
+	res.render('success', { name: 'test', pic: 'hi', success: true });
+});
 
 // API controllers
 app
-  // Login validation API for student and staff
-  .use("/api/authentication", require("./api/Authentication/googleAuth"))
+	// Login validation API for student and staff
+	.use('/api/authentication', require('./api/Authentication/googleAuth'))
 
-  // Authentication API for admin
-  .use("/api/admin", require("./api/Authentication/admin"))
+	// Authentication API for admin
+	.use('/api/admin', require('./api/Authentication/admin'))
 
-  // Faculty api
-  .use("/api/faculty", require("./api/faculty"))
+	// Faculty api
+	.use('/api/faculty', require('./api/faculty'))
 
-  // Event API (Event: Drive folder inside Faculty)
-  .use("/api/event", require("./api/event"))
+	// Event API (Event: Drive folder inside Faculty)
+	.use('/api/event', require('./api/event'))
 
-  // Download API to get articles
-  .use("/api/download", require("./api/download"))
+	// Download API to get articles
+	.use('/api/download', require('./api/download'))
 
-  // Image display API
-  .use("/api/image", require("./api/image"))
+	// Image display API
+	.use('/api/image', require('./api/image'))
 
-  // API for student to upload articles
-  .use("/api/upload", require("./api/upload"))
+	// API for student to upload articles
+	.use('/api/upload', require('./api/upload'))
 
-  .use("/api/user", require("./api/user"))
-  .use("/api/notification", require("./api/mailnotification"))
+	.use('/api/user', require('./api/user'))
+	.use('/api/notification', require('./api/mailnotification'))
 
-
-  // .use("/api/student", require("./api/Authentication/student"));
+	.use('/api/articles', require('./api/articles'));
+// .use("/api/student", require("./api/Authentication/student"));
 
 // Serve static index.html file
 
@@ -73,7 +72,7 @@ app.get("/google", (req, res) => {
 })
 
 app.listen(5000, () => {
-  console.log("App started on port 5000");
+	console.log('App started on port 5000');
 });
 
 // ============================================ OLD CODE
@@ -94,7 +93,6 @@ app.listen(5000, () => {
 // var upload = multer({
 //   storage: Storage,
 // }).any('uploadedImages')
-
 
 // app.get("/", async(req, res) => {
 //   let test = getAuthClient()
@@ -234,5 +232,3 @@ app.listen(5000, () => {
 // app.get("/test", (req, res) => {
 //   res.render("admin");
 // });
-
-
