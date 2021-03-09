@@ -21,13 +21,13 @@ router.post('/:articleId/comment', gwAccountValidation, async (req, res) => {
 	};
 
 	// Get get Posted Article by Id
-	const query = getPostedArticleById(articleId);
-	let postedArticle;
+	const query = getSubmittedArticleById(articleId);
+	let submittedArticle;
 
 	await query
 		.then((result) => {
 			console.log('result: ', result);
-			postedArticle = result;
+			submittedArticle = result;
 			addNewCommentToArticle(commentData)
 				.then((result) => {
 					console.log('result: ' + result);

@@ -21,36 +21,75 @@ const { getAdminAccountByUsername } = require('../../utils/dbService/adminServic
 const { uploadFile } = require('../../utils/dbService/fileService');
 
 module.exports = {
-	// Admin
+	// ======================================================= Admin
 	getAdminAccountByUsername: getAdminAccountByUsername,
+	// ================================================================
 
-	// Account
+
+	// ======================================================= Coordinator
+	getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
+	// ================================================================
+
+
+
+	// ======================================================= Account
 	getAccountByEmail: getAccountByEmail,
+	// ================================================================
 
-	// Faculty
+
+
+	// ======================================================= Faculty
 	getAllFaculty: getAllFaculty,
 	getFacultyById: getFacultyById,
+	// ================================================================
 
-	// Event
+
+
+	// ======================================================= Event
+	// Get event information
 	getEventById: getEventById,
+	// Get all events of a faculty
 	getEventsByFacultyName: getEventsByFacultyName,
+	// Create new event
 	createNewEvent: createNewEvent,
+	// Update an event
 	updateEvent: updateEvent,
+	// Delete an event
 	deleteEventById: deleteEventById,
+	// ================================================================
 
-	// Article
+
+
+	// ======================================================= Article
+	// Get all posted articles of event
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+	// Create new article
 	createNewArticle: createNewArticle,
+	// Get all submitted articles by eventId
 	getSubmittedArticles: getSubmittedArticles,
+	// Get a specific article by id
 	getSubmittedArticleById: getSubmittedArticleById,
+	// Add a comment to an article
 	addNewCommentToArticle: addNewCommentToArticle,
+	// ================================================================
 
-	// File
+
+
+	// ======================================================= File
 	uploadFile: uploadFile,
+	// ================================================================
 
-	// Student
+
+
+	// ======================================================= Student
 	getStudentAccountByFaculty: getStudentAccountByFaculty,
+	// ================================================================
 
-	// Image
+
+
+	// ======================================================= Image
 	getImageById: getImageById,
+	// ================================================================
+
+
 };
