@@ -1,5 +1,3 @@
-// const connection = require("../config/dbconfig");
-const { query } = require('express');
 const mysql = require('mysql2');
 const { dbconfig } = require('../config/dbconfig');
 
@@ -66,6 +64,47 @@ const getPostedArticlesOfEvent = async (eventId, facultyName) => {
 	});
 };
 
+const createNewArticle = (articleInfo) => {
+	const { articleSubmissionDate, articleFolderId, FK_account_id, FK_event_id } = articleInfo;
+
+	let db = getDataBaseConnection();
+
+	const sql = `INSERT INTO ${DB_TABLE}
+              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
+              VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
+              ${FK_account_id}, ${FK_event_id})`;
+
+	return new Promise((resolve, reject) => {
+		db.query(sql, (err, result) => {
+			if (!!err) reject(err);
+			resolve(result);
+			db.end();
+		});
+	});
+};
+
+const getSubmittedArticlesByEventId = (eventId) => {
+	const db = getDataBaseConnection();
+
+	// Select all articles of an event that status = pending, innerjoin with table "File"
+	const sql = `SELECT *
+              FROM ${DB_TABLE}
+              INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+              WHERE FK_event_id = ${eventId} 
+              AND article_status = '${ARTICLE_STATUS.pending}'`;
+
+	return new Promise((resolve, reject) => {
+		db.query(sql, (err, result) => {
+			if (!!err) reject(err);
+			else {
+				console.log('kqua tim: ', result);
+			}
+			resolve(result);
+			db.end();
+		});
+	});
+};
+
 // getArticlesOfEvent("IT").then(result => console.log(result))
 
 const getSubmittedArticleById = (articleId) => {
@@ -121,6 +160,8 @@ const addNewCommentToArticle = (commentInfo) => {
 
 module.exports = {
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+	getSubmittedArticles: getSubmittedArticlesByEventId,
 	getSubmittedArticleById: getSubmittedArticleById,
 	addNewCommentToArticle: addNewCommentToArticle,
+	createNewArticle: createNewArticle,
 };

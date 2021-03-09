@@ -6,16 +6,13 @@ const fs = require("fs");
 const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 const async = require("async");
-const multer = require("multer");
 const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
-const path = require("path");
 
 // Import modules from other files
 const {
   getAuthClient,
   getUserProfile,
-  getAuthUrl,
 } = require("../../utils/auth");
 
 // Middleware authentication
@@ -26,9 +23,6 @@ const {
 
 // Import database service
 const { getAccountByEmail } = require("../../utils/dbService/accountService");
-
-// Constants
-const _GW_GROUP_ROLE_ID = [1, 2, 3];
 
 // ****************** FOR STUDENTS AND MANAGERS ****************** \\
 //
@@ -59,7 +53,6 @@ const _GW_GROUP_ROLE_ID = [1, 2, 3];
  *          - iat: Int
  *          - exp: Int
  * @notes
- *      - (!!! CORS problems)
  */
 router.get("/", gwAccountValidation, (req, res) => {
   // Get data return from middleware
@@ -68,29 +61,99 @@ router.get("/", gwAccountValidation, (req, res) => {
   res.status(200).json({
     status: res.statusCode,
     success: true,
-    data: data,
+    user: data,
   });
 });
+
 
 /**
  * @method POST
  * @description Login API for student and staff
- * @param
- *      - Email: String (email format)
- * @returns
+ * @params
+ *      - id_token: Token from client request headers
+ * @return
  *      - status: Int
  *      - success: Boolean
  *      - message: String
- *      - userInfo: Object
- *          + username: String
- *          + role_name: String
- * @note
+ *      - user: Object
+ *          - userInfo: Object
+ *              + username: String
+ *              + role_name: String
+ *          - oAuthInfo: Object
+ *              +
+ * @notes
  *      - (!!! CORS problems)
+ *      - Function verify doesnt have resolve reject?
  */
 router.post("/login", async (req, res) => {
-  const { email } = req.body;
+  const { id_token } = req.body;
+  let email = "";
+  let oauthUser = undefined
 
-  // Check if the account is in the database or not
+  // Check if id_token is exist or not
+  if(!id_token) {
+    return res.status(500).json({
+      status: res.statusCode,
+      success: false,
+      message: "Bad request"
+    })
+  }
+
+  // STEP 1: Verify the token from client POST request
+  const oAuth2Client = getAuthClient();
+
+  // Generate new client service
+  const client = new OAuth2Client(oAuth2Client._clientId, oAuth2Client._clientSecret);
+
+  async function verify() {
+    const ticket = await client.verifyIdToken({
+      idToken: id_token,
+      audience: oAuth2Client._clientId,
+    });
+
+    // Get userInfo from payload if id_token is valid
+    const payload = ticket.getPayload();
+
+    // Only storing 
+    oauthUser = payload;
+
+    // Get email of user and assign to 'email'
+    email = payload.email; ////////// ============================= Test
+
+    console.log("User: ", payload);
+  }
+
+  // Promise response handling
+  await verify()
+    // .then(() => {
+    //   console.log("token con hieu luc");
+    //   // Get user info
+    //   oauth2.userinfo.get((err, response) => {
+    //     if (err) throw err;
+
+    //     console.log(response.data);
+
+    //     let name = response.data.name;
+    //     let pic = response.data.picture;
+
+    //     res.render("success", { name: name, pic: pic, success: false });
+
+    //     // res.status(201).json({
+    //     //   success: true,
+    //     // });
+    //   });
+    // })
+    .catch((err) => {
+      console.error(err);
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Token expired, please login",
+      });
+    });
+
+  // STEP 2: Check if the account is in the database or not (info from token_id)
+  console.log("Chay vao query") // Testing code
   const query = getAccountByEmail(email);
 
   let queryResult = [];
@@ -100,38 +163,79 @@ router.post("/login", async (req, res) => {
       console.log("result: ", result);
       queryResult = result;
 
+      // STEP 3: If user is valid, assign the data to payload and signing token
       if (queryResult.length) {
         let _data = {};
         _data.userInfo = result[0];
-        _data.googleAccountInfo = "null";
+        _data.oAuthInfo = oauthUser;
 
         const token = webToken.sign(_data, process.env.ACCESS_TOKEN_SECRET, {
-          expiresIn: "900s",
+          // Token will expire in 30mins
+          expiresIn: "1800s",
         });
 
-        res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+        // STEP 4: Send token to client cookie
+        res.cookie("Token", token, { httpOnly: true, /*secure: true*/ });
 
+        // STEP 5: Return userInfo if login successful
         res.status(200).json({
           status: res.statusCode,
-          message: "Signed in successfully",
           success: true,
+          message: "Signed in successfully",
           user: {
             userInfo: _data.userInfo,
-            googleAccountInfo: _data.googleAccountInfo,
+            oAuthInfo: _data.oAuthInfo,
           },
         });
       } else {
+        // If the user not found in database -> throw permission required notification
         res.status(401).json({
-          messages: "This account doesn't have permission to the website!",
+          status: res.statusCode,
+          success: false,
+          message: "This account doesn't have permission to the website!",
         });
       }
     })
+    // Catch database error
     .catch((err) => {
       console.log("Err: ", err);
       return res.status(500).json({
-        messages: "Server error",
+        status: res.statusCode,
+        success: false,
+        message: "Server error",
       });
     });
+});
+
+
+/** 
+ * @method POST
+ * @description API for logging out user
+ * @params null
+ * @return
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ * @notes 
+ */
+router.post("/logout", (req, res) => {
+  const token = req.cookies["Token"];
+  // If the token is not existed, throw 401 error
+  if (!token) {
+    return res.status(500).json({
+      status: res.statusCode,
+      success: false,
+      message: "Bad request",
+    });
+  }
+
+  res.clearCookie("Token");
+
+  res.status(200).json({
+    status: res.statusCode,
+    success: true,
+    message: "Signed out",
+  });
 });
 
 // ================================================== OLD CODE
@@ -215,26 +319,6 @@ router.get("/google/callback", (req, res) => {
       }
     });
   }
-});
-
-router.post("/logout", (req, res) => {
-  const token = req.cookies["Token"];
-  // If the token is not existed, throw 401 error
-  if (!token) {
-    return res.status(500).json({
-      status: res.statusCode,
-      success: false,
-      message: "Bad request",
-    });
-  }
-
-  res.clearCookie("Token");
-
-  res.status(200).json({
-    status: res.statusCode,
-    success: true,
-    message: "Signed out",
-  });
 });
 
 // router.get("/download", (req, res) => {
