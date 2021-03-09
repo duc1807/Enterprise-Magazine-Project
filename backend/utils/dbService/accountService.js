@@ -16,6 +16,7 @@ const getDataBaseConnection = () => {
 const getAccountByEmail = async (email) => {
   let db = getDataBaseConnection();
 
+  // Get correct email with role and faculty information (INNER JOIN)
   const sql = `SELECT *, Role.role_name, Faculty.faculty_name
                FROM ${_TABLE_ACCOUNT} 
                INNER JOIN Role

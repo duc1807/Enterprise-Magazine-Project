@@ -6,7 +6,16 @@ const { google } = require("googleapis");
 
 const key = require("../private_key.json");
 
+/** 
+ * @description Function that return the auth ServiceJWT
+ * @params null
+ * @return
+ *      - jwToken: Object ???????????
+ * @notes 
+ *      - Check if authJWT is created (return JWT) or not (create new JWT and return)   ????
+ */
 const getAuthServiceJwt = () => {
+  // Create new google auth JWT
   const jwToken = new google.auth.JWT(
     key.client_email,
     null,
@@ -14,6 +23,7 @@ const getAuthServiceJwt = () => {
     process.env.SERVICE_ACCOUNT_SCOPES,
     null
   );
+  // Validate the jwToken
   jwToken.authorize((err) => {
     if (err) console.log("err: ", err);
     else console.log("Authorization successful");
@@ -22,7 +32,16 @@ const getAuthServiceJwt = () => {
   return jwToken;
 };
 
-// Asynchronous create students permission for "All Articles" folder
+
+/** 
+ * @description Asynchronous create permission for a specific drive folder
+ * @params 
+ *      - permissionList: Array[]
+ *      - folderId: String
+ * @return null
+ *      
+ * @notes 
+ */
 const insertPermissionsToFolderId = async (permissionList, folderId) => {
   
   const jwToken = await getAuthServiceJwt();
@@ -32,6 +51,7 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
     auth: jwToken,
   });
 
+  // Asynchronous insert permission to folder
   async.eachSeries(
     permissionList,
     (permission, callback) => {

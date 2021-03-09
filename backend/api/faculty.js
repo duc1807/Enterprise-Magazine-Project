@@ -277,7 +277,7 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
  */
 
 router.get(
-  "/:facultyName/:eventId/newSubmission",
+  "/:facultyName/:eventId/newsubmission",
   coordinatorValidation,
   async (req, res) => {
     const facultyName = req.params.facultyName;

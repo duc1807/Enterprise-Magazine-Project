@@ -7,6 +7,7 @@ const router = express.Router();
 const { getImageById } = require("../utils/dbService/index");
 
 /**
+ * @method GET
  * @description This API is to get the image by event id and render to display
  * @params 
  *        - imageId (req.body || query param) 
