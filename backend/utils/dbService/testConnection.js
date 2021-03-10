@@ -29,3 +29,29 @@ connection.connect(function (err) {
   if (!!err) console.log(err);
   else console.log("Database connected");
 });
+
+const articleId = 1
+const userInfo = {
+  account_id: 14,
+  email: "mailfortestapi@gmail.com",
+  FK_faculty_id: "Business"
+}
+
+const sql = `SELECT * , Event.event_id, Event.FK_faculty_id
+            FROM Article
+            LEFT JOIN Event
+            ON Article.FK_event_id = Event.event_id
+            LEFT JOIN Faculty
+            ON Event.FK_faculty_id = Faculty.faculty_id
+            LEFT JOIN Account
+            ON Account.FK_faculty_id = Faculty.faculty_id
+            WHERE Article.article_id = ${articleId}
+            AND Account.account_id = ${userInfo.account_id}`
+
+connection.query(sql, (err, result) => {
+  if(!!err) console.log(err);
+
+  else {
+    console.log(result)
+  }
+})
