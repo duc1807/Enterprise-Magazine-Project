@@ -7,8 +7,18 @@ const {
 const { gwAccountValidation } = require("./middleware/verification");
 const router = express.Router();
 
-// Post comment
-// api/article/:articleId/addcomment
+const _COORDINATOR_PERISSION_ID = 2
+
+/**
+ * @method POST
+ * @description API for adding new comment to the article
+ * @api api/article/:articleId/addcomment
+ * @params
+ * 		- content: String (comment)
+ * @return null
+ * @notes
+ *      - (!!! CORS problems)
+ */
 router
   .post("/:articleId/addcomment", gwAccountValidation, async (req, res) => {
 	// Get comment content
@@ -16,9 +26,21 @@ router
 	// Get articleId from params
     const { articleId } = req.params;
 
+	// Get userInfo passed from middleware
     const data = res.locals.data;
 
+	// Check permission is coordinator or not
+	if (data.userInfo.FK_role_id != _COORDINATOR_PERISSION_ID) {
+		return res.status(401).json({
+			status: res.statusCode,
+			success: false,
+			message: "Permission required!"
+		})
+	}
+
+	// Log the data for testing
     console.log("data: ", data);
+
     // Get the current time
     const currentTime = new Date();
 
@@ -30,6 +52,7 @@ router
       FK_coordinator_id: data.userInfo.account_id,
     };
 
+	// Await database query
     await addNewCommentToArticle(commentData, data.userInfo)
       .then((result) => {
         return res.status(201).json({
@@ -47,10 +70,11 @@ router
             messages: "Bad request",
           });
         } else {
-          return res.status(404).json({
+		  // If article doesnt exist or permission invalid
+          return res.status(401).json({
             status: res.statusCode,
             success: false,
-            message: "Permission to faculty event required!",
+            message: "Invalid request!",
           });
         }
       });

@@ -156,8 +156,7 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
 
-      console.log("result check permission success: ", result);
-      // Check if the article and is existed or not
+      // Check if the article exist or the faculty permission is valid
       if (!result.length) {
         reject(false);
       } else {
