@@ -1,0 +1,26 @@
+.nav-option {
+  margin-left: 20px;
+}
+
+.active:hover {
+  font-weight: bold;
+}
+
+/* Card */
+.faculty-card {
+  margin-top: 50px;
+}
+
+.card {
+  transition: transform 0.5s;
+}
+
+.card:hover {
+  -webkit-transform: scale(1.2);
+  -ms-transform: scale(1.2);
+  transform: scale(1.2);
+}
+
+.card-body {
+  height: 150px;
+}
