@@ -1,0 +1,17 @@
+.container {
+  margin-top: 50px;
+}
+
+.event-card {
+  position: sticky;
+  top: 100px;
+}
+
+.btn {
+  width: 280px;
+}
+
+.mx-auto {
+  margin-right: auto !important;
+  margin-left: auto !important;
+}

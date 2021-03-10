@@ -1,0 +1,7 @@
+.nav-option {
+  margin-left: 20px;
+}
+
+.active:hover {
+  font-weight: bold;
+}

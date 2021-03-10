@@ -1,0 +1,89 @@
+<app-navbar-login></app-navbar-login>
+
+<div class="limiter">
+  <div class="container-login100">
+    <div class="wrap-login100">
+      <div
+        class="login100-form-title"
+        style="background-image: url(../assets/image/student.jpg)"
+      >
+        <span class="login100-form-title-1"> Student Sign In </span>
+      </div>
+
+      <form class="login100-form validate-form">
+        <div class="container">
+          <div class="btn-gm" *ngIf="isLoggedin === false">
+            <button
+              class="btn btn-lg btn-outline-primary btn-block"
+              type="button"
+              (click)="loginWithGoogle()"
+            >
+              <a
+                style="text-decoration: none; color: black"
+              >
+                <img
+                  width="20px"
+                  style="margin-bottom: 3px; margin-right: 5px"
+                  alt="Google sign-in"
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
+                />
+                Log in with Google
+              </a>
+            </button>
+          </div>
+        </div>
+
+        <h2><span>Or</span></h2>
+
+        <div
+          class="wrap-input100 validate-input m-b-26"
+          data-validate="Username is required"
+        >
+          <span class="label-input100">Username</span>
+          <input
+            class="input100"
+            type="text"
+            name="username"
+            placeholder="Enter username"
+          />
+          <span class="focus-input100"></span>
+        </div>
+
+        <div
+          class="wrap-input100 validate-input m-b-18"
+          data-validate="Password is required"
+        >
+          <span class="label-input100">Password</span>
+          <input
+            class="input100"
+            type="password"
+            name="pass"
+            placeholder="Enter password"
+          />
+          <span class="focus-input100"></span>
+        </div>
+
+        <div class="flex-sb-m w-full p-b-30">
+          <div>
+            <a href="#" class="txt1 login-a"> Login as Guest </a>
+          </div>
+
+          <div>
+            <a
+              href="https://accounts.google.com/signin/recovery?hl=en"
+              class="txt1 login-a"
+            >
+              Forgot Password?
+            </a>
+          </div>
+        </div>
+
+        <div class="container-login100-form-btn">
+          <button class="login100-form-btn" routerLink="/homepage">
+            Login
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

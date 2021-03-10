@@ -1,0 +1,65 @@
+<nav
+  class="navbar navbar-expand-lg navbar-light"
+  style="background-color: #e3f2fd"
+>
+  <div class="container-fluid">
+    <!-- <a class="navbar-brand" href="#">University of Greenwich</a> -->
+    <img src="../assets/image/logo.png" alt="" />
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse nav-option" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/homepage">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/upload">Upload</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/account">Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active text-danger" routerLink="/login">Log out</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Upload  -->
+<!-- <form id="file-upload-form" class="uploader">
+  <input id="file-upload" type="file" name="fileUpload" accept="image/*" />
+
+  <label for="file-upload" id="file-drag">
+    <img id="file-image" src="#" alt="Preview" class="hidden" />
+    <div id="start">
+      <i class="fa fa-download" aria-hidden="true"></i>
+      <div>Select a file or drag here</div>
+      <div id="notimage" class="hidden">Please select an image</div>
+      <span id="file-upload-btn" class="btn btn-primary">Select a file</span>
+    </div>
+  </label>
+</form> -->
+
+<label class="btn btn-default">
+  <input type="file" multiple (change)="selectFiles($event)" />
+</label>
+
+<button
+  class="btn btn-success"
+  [disabled]="!selectedFiles"
+  (click)="uploadFiles()"
+>
+  Upload
+</button>
+
+<div class="alert alert-light" role="alert">{{ message }}</div>
