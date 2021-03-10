@@ -85,7 +85,42 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
   );
 };
 
+
+/** 
+ * @description Asynchronous create permission for a specific drive folder
+ * @params 
+ *      - ??????
+ * @return null
+ *      
+ * @notes 
+ *      - Using try catch to retry in case the drive API is down
+ *      - insertFolderToFolderId() params should be more specific & meaningful
+ */
+ const insertFolderToFolderId = async (articleAndEventInfo) => {
+  const data = articleAndEventInfo
+  const jwToken = await getAuthServiceJwt();
+
+  const drive = google.drive({
+    version: "v3",
+    auth: jwToken,
+  });
+
+  drive.files.update({
+    fileId: data.article_folderId,
+    addParents: data.folderId_selectedArticles,
+    removeParents: data.folderId_allArticles,
+    fields: 'id, parents'
+  }, function (err, file) {
+    if (err) {
+      console.log(err)
+    } else {
+      console.log("Article folder moved to selected article successfully");
+    }
+  });
+};
+
 module.exports = {
     insertPermissionsToFolderId: insertPermissionsToFolderId,
-    getAuthServiceJwt: getAuthServiceJwt
+    getAuthServiceJwt: getAuthServiceJwt,
+    insertFolderToFolderId: insertFolderToFolderId
 };

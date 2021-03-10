@@ -176,10 +176,29 @@ const deleteEventById = (eventId) => {
   });
 };
 
+const getEventByArticleId = (articleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${TABLE}
+                INNER JOIN Article
+                ON Event.event_id = Article.FK_event_id
+                WHERE Article.article_id = ${articleId};`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      console.log("db result: ", result);
+      if (!!err) reject(err);
+      resolve(result[0]);
+      db.end();
+    });
+  });
+};
+
 module.exports = {
   getEventsByFacultyName: getEventsByFacultyName,
   getEventById: getEventById,
   createNewEvent: createNewEvent,
   updateEvent: updateEvent,
   deleteEventById: deleteEventById,
+  getEventByArticleId: getEventByArticleId,
 };

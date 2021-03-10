@@ -4,6 +4,7 @@ const {
 	createNewEvent,
 	updateEvent,
 	deleteEventById,
+	getEventByArticleId
 } = require("../../utils/dbService/eventService");
 const {
 	getAllFaculty,
@@ -15,6 +16,7 @@ const {
 	getSubmittedArticles,
 	getSubmittedArticleById,
 	addNewCommentToArticle,
+	setSelectedArticle
 } = require("../../utils/dbService/articleService");
 const {
 	getCoordinatorAccountsByFaculty,
@@ -58,6 +60,8 @@ module.exports = {
 	updateEvent: updateEvent,
 	// Delete an event
 	deleteEventById: deleteEventById,
+	// Get event information by articleId
+	getEventByArticleId: getEventByArticleId,
 	// ================================================================
 
 	// ======================================================= Article
@@ -71,6 +75,8 @@ module.exports = {
 	getSubmittedArticleById: getSubmittedArticleById,
 	// Add a comment to an article
 	addNewCommentToArticle: addNewCommentToArticle,
+	// Set status of article to 'selected' 
+	setSelectedArticle: setSelectedArticle,
 	// ================================================================
 
 	// ======================================================= File

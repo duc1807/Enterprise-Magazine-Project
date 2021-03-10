@@ -170,10 +170,34 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
   });
 };
 
+const setSelectedArticle = (articleId) => {
+  let db = getDataBaseConnection();
+
+  // Check if the article is existed or not and then update the status to accepted
+  const sql = `SELECT * FROM ${DB_TABLE}
+				WHERE article_id = ${articleId} AND article_status = '${ARTICLE_STATUS.pending}';
+				UPDATE ${DB_TABLE}
+				SET Article.article_status = '${ARTICLE_STATUS.accepted}'
+				WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      // if no article with status == 'pending' found, return false
+      if (!result[0]) {
+        reject(false);
+      }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
 module.exports = {
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSubmittedArticleById: getSubmittedArticleById,
   addNewCommentToArticle: addNewCommentToArticle,
   createNewArticle: createNewArticle,
+  setSelectedArticle: setSelectedArticle,
 };
