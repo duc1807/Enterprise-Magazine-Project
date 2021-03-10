@@ -1,14 +1,14 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const path = require('path');
-var cors = require('cors');
-const async = require('async');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const path = require("path");
+var cors = require("cors");
+const async = require("async");
 
 const app = express();
 
 // Set the view engine to ejs
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 
 // allow cross-origin resource sharing (temporally)
 app.use(cors());
@@ -25,37 +25,37 @@ app.use(
 // Parse application/json
 app.use(bodyParser.json());
 
-app.get('/testUpload', (req, res) => {
-	res.render('success', { name: 'test', pic: 'hi', success: true });
+app.get("/testUpload", (req, res) => {
+	res.render("success", { name: "test", pic: "hi", success: true });
 });
 
 // API controllers
 app
 	// Login validation API for student and staff
-	.use('/api/authentication', require('./api/Authentication/googleAuth'))
+	.use("/api/authentication", require("./api/Authentication/googleAuth"))
 
 	// Authentication API for admin
-	.use('/api/admin', require('./api/Authentication/admin'))
+	.use("/api/admin", require("./api/Authentication/admin"))
 
 	// Faculty api
-	.use('/api/faculty', require('./api/faculty'))
+	.use("/api/faculty", require("./api/faculty"))
 
 	// Event API (Event: Drive folder inside Faculty)
-	.use('/api/event', require('./api/event'))
+	.use("/api/event", require("./api/event"))
 
 	// Download API to get articles
-	.use('/api/download', require('./api/download'))
+	.use("/api/download", require("./api/download"))
 
 	// Image display API
-	.use('/api/image', require('./api/image'))
+	.use("/api/image", require("./api/image"))
 
 	// API for student to upload articles
-	.use('/api/upload', require('./api/upload'))
+	.use("/api/upload", require("./api/upload"))
 
-	.use('/api/user', require('./api/user'))
-	.use('/api/notification', require('./api/mailnotification'))
+	.use("/api/user", require("./api/user"))
+	.use("/api/notification", require("./api/mailnotification"))
 
-	.use('/api/articles', require('./api/articles'));
+	.use("/api/article", require("./api/article"));
 // .use("/api/student", require("./api/Authentication/student"));
 
 // Serve static index.html file
@@ -66,13 +66,16 @@ app
 //   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
 
-// Test 
+// Test
 app.get("/google", (req, res) => {
-  res.render('index', {clientID:"701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com" })
-})
+	res.render("index", {
+		clientID:
+			"701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com",
+	});
+});
 
 app.listen(5000, () => {
-	console.log('App started on port 5000');
+	console.log("App started on port 5000");
 });
 
 // ============================================ OLD CODE

@@ -1,13 +1,13 @@
-const mysql = require('mysql2');
-const { dbconfig } = require('../config/dbconfig');
+const mysql = require("mysql2");
+const { dbconfig } = require("../config/dbconfig");
 
-const DB_TABLE = 'Article';
+const DB_TABLE = "Article";
 
 const ARTICLE_STATUS = {
-	posted: 'posted',
-	accepted: 'accepted',
-	pending: 'pending',
-	rejected: 'rejected',
+	posted: "posted",
+	accepted: "accepted",
+	pending: "pending",
+	rejected: "rejected",
 };
 
 const getDataBaseConnection = () => {
@@ -15,7 +15,7 @@ const getDataBaseConnection = () => {
 
 	connection.connect(function (err) {
 		if (!!err) console.log(err);
-		else console.log('Database connected');
+		else console.log("Database connected");
 	});
 	return connection;
 };
@@ -24,7 +24,7 @@ const getDataBaseConnection = () => {
 const getPostedArticlesOfEvent = async (eventId, facultyName) => {
 	let db = getDataBaseConnection();
 
-	console.log('test: ', eventId + ' ' + facultyName);
+	console.log("test: ", eventId + " " + facultyName);
 
 	const sql = //Check if faculty exist
 		`SELECT * FROM Faculty
@@ -65,7 +65,12 @@ const getPostedArticlesOfEvent = async (eventId, facultyName) => {
 };
 
 const createNewArticle = (articleInfo) => {
-	const { articleSubmissionDate, articleFolderId, FK_account_id, FK_event_id } = articleInfo;
+	const {
+		articleSubmissionDate,
+		articleFolderId,
+		FK_account_id,
+		FK_event_id,
+	} = articleInfo;
 
 	let db = getDataBaseConnection();
 
@@ -97,7 +102,7 @@ const getSubmittedArticlesByEventId = (eventId) => {
 		db.query(sql, (err, result) => {
 			if (!!err) reject(err);
 			else {
-				console.log('kqua tim: ', result);
+				console.log("kqua tim: ", result);
 			}
 			resolve(result);
 			db.end();
@@ -126,22 +131,32 @@ const getSubmittedArticleById = (articleId) => {
 	});
 };
 
-const addNewCommentToArticle = (commentInfo) => {
+const addNewCommentToArticle = (commentInfo, userInfo) => {
 	const { content, time, FK_article_id, FK_coordinator_id } = commentInfo;
 	let db = getDataBaseConnection();
 	//Find article by id
 	//Find coodinator by account_id and role
-	const sql = `SELECT *, Account.account_id,  Account.FK_role_id 
-				 FROM ${DB_TABLE}
-				 INNER JOIN Account ON Account.account_id = Article.FK_account_id
-				 WHERE Account.FK_role_id = 2
-				 AND Account.account_id = ${FK_coordinator_id}`;
+	// const sql = `SELECT *, Account.account_id,  Account.FK_role_id
+	// 			 FROM ${DB_TABLE}
+	// 			 INNER JOIN Account ON Account.account_id = Article.FK_account_id
+	// 			 WHERE Account.FK_role_id = 2
+	// 			 AND Account.account_id = ${FK_coordinator_id}`;
+
+	const sql = `SELECT *
+				 FROM Account
+				 INNER JOIN Event ON ${userInfo.FK_faculty_id} = Event.FK_faculty_id
+				 INNER JOIN Article ON Article.FK_event_id = Event.event_id
+				 WHERE Account.account_id = ${FK_coordinator_id}
+				 `;
+
 	const sql1 = `INSERT INTO
                   Comment (comment_content, comment_time, FK_article_id, FK_coordinator_id)
 				  VALUES ('${content}', '${time}', '${FK_article_id}', '${FK_coordinator_id}')`;
 	return new Promise((resolve, reject) => {
 		db.query(sql, (err, result) => {
 			if (!!err) reject(err);
+
+			console.log("result check permission: ", result);
 			// Check if the article and is existed or not
 			if (!result.length) {
 				reject(false);
