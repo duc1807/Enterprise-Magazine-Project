@@ -11,7 +11,13 @@ const app = express();
 app.set("view engine", "ejs");
 
 // allow cross-origin resource sharing (temporally)
-app.use(cors());
+const corsOptions = {
+  credentials: true,
+  origin: "*"
+  ///..other options
+};
+
+app.use(cors(corsOptions));
 
 // Parse application/x-www-form-urlencoded
 app.use(

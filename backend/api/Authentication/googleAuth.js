@@ -214,7 +214,7 @@ router.post("/login", async (req, res) => {
         // STEP 4: Send token to client cookie
         res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
-        res.setHeader('Token', token);
+        // res.setHeader('Token', token);
 
         // STEP 5: Return userInfo if login successful
         res.status(200).json({
