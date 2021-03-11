@@ -46,11 +46,13 @@ const eventFolderConstants = {
 
 /**
  * @method POST
+ * @API /api/event/create-event
  * @description API for creating new event
  * @params
- *      - title: Int
- *      - content: Boolean
+ *      - title: String
+ *      - content: String
  *      - imageData: file
+ * 		- startDate: Date (yyyy-mm-dd)
  *      - endDate: Date (yyyy-mm-dd)
  *      - facultyId: Int
  * @return
@@ -58,7 +60,7 @@ const eventFolderConstants = {
  * @notes
  *      - event image upload not implemented
  */
-router.post('/createEvent', managerValidation, upload.single('file'), async (req, res) => {
+router.post('/create-event', managerValidation, upload.single('file'), async (req, res) => {
 	// Not sure if file is retrieved by req.files or req.body
 	const { title, content, startDate, endDate, facultyId } = req.body;
 
@@ -126,9 +128,14 @@ router.post('/createEvent', managerValidation, upload.single('file'), async (req
     // console.log("image base64 string :", imageBase64);
     **/
 
+	// Input startDate processing (from date format to timestamps)
+	let splittedStartDate = startDate.split('-');
+	const newStartDate = new Date(splittedStartDate[0], splittedStartDate[1] - 1, splittedStartDate[2]).getTime();
+	console.log(newStartDate);
+
 	// Input endDate processing (from date format to timestamps)
-	let splittedDate = endDate.split('-');
-	const newEndDate = new Date(splittedDate[0], splittedDate[1] - 1, splittedDate[2]).getTime();
+	let splittedEndDate = endDate.split('-');
+	const newEndDate = new Date(splittedEndDate[0], splittedEndDate[1] - 1, splittedEndDate[2]).getTime();
 	console.log(newEndDate);
 
 	// Get the current time
@@ -139,7 +146,7 @@ router.post('/createEvent', managerValidation, upload.single('file'), async (req
 		title: title,
 		content: content,
 		// imageData: imageData,
-		startDate: currentTime.getTime(),
+		startDate: newStartDate,
 		endDate: newEndDate,
 		createdAt: currentTime.getTime(),
 		lastUpdate: currentTime.getTime(),
@@ -217,16 +224,16 @@ router.post('/createEvent', managerValidation, upload.single('file'), async (req
 	});
 
 	// Create student permission data (???? needed or not?)
-	letstudentPermissions = [];
+	// letstudentPermissions = [];
 
-	studentAccounts.map((student) => {
-		studentPermissions.push({
-			kind: 'drive#permission',
-			type: 'user',
-			role: 'writer',
-			emailAddress: student.email,
-		});
-	});
+	// studentAccounts.map((student) => {
+	// 	studentPermissions.push({
+	// 		kind: 'drive#permission',
+	// 		type: 'user',
+	// 		role: 'writer',
+	// 		emailAddress: student.email,
+	// 	});
+	// });
 
 	// // Asynchronous create students permission for "All Articles" folder
 	// const insertPermission = async(allArticlesFolderId) => {
@@ -392,11 +399,12 @@ router.post('/createEvent', managerValidation, upload.single('file'), async (req
 
 /**
  * @method POST
+ * @API /api/event/update-event
  * @description API for updating event
  * @params
  *      - id: Int
- *      - title: Int
- *      - content: Boolean
+ *      - title: String
+ *      - content: String
  *      - imageData: file
  *      - endDate: Date (yyyy-mm-dd)
  *      - folderId: String (???? needed?)
@@ -412,7 +420,7 @@ router.post('/createEvent', managerValidation, upload.single('file'), async (req
  *      - Image data not implemented
  *      - Startdate needed?
  */
-router.post('/updateEvent', managerValidation, upload.single('file'), (req, res) => {
+router.post('/update-event', managerValidation, upload.single('file'), (req, res) => {
 	const {
 		id,
 		title,
@@ -491,6 +499,7 @@ router.post('/updateEvent', managerValidation, upload.single('file'), (req, res)
 
 /**
  * @method POST
+ * @API /api/event/delete-event
  * @description API for deleting event
  * @params
  *      - eventId: Int
@@ -498,7 +507,7 @@ router.post('/updateEvent', managerValidation, upload.single('file'), (req, res)
  * @notes
  *      - Delete event on drive??? Or not??
  */
-router.post('/deleteEvent', managerValidation, (req, res) => {
+router.post('/delete-event', managerValidation, (req, res) => {
 	const { eventId } = req.body;
 
 	// Delete event by eventId

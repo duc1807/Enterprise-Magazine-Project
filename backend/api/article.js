@@ -14,15 +14,15 @@ const _COORDINATOR_PERMISSION_ID = 2;
 
 /**
  * @method POST
+ * @API api/article/:articleId/add-comment
  * @description API for adding new comment to the article
- * @api api/article/:articleId/addcomment
  * @params
  * 		- content: String (comment)
  * @return null
  * @notes
  *      - (!!! CORS problems)
  */
-router.post("/:articleId/addcomment", gwAccountValidation, async (req, res) => {
+router.post("/:articleId/add-comment", gwAccountValidation, async (req, res) => {
 	// Get comment content
 	const { content } = req.body;
 	// Get articleId from params
@@ -84,8 +84,8 @@ router.post("/:articleId/addcomment", gwAccountValidation, async (req, res) => {
 
 /**
  * @method POST
+ * @API api/article/:articleId/select-article
  * @description API for select article submission to the event's selected article
- * @api api/article/:articleId/select-article
  * @params
  * 		- articleId: Int
  * @return null
