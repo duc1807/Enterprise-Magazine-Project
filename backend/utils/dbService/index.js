@@ -4,7 +4,7 @@ const {
 	createNewEvent,
 	updateEvent,
 	deleteEventById,
-	getEventByArticleId
+	getEventByArticleId,
 } = require("../../utils/dbService/eventService");
 const {
 	getAllFaculty,
@@ -14,9 +14,10 @@ const {
 	getPostedArticlesOfEvent,
 	createNewArticle,
 	getSubmittedArticles,
+	getSelectedArticles,
 	getSubmittedArticleById,
 	addNewCommentToArticle,
-	setSelectedArticle
+	setSelectedArticle,
 } = require("../../utils/dbService/articleService");
 const {
 	getCoordinatorAccountsByFaculty,
@@ -71,11 +72,13 @@ module.exports = {
 	createNewArticle: createNewArticle,
 	// Get all submitted articles by eventId
 	getSubmittedArticles: getSubmittedArticles,
+	//get all of selected articles by eventId
+	getSelectedArticles: getSelectedArticles,
 	// Get a specific article by id
 	getSubmittedArticleById: getSubmittedArticleById,
 	// Add a comment to an article
 	addNewCommentToArticle: addNewCommentToArticle,
-	// Set status of article to 'selected' 
+	// Set status of article to 'selected'
 	setSelectedArticle: setSelectedArticle,
 	// ================================================================
 
