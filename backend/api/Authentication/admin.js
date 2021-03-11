@@ -15,6 +15,7 @@ const _ROUTER_ROLE = "admin";
 
 /**
  * @method GET
+ * @API /api/admin/authentication
  * @description Login API for admin
  * @param null
  * @returns
@@ -50,6 +51,7 @@ router.get("/", adminValidation, (req, res) => {
 
 /**
  * @method POST
+ * @API /api/admin/authentication/login
  * @description API route to signin the user
  * @param
  *    - username: String
@@ -58,7 +60,7 @@ router.get("/", adminValidation, (req, res) => {
  *    - status: statusCode
  *    - success: Boolean
  *    - message: String
- *    - user: JSON
+ *    - user: Object
  */
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -142,7 +144,7 @@ router.post("/login", async (req, res) => {
         return res.status(501).json({
           status: res.statusCode,
           success: false,
-          messages: "Bad request",
+          message: "Bad request",
         });
       });
 

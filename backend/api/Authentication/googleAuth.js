@@ -10,10 +10,7 @@ const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
 
 // Import modules from other files
-const {
-  getAuthClient,
-  getUserProfile,
-} = require("../../utils/auth");
+const { getAuthClient, getUserProfile } = require("../../utils/auth");
 
 // Middleware authentication
 const {
@@ -33,6 +30,7 @@ const { getAccountByEmail } = require("../../utils/dbService/accountService");
 
 /**
  * @method GET
+ * @API /api/authentication
  * @description Get information for manager, coordinator and student
  * @params null
  * @returns
@@ -65,9 +63,9 @@ router.get("/", gwAccountValidation, (req, res) => {
   });
 });
 
-
 /**
  * @method POST
+ * @API /api/authentication/login
  * @description Login API for student and staff
  * @params
  *      - id_token: Token from client request headers
@@ -88,22 +86,27 @@ router.get("/", gwAccountValidation, (req, res) => {
 router.post("/login", async (req, res) => {
   const { id_token } = req.body;
   let email = "";
-  let oauthUser = undefined
+  let oauthUser = undefined;
 
   // Check if id_token is exist or not
-  if(!id_token) {
+  if (!id_token) {
     return res.status(500).json({
       status: res.statusCode,
       success: false,
-      message: "Bad request"
-    })
+      message: "Bad request",
+    });
   }
 
   // STEP 1: Verify the token from client POST request
   const oAuth2Client = getAuthClient();
 
   // Generate new client service
-  const client = new OAuth2Client(oAuth2Client._clientId, oAuth2Client._clientSecret);
+  const client = new OAuth2Client(
+    oAuth2Client._clientId,
+    oAuth2Client._clientSecret
+  );
+
+  // OLD TOKEN VERIFY WAY
 
   async function verify() {
     const ticket = await client.verifyIdToken({
@@ -152,8 +155,42 @@ router.post("/login", async (req, res) => {
       });
     });
 
+  // */
+
+  /* NEW TOKEN VERIFY WAY (NO PROMISE HANDLE WARNING)
+
+  await client
+    .verifyIdToken({
+      idToken: id_token,
+      audience: oAuth2Client._clientId,
+    })
+    .then((result) => {
+      console.log("token valid: ", result);
+
+      // Get userInfo from payload if id_token is valid
+      const payload = result.getPayload();
+
+      // Only storing
+      oauthUser = payload;
+
+      // Get email of user and assign to 'email'
+      email = payload.email; ////////// ============================= Test
+
+      console.log("User: ", payload);
+    })
+    .catch((err) => {
+      console.log("Token invalid: ", err);
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Token invalid, please login",
+      });
+    });
+
+  // */
+
   // STEP 2: Check if the account is in the database or not (info from token_id)
-  console.log("Chay vao query") // Testing code
+  console.log("Chay vao query"); // Testing code
   const query = getAccountByEmail(email);
 
   let queryResult = [];
@@ -175,7 +212,7 @@ router.post("/login", async (req, res) => {
         });
 
         // STEP 4: Send token to client cookie
-        res.cookie("Token", token, { httpOnly: true, /*secure: true*/ });
+        res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
         // STEP 5: Return userInfo if login successful
         res.status(200).json({
@@ -207,16 +244,16 @@ router.post("/login", async (req, res) => {
     });
 });
 
-
-/** 
+/**
  * @method POST
+ * @API /api/authentication/logout
  * @description API for logging out user
  * @params null
  * @return
  *      - status: Int
  *      - success: Boolean
  *      - message: String
- * @notes 
+ * @notes
  */
 router.post("/logout", (req, res) => {
   const token = req.cookies["Token"];

@@ -31,11 +31,11 @@ app.get("/testUpload", (req, res) => {
 
 // API controllers
 app
-	// Login validation API for student and staff
+	// Login validation API for student and staff (Google Auth)
 	.use("/api/authentication", require("./api/Authentication/googleAuth"))
 
 	// Authentication API for admin
-	.use("/api/admin", require("./api/Authentication/admin"))
+	.use("api/admin/authentication", require("./api/Authentication/admin"))
 
 	// Faculty api
 	.use("/api/faculty", require("./api/faculty"))
