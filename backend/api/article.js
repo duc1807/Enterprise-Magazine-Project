@@ -103,7 +103,7 @@ router.post(
 		const data = res.locals.data;
 
 		// Check permission is coordinator or not
-		if (data.userInfo.FK_role_id != _COORDINATOR_PERISSION_ID) {
+		if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
 			return res.status(401).json({
 				status: res.statusCode,
 				success: false,

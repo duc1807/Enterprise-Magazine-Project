@@ -320,9 +320,7 @@ router.get(
 
 						// Get position of the article in 'articlesResult[]'
 						let articlePosition =
-							articlesPositionDetail[
-								articleInfo.article_folderId
-							];
+							articlesPositionDetail[articleInfo.article_folderId];
 						console.log("position: ", articlePosition);
 
 						// Create file Object to store file information
@@ -342,8 +340,7 @@ router.get(
 						// Create article Object to store information from result
 						let article = {
 							article_id: articleInfo.article_id,
-							article_submission_date:
-								articleInfo.article_submission_date,
+							article_submission_date: articleInfo.article_submission_date,
 							article_status: articleInfo.article_status,
 							article_folderId: articleInfo.article_folderId,
 							FK_account_id: articleInfo.FK_account_id,
@@ -432,9 +429,7 @@ router.get(
 
 						// Get position of the article in 'articlesResult[]'
 						let articlePosition =
-							articlesPositionDetail[
-								articleInfo.article_folderId
-							];
+							articlesPositionDetail[articleInfo.article_folderId];
 						console.log("position: ", articlePosition);
 
 						// Create file Object to store file information
@@ -454,8 +449,7 @@ router.get(
 						// Create article Object to store information from result
 						let article = {
 							article_id: articleInfo.article_id,
-							article_submission_date:
-								articleInfo.article_submission_date,
+							article_submission_date: articleInfo.article_submission_date,
 							article_status: articleInfo.article_status,
 							article_folderId: articleInfo.article_folderId,
 							FK_account_id: articleInfo.FK_account_id,
@@ -483,11 +477,11 @@ router.get(
 					}
 				});
 
-				// Finally, response the submittedArticles[]
+				// Finally, response the selectedArticles[]
 				res.status(200).json({
 					status: res.statusCode,
 					success: true,
-					submittedArticles: articlesResult,
+					selectedArticles: articlesResult,
 				});
 			})
 			.catch((err) => {
