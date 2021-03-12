@@ -89,14 +89,13 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
 /** 
  * @description Asynchronous create permission for a specific drive folder
  * @params 
- *      - ??????
+ *      - Article info INNER JOIN Event info
  * @return null
  *      
  * @notes 
  *      - Using try catch to retry in case the drive API is down
- *      - insertFolderToFolderId() params should be more specific & meaningful
  */
- const insertFolderToFolderId = async (articleAndEventInfo) => {
+  const insertFolderToOtherFolder = async (articleAndEventInfo) => {
   const data = articleAndEventInfo
   const jwToken = await getAuthServiceJwt();
 
@@ -122,5 +121,5 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
 module.exports = {
     insertPermissionsToFolderId: insertPermissionsToFolderId,
     getAuthServiceJwt: getAuthServiceJwt,
-    insertFolderToFolderId: insertFolderToFolderId
+    insertFolderToOtherFolder: insertFolderToOtherFolder
 };

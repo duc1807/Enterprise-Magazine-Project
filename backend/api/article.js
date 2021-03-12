@@ -6,7 +6,7 @@ const {
 	setSelectedArticle,
 	getEventByArticleId,
 } = require("../utils/dbService/index");
-const { insertFolderToFolderId } = require("../utils/driveAPI");
+const { insertFolderToOtherFolder } = require("../utils/driveAPI");
 const { gwAccountValidation } = require("./middleware/verification");
 const router = express.Router();
 
@@ -91,7 +91,6 @@ router.post("/:articleId/add-comment", gwAccountValidation, async (req, res) => 
  * @return null
  * @notes
  * 		- Should use method PUT ???
- *    - insertFolderToFolderId() params should be more specific & meaningful
  */
 router.post(
 	"/:articleId/select-article",
@@ -125,7 +124,7 @@ router.post(
 						console.log(articleAndEventInfo);
 
 						// Asynchronous move article folder to selected article in Drive
-						insertFolderToFolderId(articleAndEventInfo);
+						insertFolderToOtherFolder(articleAndEventInfo);
 
 						// Return the success status
 						return res.status(204).json({

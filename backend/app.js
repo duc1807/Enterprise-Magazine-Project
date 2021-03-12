@@ -13,7 +13,7 @@ app.set("view engine", "ejs");
 // allow cross-origin resource sharing (temporally)
 const corsOptions = {
   credentials: true,
-  origin: "*"
+  origin: "*",
   ///..other options
 };
 
@@ -43,11 +43,14 @@ app
 	// Authentication API for admin
 	.use("api/admin/authentication", require("./api/Authentication/admin"))
 
-	// Faculty api
+	// Faculty API
 	.use("/api/faculty", require("./api/faculty"))
 
 	// Event API (Event: Drive folder inside Faculty)
 	.use("/api/event", require("./api/event"))
+
+  // API for articles manipulating
+	.use("/api/article", require("./api/article"))
 
 	// Download API to get articles
 	.use("/api/download", require("./api/download"))
@@ -58,10 +61,12 @@ app
 	// API for student to upload articles
 	.use("/api/upload", require("./api/upload"))
 
+  // ============================= In development
 	.use("/api/user", require("./api/user"))
 	.use("/api/notification", require("./api/mailnotification"))
 
-	.use("/api/article", require("./api/article"));
+  
+
 // .use("/api/student", require("./api/Authentication/student"));
 
 // Serve static index.html file
