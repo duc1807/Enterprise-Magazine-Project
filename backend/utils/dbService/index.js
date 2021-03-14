@@ -15,9 +15,11 @@ const {
 	createNewArticle,
 	getSubmittedArticles,
 	getSelectedArticles,
+	getRejectedArticles,
 	getSubmittedArticleById,
 	addNewCommentToArticle,
 	setSelectedArticle,
+	setRejectedArticle,
 } = require("../../utils/dbService/articleService");
 const {
 	getCoordinatorAccountsByFaculty,
@@ -74,12 +76,16 @@ module.exports = {
 	getSubmittedArticles: getSubmittedArticles,
 	//get all of selected articles by eventId
 	getSelectedArticles: getSelectedArticles,
+	//get all rejected articles by eventId
+	getRejectedArticles: getRejectedArticles,
 	// Get a specific article by id
 	getSubmittedArticleById: getSubmittedArticleById,
 	// Add a comment to an article
 	addNewCommentToArticle: addNewCommentToArticle,
 	// Set status of article to 'selected'
 	setSelectedArticle: setSelectedArticle,
+	// Set status of article to 'rejected'
+	setRejectedArticle: setRejectedArticle,
 	// ================================================================
 
 	// ======================================================= File

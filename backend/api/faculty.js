@@ -15,6 +15,7 @@ const {
 	getEventById,
 	getSubmittedArticles,
 	getSelectedArticles,
+	getRejectedArticles,
 } = require("../utils/dbService/index");
 
 // Import middleware
@@ -493,6 +494,112 @@ router.get(
 			});
 	}
 );
+
+// =================GET REJECTED ARTICLES===========================
+router.get(
+	"/:facultyName/:eventId/rejectedArticles",
+	coordinatorValidation,
+	async (req, res) => {
+		const facultyName = req.params.facultyName;
+		const eventId = req.params.eventId;
+		const data = res.locals.data;
+		console.log("data: ", data);
+		if (data.userInfo.faculty_name != facultyName) {
+			return res.statusCode(401).json({
+				success: false,
+				status: res.statusCode,
+				message: "Permission required to access to this faculty.",
+			});
+		}
+		// Get event new submission
+		const query = getRejectedArticles(eventId);
+
+		await query
+			.then((result) => {
+				console.log("result: ", result);
+
+				// Create array to store final data to return to frontend
+				let articlesResult = [];
+
+				// Create array for storing distinc iterated article_id
+				let passedArticlesId = [];
+
+				// Create Object for storing the article's position in 'articlesResult[]' for searching optimization
+				let articlesPositionDetail = {};
+
+				// Itarate each data in result
+				result.map((articleInfo) => {
+					// Check if this article is exist in 'articlesResult' array or not
+					if (passedArticlesId.includes(articleInfo.article_id)) {
+						// If this article existed in 'articlesResult' array, push its file into 'article.files'
+
+						// Get position of the article in 'articlesResult[]'
+						let articlePosition =
+							articlesPositionDetail[articleInfo.article_folderId];
+						console.log("position: ", articlePosition);
+
+						// Create file Object to store file information
+						let file = {
+							file_id: articleInfo.file_id,
+							file_mimeType: articleInfo.file_mimeType,
+							file_fileId: articleInfo.file_fileId,
+							FK_article_id: articleInfo.FK_article_id,
+						};
+
+						// Insert file Object to its article in 'articlesResult[]'
+						articlesResult[articlePosition].files.push(file);
+					} else {
+						// If this article not exist, push the article_id into 'passedArticlesId'
+						passedArticlesId.push(articleInfo.article_id);
+
+						// Create article Object to store information from result
+						let article = {
+							article_id: articleInfo.article_id,
+							article_submission_date: articleInfo.article_submission_date,
+							article_status: articleInfo.article_status,
+							article_folderId: articleInfo.article_folderId,
+							FK_account_id: articleInfo.FK_account_id,
+							FK_event_id: articleInfo.FK_event_id,
+							files: [],
+						};
+
+						// Create file Object to store file information
+						let file = {
+							file_id: articleInfo.file_id,
+							file_mimeType: articleInfo.file_mimeType,
+							file_fileId: articleInfo.file_fileId,
+							FK_article_id: articleInfo.FK_article_id,
+						};
+
+						// Push file Object into 'article.files' (only in first-time run)
+						article.files.push(file);
+
+						// Finally, push article information into 'articlesResult[]'
+						articlesResult.push(article);
+
+						// Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
+						articlesPositionDetail[articleInfo.article_folderId] =
+							articlesResult.length - 1;
+					}
+				});
+
+				// Finally, response the rejectedArticles[]
+				res.status(200).json({
+					status: res.statusCode,
+					success: true,
+					rejectedArticles: articlesResult,
+				});
+			})
+			.catch((err) => {
+				res.status(501).json({
+					status: res.statusCode,
+					success: false,
+					messages: "Bad request",
+				});
+			});
+	}
+);
+
 // =================================================== TEST CODE
 
 router.post("/:facultyName/:eventId/download", (req, res) => {

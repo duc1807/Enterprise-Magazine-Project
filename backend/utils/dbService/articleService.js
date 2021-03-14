@@ -121,7 +121,7 @@ const getSelectedArticlesByEvent = (eventId) => {
 		db.query(sql, (err, result) => {
 			if (!!err) reject(err);
 			// Check if the articles is null or not
-			else if (!result.length) {
+			if (!result.length) {
 				console.log("Query result not found!");
 				reject(false);
 			} else {
@@ -132,6 +132,31 @@ const getSelectedArticlesByEvent = (eventId) => {
 		});
 	});
 };
+
+//query for get all rejected articles in an event of any faculty
+const getRejectedArticlesByEvent = (eventId) => {
+	const db = getDataBaseConnection();
+
+	const sql = `SELECT * FROM ${DB_TABLE}
+               INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+               WHERE ${DB_TABLE}.FK_event_id =${eventId}
+               AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.rejected}'`;
+	return new Promise((resolve, reject) => {
+		db.query(sql, (err, result) => {
+			if (!!err) reject(err);
+			// Check if the articles is null or not
+			if (!result.length) {
+				console.log("Query result not found!");
+				reject(false);
+			} else {
+				console.log("query result: ", result);
+			}
+			resolve(result);
+			db.end();
+		});
+	});
+};
+
 // getArticlesOfEvent("IT").then(result => console.log(result))
 
 const getSubmittedArticleById = (articleId) => {
@@ -215,12 +240,35 @@ const setSelectedArticle = (articleId) => {
 	});
 };
 
+const setRejectedArticle = (articleId) => {
+	let db = getDataBaseConnection();
+	const sql = `SELECT * FROM ${DB_TABLE}
+				 WHERE article_status = '${ARTICLE_STATUS.pending}' AND article_id = ${articleId};
+				 UPDATE Article
+				 SET article_status = '${ARTICLE_STATUS.rejected}'
+				 WHERE article_id = ${articleId};`;
+	return new Promise((resolve, reject) => {
+		db.query(sql, (err, result) => {
+			if (!!err) reject(err);
+
+			if (!result) {
+				console.log("Query result not found!");
+				reject(false);
+			}
+			console.log("Query result: ", result);
+			resolve(result);
+			db.end();
+		});
+	});
+};
 module.exports = {
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 	getSubmittedArticles: getSubmittedArticlesByEventId,
 	getSelectedArticles: getSelectedArticlesByEvent,
+	getRejectedArticles: getRejectedArticlesByEvent,
 	getSubmittedArticleById: getSubmittedArticleById,
 	addNewCommentToArticle: addNewCommentToArticle,
 	createNewArticle: createNewArticle,
 	setSelectedArticle: setSelectedArticle,
+	setRejectedArticle: setRejectedArticle,
 };
