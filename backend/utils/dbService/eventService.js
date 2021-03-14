@@ -14,15 +14,13 @@ const getDataBaseConnection = () => {
   return connection;
 };
 
-const getEventsByFacultyName = async (facultyName) => {
+const getEventsByFacultyId = async (facultyId) => {
   let db = getDataBaseConnection();
 
   const sql = ` SELECT * FROM Faculty
-                WHERE faculty_name = '${facultyName}';  
-                SELECT *, Faculty.faculty_name, Faculty.faculty_id
-                FROM ${TABLE}
-                JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-                WHERE Faculty.faculty_name = '${facultyName}'`;
+                WHERE faculty_id = '${facultyId}';  
+                SELECT * FROM ${TABLE}
+                WHERE FK_faculty_id = ${facultyId}`
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -195,7 +193,7 @@ const getEventByArticleId = (articleId) => {
 };
 
 module.exports = {
-  getEventsByFacultyName: getEventsByFacultyName,
+  getEventsByFacultyId: getEventsByFacultyId,
   getEventById: getEventById,
   createNewEvent: createNewEvent,
   updateEvent: updateEvent,

@@ -9,7 +9,7 @@ const { google } = require("googleapis");
 
 // Import database service
 const {
-	getEventsByFacultyName,
+	getEventsByFacultyId,
 	getAllFaculty,
 	getPostedArticlesOfEvent,
 	getEventById,
@@ -30,6 +30,7 @@ const _MANAGER_ROLE_ID = 3;
 
 /**
  * @method GET
+ * @api /api/faculties/
  * @permissions Manager
  * @description API for getting all Faculties information
  * @params null
@@ -65,26 +66,27 @@ router.get("/", managerValidation, async (req, res) => {
 
 /**
  * @method GET
+ * @api /api/faculties/:facultyId
  * @permissions
  *      - Manager
  *      - Coordinators (exact faculty)
  *      - Students (exact faculty)
  * @description API for getting all events of a faculty
  * @params
- *      - facultyName: String (req.params)
+ *      - facultyId: Int (req.params)
  * @return
  *      - events: Array[]
  *          + .................................. ???
  * @notes
  */
-router.get("/:facultyName", gwAccountValidation, async (req, res) => {
-	const facultyName = req.params.facultyName;
+router.get("/:facultyId", gwAccountValidation, async (req, res) => {
+	const facultyId = req.params.facultyId;
 	const data = res.locals.data;
 
 	// If the user role is student || coordinator, check if their faculty is valid or not
 	if (
 		data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
-		data.userInfo.faculty_name.toLowerCase() != facultyName.toLowerCase()
+		data.userInfo.FK_faculty_id != facultyId
 	) {
 		return res.status(401).json({
 			status: res.statusCode,
@@ -94,7 +96,7 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
 	}
 
 	// Get all events by faculty name from params
-	const query = getEventsByFacultyName(facultyName);
+	const query = getEventsByFacultyId(facultyId);
 	let queryResult = [];
 
 	await query
@@ -131,26 +133,27 @@ router.get("/:facultyName", gwAccountValidation, async (req, res) => {
 
 /**
  * @method GET
+ * @api /api/faculties/:facultyId/events/:eventId
  * @permissions
  *      - Students (exact faculty)
  * @description API for getting event information for students
  * @params
- *      - facultyName: String (req.params)    ???
+ *      - facultyId: Int (req.params)    ???
  *      - eventId: Int (req.params)
  * @return
- *      - events: Array[]
+ *      - event: Object
  *          + ..................................
  * @notes
  *      - Need facultyName      ????
  */
-router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
-	const facultyName = req.params.facultyName;
+router.get("/:facultyId/events/:eventId", gwAccountValidation, async (req, res) => {
+	const facultyId = req.params.facultyId;
 	const eventId = req.params.eventId;
 
 	const user = res.locals.data;
 
 	// Check if the account has permission to access or not
-	if (user.userInfo.faculty_name != facultyName) {
+	if (user.userInfo.FK_faculty_id != facultyId) {
 		return res.status(401).json({
 			status: res.statusCode,
 			success: false,
@@ -192,6 +195,7 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
 
 /**
  * @method GET
+ * @api /api/faculties/:facultyId/events/:eventId/posted-articles
  * @permissions
  *      - Manager
  *      - Coordinators (exact faculty)
@@ -199,7 +203,7 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
  *      - Guest ???
  * @description API for getting event information and its posted articles (news)
  * @params
- *      - facultyName: String (req.params)
+ *      - facultyId: Int (req.params)
  *      - eventId: Int (req.params)
  * @return
  *      - event: Array[]
@@ -209,12 +213,12 @@ router.get("/:facultyName/:eventId", gwAccountValidation, async (req, res) => {
  * @notes
  *      - Should check faculty valid before query -> Optimize
  */
-router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
-	const facultyName = req.params.facultyName;
+router.get("/:facultyId/events/:eventId/posted-articles", async (req, res) => {
+	const facultyId = req.params.facultyId;
 	const eventId = req.params.eventId;
 
-	// Get event info and its posted articles by eventId and facultyName
-	const query = getPostedArticlesOfEvent(eventId, facultyName);
+	// Get event info and its posted articles by eventId and facultyId
+	const query = getPostedArticlesOfEvent(eventId, facultyId);
 
 	await query
 		.then((result) => {
@@ -249,11 +253,12 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
 
 /**
  * @method GET
+ * @api /api/faculties/:facultyId/events/:eventId/new-articles
  * @permissions
  *      - Coordinators (exact faculty)
- * @description API for getting new submissions of a faculty
+ * @description API for getting new article submissions of a faculty
  * @params
- *      - facultyName: String (req.params)
+ *      - facultyId: Int (req.params)
  *      - eventId: Int (req.params)
  * @return
  *      - status: Int
@@ -279,17 +284,17 @@ router.get("/:facultyName/:eventId/postedArticles", async (req, res) => {
  */
 
 router.get(
-	"/:facultyName/:eventId/newsubmission",
+	"/:facultyId/events/:eventId/new-articles",
 	coordinatorValidation,
 	async (req, res) => {
-		const facultyName = req.params.facultyName;
+		const facultyId = req.params.facultyId;
 		const eventId = req.params.eventId;
 
 		// Get userInfo from middleware
 		const data = res.locals.data;
 
 		// Check if the faculty of the coordinator is valid or not
-		if (data.userInfo.faculty_name != facultyName) {
+		if (data.userInfo.FK_faculty_id != facultyId) {
 			return res.status(401).json({
 				status: res.statusCode,
 				success: false,
@@ -386,19 +391,33 @@ router.get(
 	}
 );
 
-// ===================GET SELECTED ARTICLE===============================
+/**
+ * @method GET
+ * @api /api/faculties/:facultyId/events/:eventId/selected-articles
+ * @permissions
+ *      - Manager		???????
+ *      - Coordinators (exact faculty)
+ * @description API for getting selected articles
+ * @params
+ *      - facultyId: Int (req.params)
+ *      - eventId: Int (req.params)
+ * @return
+ *      - selectedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
 router.get(
-	"/:facultyName/:eventId/selectedarticles",
+	"/:facultyId/events/:eventId/selected-articles",
 	coordinatorValidation,
 	async (req, res) => {
-		const facultyName = req.params.facultyName;
+		const facultyId = req.params.facultyId;
 		const eventId = req.params.eventId;
 
 		// Get middleware data
 		const data = res.locals.data;
 
 		// Check if the faculty of the coordinator is valid or not
-		if (data.userInfo.faculty_name != facultyName) {
+		if (data.userInfo.FK_faculty_id != facultyId) {
 			return res.status(401).json({
 				status: res.statusCode,
 				success: false,
@@ -406,7 +425,7 @@ router.get(
 			});
 		}
 
-		// Get event new submission
+		// Get event selected submission
 		const query = getSelectedArticles(eventId);
 
 		await query
@@ -495,23 +514,37 @@ router.get(
 	}
 );
 
-// =================GET REJECTED ARTICLES===========================
+/**
+ * @method GET
+ * @api /api/faculties/:facultyId/events/:eventId/rejected-articles
+ * @permissions
+ *      - Manager			??????
+ *      - Coordinators (exact faculty)
+ * @description API for getting rejected articles
+ * @params
+ *      - facultyId: Int (req.params)
+ *      - eventId: Int (req.params)
+ * @return
+ *      - rejectedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
 router.get(
-	"/:facultyName/:eventId/rejectedArticles",
+	"/:facultyId/events/:eventId/rejected-articles",
 	coordinatorValidation,
 	async (req, res) => {
-		const facultyName = req.params.facultyName;
+		const facultyId = req.params.facultyId;
 		const eventId = req.params.eventId;
 		const data = res.locals.data;
 		console.log("data: ", data);
-		if (data.userInfo.faculty_name != facultyName) {
+		if (data.userInfo.FK_faculty_id != facultyId) {
 			return res.statusCode(401).json({
 				success: false,
 				status: res.statusCode,
 				message: "Permission required to access to this faculty.",
 			});
 		}
-		// Get event new submission
+		// Get event rejected submission
 		const query = getRejectedArticles(eventId);
 
 		await query

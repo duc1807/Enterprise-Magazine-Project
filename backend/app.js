@@ -44,7 +44,7 @@ app
 	.use("api/admin/authentication", require("./api/Authentication/admin"))
 
 	// Faculty API
-	.use("/api/faculty", require("./api/faculty"))
+	.use("/api/faculties", require("./api/faculty"))
 
 	// Event API (Event: Drive folder inside Faculty)
 	.use("/api/event", require("./api/event"))

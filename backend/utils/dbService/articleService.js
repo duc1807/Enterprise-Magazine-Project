@@ -20,20 +20,29 @@ const getDataBaseConnection = () => {
 	return connection;
 };
 
-// Get the posted artiles of event's newfeed
-const getPostedArticlesOfEvent = async (eventId, facultyName) => {
+/**
+ * @description Get the posted artiles of event's newfeed
+ * @params
+ *      - facultyId: Int (req.params)
+ *      - eventId: Int (req.params)
+ * @return
+ *      - postedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ *      - Not yet add the WHERE condition for selecting posted articles
+ */
+const getPostedArticlesOfEvent = async (eventId, facultyId) => {
 	let db = getDataBaseConnection();
 
-	console.log("test: ", eventId + " " + facultyName);
+	console.log("test: ", eventId + " " + facultyId);
 
 	const sql = //Check if faculty exist
 		`SELECT * FROM Faculty
-              WHERE faculty_name = '${facultyName}';` +
+              WHERE faculty_id = '${facultyId}';` +
 		// Check if faculty exist event
-		`SELECT *, Faculty.faculty_name, Faculty.faculty_id
-              FROM Event
-              INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-              WHERE event_id = ${eventId} AND Faculty.faculty_name = '${facultyName}';` +
+		`SELECT * FROM Event
+              WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
+
 		//   // Check if event exist
 		// + `SELECT * FROM Event
 		//   WHERE event_id = ${eventId};`
@@ -64,6 +73,13 @@ const getPostedArticlesOfEvent = async (eventId, facultyName) => {
 	});
 };
 
+/**
+ * @description Create new article
+ * @params
+ *      - articleInfo: Object
+ * @return null
+ * @notes
+ */
 const createNewArticle = (articleInfo) => {
 	const {
 		articleSubmissionDate,
@@ -88,6 +104,15 @@ const createNewArticle = (articleInfo) => {
 	});
 };
 
+/**
+ * @description Get the sumitted artiles of event
+ * @params
+ *      - eventId: Int (req.params)
+ * @return
+ *      - submittedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
 const getSubmittedArticlesByEventId = (eventId) => {
 	const db = getDataBaseConnection();
 
@@ -110,7 +135,16 @@ const getSubmittedArticlesByEventId = (eventId) => {
 	});
 };
 
-const getSelectedArticlesByEvent = (eventId) => {
+/**
+ * @description Get the selected artiles of event
+ * @params
+ *      - eventId: Int (req.params)
+ * @return
+ *      - selectedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ */
+const getSelectedArticlesByEventId = (eventId) => {
 	const db = getDataBaseConnection();
 
 	const sql = `SELECT * FROM ${DB_TABLE}
@@ -133,13 +167,24 @@ const getSelectedArticlesByEvent = (eventId) => {
 	});
 };
 
-//query for get all rejected articles in an event of any faculty
-const getRejectedArticlesByEvent = (eventId) => {
+/**
+ * @description Get the rejected artiles of event
+ * @params
+ *      - eventId: Int (req.params)
+ * @return
+ *      - rejectedArticles: Array[]
+ *          + ........................... ???
+ * @notes
+ * 		- Query result not found????
+ */
+const getRejectedArticlesByEventId = (eventId) => {
 	const db = getDataBaseConnection();
+
+	console.log("art: ", eventId);
 
 	const sql = `SELECT * FROM ${DB_TABLE}
                INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
-               WHERE ${DB_TABLE}.FK_event_id =${eventId}
+               WHERE ${DB_TABLE}.FK_event_id = ${eventId}
                AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.rejected}'`;
 	return new Promise((resolve, reject) => {
 		db.query(sql, (err, result) => {
@@ -241,9 +286,10 @@ const setSelectedArticle = (articleId) => {
 };
 
 const setRejectedArticle = (articleId) => {
+	
 	let db = getDataBaseConnection();
 	const sql = `SELECT * FROM ${DB_TABLE}
-				 WHERE article_status = '${ARTICLE_STATUS.pending}' AND article_id = ${articleId};
+				 WHERE article_id = ${articleId} AND article_status = '${ARTICLE_STATUS.pending}';
 				 UPDATE Article
 				 SET article_status = '${ARTICLE_STATUS.rejected}'
 				 WHERE article_id = ${articleId};`;
@@ -264,8 +310,8 @@ const setRejectedArticle = (articleId) => {
 module.exports = {
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 	getSubmittedArticles: getSubmittedArticlesByEventId,
-	getSelectedArticles: getSelectedArticlesByEvent,
-	getRejectedArticles: getRejectedArticlesByEvent,
+	getSelectedArticles: getSelectedArticlesByEventId,
+	getRejectedArticles: getRejectedArticlesByEventId,
 	getSubmittedArticleById: getSubmittedArticleById,
 	addNewCommentToArticle: addNewCommentToArticle,
 	createNewArticle: createNewArticle,

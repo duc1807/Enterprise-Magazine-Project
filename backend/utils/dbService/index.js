@@ -1,5 +1,5 @@
 const {
-	getEventsByFacultyName,
+	getEventsByFacultyId,
 	getEventById,
 	createNewEvent,
 	updateEvent,
@@ -56,7 +56,7 @@ module.exports = {
 	// Get event information
 	getEventById: getEventById,
 	// Get all events of a faculty
-	getEventsByFacultyName: getEventsByFacultyName,
+	getEventsByFacultyId: getEventsByFacultyId,
 	// Create new event
 	createNewEvent: createNewEvent,
 	// Update an event

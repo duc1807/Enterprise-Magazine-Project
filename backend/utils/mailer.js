@@ -22,7 +22,7 @@ const sendMail = (coordinatorEmail, studentEmail, eventInfo, facultyInfo) => {
     from: "vuatrochoi.theblue@gmail.com", // The mail used to send the OTP code
     to: coordinatorEmail, // The coordinator email
     subject: `New article submitted to ${eventInfo.event_title}.`, // Content of the mail
-    html: studentEmail + ` has submitted new post. Click the url to check: https://gw-magazine.site/api/faculty/${facultyInfo.faculty_name}/${eventInfo.event_id}/newsubmission`,
+    html: studentEmail + ` has submitted new post. Click the url to check: https://gw-magazine.site/api/faculties/${facultyInfo.faculty_id}/events/${eventInfo.event_id}/newsubmission`,
   };
   // Send mail
   transporter.sendMail(details, function (error, data) {
