@@ -8,9 +8,10 @@ const { getImageById } = require("../utils/dbService/index");
 
 /**
  * @method GET
+ * @api /api/image/:imageId
  * @description This API is to get the image by event id and render to display
  * @params 
- *        - imageId (req.body || query param) 
+ *        - imageId (query param) 
  * @return
  *        - bufferData with content type (image/jpeg)
  */

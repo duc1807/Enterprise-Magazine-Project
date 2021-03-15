@@ -30,8 +30,8 @@ const { getAccountByEmail } = require("../../utils/dbService/accountService");
 
 /**
  * @method GET
- * @API /api/authentication
- * @description Get information for manager, coordinator and student
+ * @API /api/authentication/
+ * @description Get login credentials for manager, coordinator and student
  * @params null
  * @returns
  *      - status: Int
@@ -68,7 +68,7 @@ router.get("/", gwAccountValidation, (req, res) => {
  * @API /api/authentication/login
  * @description Login API for student and staff
  * @params
- *      - id_token: Token from client request headers
+ *      - id_token: Token from client request cookies
  * @return
  *      - status: Int
  *      - success: Boolean
@@ -82,6 +82,7 @@ router.get("/", gwAccountValidation, (req, res) => {
  * @notes
  *      - (!!! CORS problems)
  *      - Function verify doesnt have resolve reject?
+ *      - token expiration needed ??? Bcs using google token already
  */
 router.post("/login", async (req, res) => {
   const { id_token } = req.body;
@@ -117,7 +118,7 @@ router.post("/login", async (req, res) => {
     // Get userInfo from payload if id_token is valid
     const payload = ticket.getPayload();
 
-    // Only storing 
+    // Get oauthUser information from payload 
     oauthUser = payload;
 
     // Get email of user and assign to 'email'
@@ -190,8 +191,7 @@ router.post("/login", async (req, res) => {
   // */
 
   // STEP 2: Check if the account is in the database or not (info from token_id)
-  console.log("Chay vao query"); // Testing code
-  const query = getAccountByEmail(email);
+  const query = getAccountByEmail(oauthUser.email);
 
   let queryResult = [];
 
@@ -213,8 +213,6 @@ router.post("/login", async (req, res) => {
 
         // STEP 4: Send token to client cookie
         res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
-
-        // res.setHeader('Token', token);
 
         // STEP 5: Return userInfo if login successful
         res.status(200).json({

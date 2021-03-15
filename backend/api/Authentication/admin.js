@@ -16,7 +16,7 @@ const _ROUTER_ROLE = "admin";
 /**
  * @method GET
  * @API /api/admin/authentication
- * @description Login API for admin
+ * @description API for admin to get login credentials
  * @param null
  * @returns
  *      - status: Int

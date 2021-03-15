@@ -21,7 +21,7 @@ const getDataBaseConnection = () => {
 };
 
 /**
- * @description Get the posted artiles of event's newfeed
+ * @description Get the posted articles of event's newfeed
  * @params
  *      - eventId: Int (req.params)
  * 		- facultyId: Int (req.params)
@@ -104,7 +104,7 @@ const createNewArticle = (articleInfo) => {
 };
 
 /**
- * @description Get the sumitted artiles of event
+ * @description Get the sumitted articles of event
  * @params
  *      - eventId: Int (req.params)
  *      - facultyId: Int (req.params)
@@ -152,7 +152,7 @@ const getSubmittedArticlesByEventId = (eventId, facultyId) => {
 };
 
 /**
- * @description Get the selected artiles of event
+ * @description Get the selected articles of event
  * @params
  *      - eventId: Int (req.params)
  * 		- facultyId: Int (req.params)
@@ -191,7 +191,7 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
 };
 
 /**
- * @description Get the rejected artiles of event
+ * @description Get the rejected articles of event
  * @params
  *      - eventId: Int (req.params)
  * 		- facultyId: Int (req.params)
@@ -205,14 +205,13 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
 const getRejectedArticlesByEventId = (eventId, facultyId) => {
   const db = getDataBaseConnection();
 
-  console.log("art: ", eventId);
-
   const sql =
     // Check if faculty exist event
     `SELECT * FROM Event
-	INNER JOIN Faculty
-	ON Event.FK_faculty_id = Faculty.faculty_id
-	WHERE event_id = ${eventId} AND Faculty.faculty_id = ${facultyId};` +
+    INNER JOIN Faculty
+    ON Event.FK_faculty_id = Faculty.faculty_id
+    WHERE event_id = ${eventId} AND Faculty.faculty_id = ${facultyId};` +
+
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
     INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
@@ -233,8 +232,14 @@ const getRejectedArticlesByEventId = (eventId, facultyId) => {
   });
 };
 
-// getArticlesOfEvent("IT").then(result => console.log(result))
-
+/**
+ * @description Get the exactly submitted article by Id
+ * @params
+ *      - articleId: Int
+ * @return
+ *      - article: Object
+ * @notes
+ */
 const getSubmittedArticleById = (articleId) => {
   let db = getDataBaseConnection();
 
@@ -254,6 +259,14 @@ const getSubmittedArticleById = (articleId) => {
   });
 };
 
+/**
+ * @description Add new comment to a specific article 
+ * @params
+ *      - commentInfo: Object
+ * 		  - userInfo: Object
+ * @return null
+ * @notes
+ */
 const addNewCommentToArticle = (commentInfo, userInfo) => {
   const { content, time, FK_article_id, FK_coordinator_id } = commentInfo;
   let db = getDataBaseConnection();
@@ -270,7 +283,7 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
 				WHERE Article.article_id = ${FK_article_id}
 				AND Account.account_id = ${userInfo.account_id}`;
 
-  // SQL for insert into database
+  // SQL for insert comment into database
   const sql1 = `INSERT INTO
                 Comment (comment_content, comment_time, FK_article_id, FK_coordinator_id)
 				VALUES ('${content}', '${time}', '${FK_article_id}', '${FK_coordinator_id}')`;
@@ -293,6 +306,14 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
   });
 };
 
+/**
+ * @description Set an article status to 'accepted'
+ * @params
+ *      - articleId: Int 
+ * @return null
+ * @notes
+ *      - Only can set status for 'pending' articles
+ */
 const setSelectedArticle = (articleId) => {
   let db = getDataBaseConnection();
 
@@ -300,7 +321,7 @@ const setSelectedArticle = (articleId) => {
   const sql = `SELECT * FROM ${DB_TABLE}
 				WHERE article_id = ${articleId} AND article_status = '${ARTICLE_STATUS.pending}';`;
 
-  // Query for UPDATE article
+  // Query for UPDATE article status to "accepted"
   const sql1 = `UPDATE ${DB_TABLE}
 				SET Article.article_status = '${ARTICLE_STATUS.accepted}'
 				WHERE article_id = ${articleId}`;
@@ -313,9 +334,9 @@ const setSelectedArticle = (articleId) => {
         reject(false);
       } else {
 		  // If article with status == 'pending' found, UPDATE to 'accepted'
-        db.query(sql1, (err, result) => {
+        db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
-          resolve(result);
+          resolve(result1);
         });
       }
       db.end();
@@ -323,9 +344,18 @@ const setSelectedArticle = (articleId) => {
   });
 };
 
-// !!!!!!!!!! PROBLEM: Only can set status for 'pending' articles ???
+
+/**
+ * @description Set an article status to 'accepted'
+ * @params
+ *      - articleId: Int 
+ * @return null
+ * @notes
+ *      - Only can set status for 'pending' articles
+ */
 const setRejectedArticle = (articleId) => {
   let db = getDataBaseConnection();
+
   // Check if the article is existed or not and then update the status to accepted
   const sql = `SELECT * FROM ${DB_TABLE}
 				WHERE article_id = ${articleId} AND article_status = '${ARTICLE_STATUS.pending}';`;
@@ -343,15 +373,17 @@ const setRejectedArticle = (articleId) => {
         reject(false);
       } else {
 		  // If article with status == 'pending' found, UPDATE to 'rejected'
-        db.query(sql1, (err, result) => {
+        db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
-          resolve(result);
+          resolve(result1);
         });
       }
       db.end();
     });
   });
 };
+
+
 module.exports = {
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,

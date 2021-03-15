@@ -47,6 +47,11 @@ const adminValidation = (req, res, next) => {
   });
 };
 
+/** 
+ * @description Middleware validation for manager
+ * @params null
+ * @return next()
+ */
 const managerValidation = (req, res, next) => {
   // Retrieve the token from cookies
   const token = req.cookies["Token"];
@@ -81,6 +86,51 @@ const managerValidation = (req, res, next) => {
   });
 };
 
+/** 
+ * @description Middleware validation for coordinator
+ * @params null
+ * @return next()
+ */
+ const coordinatorValidation = (req, res, next) => {
+  // Retrieve the token from cookies
+  const token = req.cookies["Token"];
+  // If the token is not existed, throw 401 error
+  if (!token) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Please login",
+    });
+  }
+  // Check if the token is not valid | expired, throw 401 error if true
+  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
+    if (err)
+      return res.status(403).json({
+        status: res.statusCode,
+        success: false,
+        message: "Session expired! Please login",
+      });
+    // If the user permission is not manager, throw the 401 error to prevent unauthorised access
+    if (data.userInfo.FK_role_id !== _COORDINATOR_ROLE_ID) {
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Coordinator permission required",
+      });
+    } else {
+      res.locals.data = data;
+      console.log("Passed verify middleware");
+      next();
+    }
+  });
+};
+
+
+/** 
+ * @description Middleware validation for manager, coordinator and student
+ * @params null
+ * @return next()
+ */
 const gwAccountValidation = (req, res, next) => {
   // Retrieve the token from cookies
   const token = req.cookies["Token"];
@@ -107,40 +157,6 @@ const gwAccountValidation = (req, res, next) => {
         status: res.statusCode,
         success: false,
         message: "Permission required",
-      });
-    } else {
-      res.locals.data = data;
-      console.log("Passed verify middleware");
-      next();
-    }
-  });
-};
-
-const coordinatorValidation = (req, res, next) => {
-  // Retrieve the token from cookies
-  const token = req.cookies["Token"];
-  // If the token is not existed, throw 401 error
-  if (!token) {
-    return res.status(401).json({
-      status: res.statusCode,
-      success: false,
-      message: "Please login",
-    });
-  }
-  // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
-    if (err)
-      return res.status(403).json({
-        status: res.statusCode,
-        success: false,
-        message: "Session expired! Please login",
-      });
-    // If the user permission is not manager, throw the 401 error to prevent unauthorised access
-    if (data.userInfo.FK_role_id !== _COORDINATOR_ROLE_ID) {
-      return res.status(401).json({
-        status: res.statusCode,
-        success: false,
-        message: "Coordinator permission required",
       });
     } else {
       res.locals.data = data;
