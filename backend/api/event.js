@@ -46,7 +46,7 @@ const eventFolderConstants = {
 
 /**
  * @method POST
- * @API /api/event/create-event
+ * @API /api/event/
  * @description API for creating new event
  * @params
  *      - title: String
@@ -60,7 +60,7 @@ const eventFolderConstants = {
  * @notes
  *      - event image upload not implemented
  */
-router.post('/create-event', managerValidation, upload.single('file'), async (req, res) => {
+router.post('/', managerValidation, upload.single('file'), async (req, res) => {
 	// Not sure if file is retrieved by req.files or req.body
 	const { title, content, startDate, endDate, facultyId } = req.body;
 
@@ -398,8 +398,8 @@ router.post('/create-event', managerValidation, upload.single('file'), async (re
 });
 
 /**
- * @method POST
- * @API /api/event/update-event
+ * @method PUT
+ * @API /api/event/
  * @description API for updating event
  * @params
  *      - id: Int
@@ -420,7 +420,7 @@ router.post('/create-event', managerValidation, upload.single('file'), async (re
  *      - Image data not implemented
  *      - Startdate needed?
  */
-router.post('/update-event', managerValidation, upload.single('file'), (req, res) => {
+router.put('/', managerValidation, upload.single('file'), (req, res) => {
 	const {
 		id,
 		title,
@@ -498,8 +498,8 @@ router.post('/update-event', managerValidation, upload.single('file'), (req, res
 });
 
 /**
- * @method POST
- * @API /api/event/delete-event
+ * @method DELETE
+ * @API /api/event/
  * @description API for deleting event
  * @params
  *      - eventId: Int
@@ -507,7 +507,7 @@ router.post('/update-event', managerValidation, upload.single('file'), (req, res
  * @notes
  *      - Delete event on drive??? Or not??
  */
-router.post('/delete-event', managerValidation, (req, res) => {
+router.delete('/', managerValidation, (req, res) => {
 	const { eventId } = req.body;
 
 	// Delete event by eventId

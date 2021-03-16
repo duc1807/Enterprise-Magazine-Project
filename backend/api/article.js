@@ -87,7 +87,7 @@ router.post(
 );
 
 /**
- * @method POST
+ * @method PATCH
  * @API /api/article/:articleId/select-article
  * @description API for select an article
  * @params
@@ -96,8 +96,9 @@ router.post(
  * @notes
  * 		- Should use method PUT ???
  * 		- Should pass articleId in req.params ??? Or body ???
+ *    - Still not validate permission
  */
-router.post(
+router.patch(
   "/:articleId/select-article",
   gwAccountValidation,
   async (req, res) => {
@@ -167,7 +168,7 @@ router.post(
 );
 
 /**
- * @method POST
+ * @method PATCH
  * @API /api/article/:articleId/reject-article
  * @description API for reject an article
  * @param
@@ -175,7 +176,7 @@ router.post(
  * @note
  * 		- Should pass articleId in req.params ??? Or body ???
  */
-router.post(
+router.patch(
   "/:articleId/reject-article",
   gwAccountValidation,
   async (req, res) => {

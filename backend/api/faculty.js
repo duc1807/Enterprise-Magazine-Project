@@ -138,7 +138,7 @@ router.get("/:facultyId", gwAccountValidation, async (req, res) => {
  *      - Students (exact faculty)
  * @description API for getting event information for students
  * @params
- *      - facultyId: Int (req.params)    ???
+ *      - facultyId: Int (req.params)   
  *      - eventId: Int (req.params)
  * @return
  *      - event: Object
@@ -164,7 +164,7 @@ router.get(
       });
     }
 
-    // Get event info
+    // Get event infomation (info only)
     const query = getEventById(eventId);
 
     await query
@@ -258,7 +258,7 @@ router.get("/:facultyId/events/:eventId/posted-articles", async (req, res) => {
 
 /**
  * @method GET
- * @api /api/faculties/:facultyId/events/:eventId/new-articles
+ * @api /api/faculties/:facultyId/events/:eventId/submitted-articles
  * @permissions
  *      - Coordinators (exact faculty)
  * @description API for getting new article submissions of a faculty
@@ -289,7 +289,7 @@ router.get("/:facultyId/events/:eventId/posted-articles", async (req, res) => {
  */
 
 router.get(
-  "/:facultyId/events/:eventId/new-articles",
+  "/:facultyId/events/:eventId/submitted-articles",
   coordinatorValidation,
   async (req, res) => {
     const facultyId = req.params.facultyId;
