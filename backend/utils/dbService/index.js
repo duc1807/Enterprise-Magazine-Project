@@ -12,6 +12,7 @@ const {
 } = require("../../utils/dbService/facultyService");
 const {
 	getPostedArticlesOfEvent,
+	getArticleById,
 	createNewArticle,
 	getSubmittedArticles,
 	getSelectedArticles,
@@ -20,6 +21,7 @@ const {
 	addNewCommentToArticle,
 	setSelectedArticle,
 	setRejectedArticle,
+	getFileByFileId,
 } = require("../../utils/dbService/articleService");
 const {
 	getCoordinatorAccountsByFaculty,
@@ -68,6 +70,8 @@ module.exports = {
 	// ================================================================
 
 	// ======================================================= Article
+	// Get an article information
+	getArticleById: getArticleById,
 	// Get all posted articles of event
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 	// Create new article
@@ -90,6 +94,7 @@ module.exports = {
 
 	// ======================================================= File
 	uploadFile: uploadFile,
+	getFileByFileId: getFileByFileId,
 	// ================================================================
 
 	// ======================================================= Student

@@ -20,11 +20,81 @@ const getDataBaseConnection = () => {
   return connection;
 };
 
+// Test code ================================================================
+
+/**
+ * @description Get the article information
+ * @params
+ *      - articleId: Int (req.params)
+ * @return
+ *      - article: Object
+ *          + file: Array[]
+ * @notes
+ */
+const getArticleById = async (articleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${DB_TABLE}
+              INNER JOIN File
+              ON File.FK_article_id = Article.article_id
+              WHERE article_id = ${articleId};
+              SELECT * FROM ${DB_TABLE}
+              INNER JOIN Comment
+              ON Comment.FK_article_id = Article.article_id
+              WHERE article_id = ${articleId};`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+
+
+/**
+ * @description Get the article's file information
+ * @params
+ *      - fileId: Int (req.params)
+ * @return
+ *      - article: Object
+ *          + file: Array[]
+ * @notes
+ *      - Put service in fileService.js   ?????
+ */
+const getFileByFileId = async (fileId, articleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Article
+              WHERE article_id = ${articleId};
+              SELECT * FROM File
+              WHERE file_id = ${fileId};
+              SELECT * FROM Comment
+              WHERE FK_article_id = ${articleId}`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      // Check if Article && File is valid
+      if (!result[0].length || !result[1].length) {
+        reject(false)
+      }
+      // Return the query[1] and query[2]
+      resolve([result[1],result[2]]);
+      db.end();
+    });
+  });
+};
+
+// =========================================================================
+
 /**
  * @description Get the posted articles of event's newfeed
  * @params
  *      - eventId: Int (req.params)
- * 		- facultyId: Int (req.params)
+ * 		  - facultyId: Int (req.params)
  * @return
  *      - postedArticles: Array[]
  *          + ........................... ???
@@ -211,7 +281,6 @@ const getRejectedArticlesByEventId = (eventId, facultyId) => {
     INNER JOIN Faculty
     ON Event.FK_faculty_id = Faculty.faculty_id
     WHERE event_id = ${eventId} AND Faculty.faculty_id = ${facultyId};` +
-
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
     INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
@@ -260,7 +329,7 @@ const getSubmittedArticleById = (articleId) => {
 };
 
 /**
- * @description Add new comment to a specific article 
+ * @description Add new comment to a specific article
  * @params
  *      - commentInfo: Object
  * 		  - userInfo: Object
@@ -309,7 +378,7 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
 /**
  * @description Set an article status to 'accepted'
  * @params
- *      - articleId: Int 
+ *      - articleId: Int
  * @return null
  * @notes
  *      - Only can set status for 'pending' articles
@@ -333,7 +402,7 @@ const setSelectedArticle = (articleId) => {
       if (!result[0]) {
         reject(false);
       } else {
-		  // If article with status == 'pending' found, UPDATE to 'accepted'
+        // If article with status == 'pending' found, UPDATE to 'accepted'
         db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
           resolve(result1);
@@ -344,11 +413,10 @@ const setSelectedArticle = (articleId) => {
   });
 };
 
-
 /**
  * @description Set an article status to 'accepted'
  * @params
- *      - articleId: Int 
+ *      - articleId: Int
  * @return null
  * @notes
  *      - Only can set status for 'pending' articles
@@ -372,7 +440,7 @@ const setRejectedArticle = (articleId) => {
       if (!result[0]) {
         reject(false);
       } else {
-		  // If article with status == 'pending' found, UPDATE to 'rejected'
+        // If article with status == 'pending' found, UPDATE to 'rejected'
         db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
           resolve(result1);
@@ -383,13 +451,14 @@ const setRejectedArticle = (articleId) => {
   });
 };
 
-
 module.exports = {
+  getArticleById: getArticleById,
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSelectedArticles: getSelectedArticlesByEventId,
   getRejectedArticles: getRejectedArticlesByEventId,
   getSubmittedArticleById: getSubmittedArticleById,
+  getFileByFileId: getFileByFileId,
   addNewCommentToArticle: addNewCommentToArticle,
   createNewArticle: createNewArticle,
   setSelectedArticle: setSelectedArticle,
