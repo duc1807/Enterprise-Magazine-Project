@@ -101,20 +101,56 @@ const getFileByFileId = async (fileId, articleId) => {
  * @notes
  *      - Not yet add the WHERE condition for selecting posted articles
  */
-const getPostedArticlesOfEvent = async (eventId, facultyId) => {
+// const getPostedArticlesOfEvent = async (eventId, facultyId) => {
+//   let db = getDataBaseConnection();
+
+//   console.log("test: ", eventId + " " + facultyId);
+
+//   const sql = //Check if faculty exist
+//     `SELECT * FROM Faculty
+//               WHERE faculty_id = '${facultyId}';` +
+//     // Check if faculty exist event
+//     `SELECT * FROM Event
+//               WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
+//     //   // Check if event exist
+//     // + `SELECT * FROM Event
+//     //   WHERE event_id = ${eventId};`
+
+//     // Get articles (nullable)
+//     `SELECT * FROM ${DB_TABLE} 
+//               WHERE FK_event_id = ${eventId}`;
+//   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
+//   // `;
+
+//   return new Promise((resolve, reject) => {
+//     db.query(sql, (err, result) => {
+//       if (!!err) reject(err);
+
+//       /* Check if event/faculty is existed or not
+//        *  Bypass the final result because articles can be null
+//        */
+//       for (let i = 0; i < result.length - 1; i++) {
+//         if (!result[i].length) {
+//           reject(false);
+//         }
+//       }
+
+//       // Return result at the last position (Event info & Posted articles)
+//       resolve([result[result.length - 2], result[result.length - 1]]);
+//       db.end();
+//     });
+//   });
+// };
+
+// ============================================== DEVELOPMENT CODE (getPostedArticlesOfEvent)
+
+const getPostedArticlesOfEvent = async (eventId) => {
   let db = getDataBaseConnection();
 
-  console.log("test: ", eventId + " " + facultyId);
-
-  const sql = //Check if faculty exist
-    `SELECT * FROM Faculty
-              WHERE faculty_id = '${facultyId}';` +
-    // Check if faculty exist event
+  const sql =
+    // Get event information
     `SELECT * FROM Event
-              WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
-    //   // Check if event exist
-    // + `SELECT * FROM Event
-    //   WHERE event_id = ${eventId};`
+              WHERE event_id = ${eventId};` +
 
     // Get articles (nullable)
     `SELECT * FROM ${DB_TABLE} 
@@ -126,21 +162,19 @@ const getPostedArticlesOfEvent = async (eventId, facultyId) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
 
-      /* Check if event/faculty is existed or not
-       *  Bypass the final result because articles can be null
-       */
-      for (let i = 0; i < result.length - 1; i++) {
-        if (!result[i].length) {
+      // Check if event is existed or not
+        if (!result[0].length) {
           reject(false);
         }
-      }
-
+        console.log("event res: ", result);
       // Return result at the last position (Event info & Posted articles)
-      resolve([result[result.length - 2], result[result.length - 1]]);
+      resolve([result[0], result[1]]);
       db.end();
     });
   });
 };
+// ===============================================================
+
 
 /**
  * @description Create new article
@@ -184,18 +218,53 @@ const createNewArticle = (articleInfo) => {
  * @notes
  * 		- In case article has no file, return empty array ?? or still return article with empty file[] ???
  */
+// const getSubmittedArticlesByEventId = (eventId, facultyId) => {
+//   const db = getDataBaseConnection();
+
+//   // Select all articles of an event that status = pending, innerjoin with table "File"
+//   const sql = //Check if faculty exist
+//     `SELECT * FROM Faculty
+// 						WHERE faculty_id = '${facultyId}';` +
+//     // Check if faculty exist event
+//     `SELECT * FROM Event
+// 						WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
+//     // Get the selected articles of event with its files
+//     `SELECT *
+//             FROM ${DB_TABLE}
+//             INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+//             WHERE FK_event_id = ${eventId} AND File.FK_article_id IS NOT NULL
+//             AND article_status = '${ARTICLE_STATUS.pending}'`;
+
+//   return new Promise((resolve, reject) => {
+//     db.query(sql, (err, result) => {
+//       if (!!err) reject(err);
+
+//       /* Check if event/faculty is existed or not
+//        *  Bypass the final result because articles can be null
+//        */
+//       for (let i = 0; i < result.length - 1; i++) {
+//         if (!result[i].length) {
+//           reject(false);
+//         }
+//       }
+
+//       // Return the submitted article
+//       resolve(result[result.length - 1]);
+//       db.end();
+//     });
+//   });
+// };
+
+// ========================================================= DEVELOPMENT CODE (getSubmittedArticlesByEventId)
 const getSubmittedArticlesByEventId = (eventId, facultyId) => {
   const db = getDataBaseConnection();
 
-  // Select all articles of an event that status = pending, innerjoin with table "File"
-  const sql = //Check if faculty exist
-    `SELECT * FROM Faculty
-						WHERE faculty_id = '${facultyId}';` +
     // Check if faculty exist event
-    `SELECT * FROM Event
+    const sql = 
+            `SELECT * FROM Event
 						WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
-    // Get the selected articles of event with its files
-    `SELECT *
+    // Select all articles of an event that status = pending, innerjoin with table "File"
+            `SELECT *
             FROM ${DB_TABLE}
             INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
             WHERE FK_event_id = ${eventId} AND File.FK_article_id IS NOT NULL
@@ -205,13 +274,9 @@ const getSubmittedArticlesByEventId = (eventId, facultyId) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
 
-      /* Check if event/faculty is existed or not
-       *  Bypass the final result because articles can be null
-       */
-      for (let i = 0; i < result.length - 1; i++) {
-        if (!result[i].length) {
-          reject(false);
-        }
+      // Check if event is existed or not
+      if (!result[0].length) {
+        reject(false);
       }
 
       // Return the submitted article
@@ -220,12 +285,16 @@ const getSubmittedArticlesByEventId = (eventId, facultyId) => {
     });
   });
 };
+// ============================================================================
+
+
+// ========================================================= DEVELOPMENT CODE (getSelectedArticlesByEventId)
 
 /**
  * @description Get the selected articles of event
  * @params
  *      - eventId: Int (req.params)
- * 		- facultyId: Int (req.params)
+ *      - facultyId: Int (req.params)
  * @return
  *      - selectedArticles: Array[]
  *          + ........................... ???
@@ -237,9 +306,7 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
   const sql =
     // Check if faculty exist event
     `SELECT * FROM Event
-	INNER JOIN Faculty
-	ON Event.FK_faculty_id = Faculty.faculty_id
-	WHERE event_id = ${eventId} AND Faculty.faculty_id = ${facultyId};` +
+	  WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
     INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
@@ -259,12 +326,14 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
     });
   });
 };
+// =============================================================================================
+
 
 /**
  * @description Get the rejected articles of event
  * @params
  *      - eventId: Int (req.params)
- * 		- facultyId: Int (req.params)
+ * 		  - facultyId: Int (req.params)
  * @return
  *      - rejectedArticles: Array[]
  *          + ........................... ???
@@ -278,9 +347,7 @@ const getRejectedArticlesByEventId = (eventId, facultyId) => {
   const sql =
     // Check if faculty exist event
     `SELECT * FROM Event
-    INNER JOIN Faculty
-    ON Event.FK_faculty_id = Faculty.faculty_id
-    WHERE event_id = ${eventId} AND Faculty.faculty_id = ${facultyId};` +
+    WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
     INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id

@@ -37,14 +37,37 @@ const getEventsByFacultyId = async (facultyId) => {
   });
 };
 
-const getEventById = (eventId) => {
+
+// const getEventById = (eventId) => {
+//   let db = getDataBaseConnection();
+
+//   const sql = `SELECT * FROM ${TABLE}
+//                 WHERE event_id = ${eventId}`;
+
+//   return new Promise((resolve, reject) => {
+//     db.query(sql, (err, result) => {
+//       if (!!err) reject(err);
+//       if (!result.length) {
+//         reject(false);
+//       }
+//       resolve(result);
+//       db.end();
+//     });
+//   });
+// };
+// =============================================================== TEST NEW CODE
+const getEventById = (eventId, facultyId) => {
   let db = getDataBaseConnection();
 
-  const sql = `SELECT * FROM ${TABLE}
-                WHERE event_id = ${eventId}`;
+  console.log("faculty: ", facultyId);
+
+  const sql = `SELECT *
+              FROM ${TABLE}
+              WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
+      console.log("result: ", result);
       if (!!err) reject(err);
       if (!result.length) {
         reject(false);
@@ -54,6 +77,8 @@ const getEventById = (eventId) => {
     });
   });
 };
+// ===============================================================
+
 
 const createNewEvent = async (eventInfo) => {
   const {

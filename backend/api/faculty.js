@@ -131,6 +131,8 @@ router.get("/:facultyId", gwAccountValidation, async (req, res) => {
     });
 });
 
+
+// ================================================ moved to Event.js || /api/events/:eventId
 /**
  * @method GET
  * @api /api/faculties/:facultyId/events/:eventId
@@ -196,6 +198,10 @@ router.get(
       });
   }
 );
+// ==============================================================================
+
+
+// ================================================ moved to Event.js || /api/events/:eventId/all
 
 /**
  * @method GET
@@ -255,6 +261,10 @@ router.get("/:facultyId/events/:eventId/posted-articles", async (req, res) => {
       }
     });
 });
+// =================================================================================
+
+
+// ================================================ moved to Event.js || /api/events/:eventId/submitted-articles
 
 /**
  * @method GET
@@ -405,7 +415,12 @@ router.get(
       });
   }
 );
+// =============================================================================
 
+
+
+
+// ================================================ moved to Event.js || /api/events/:eventId/selected-articles
 /**
  * @method GET
  * @api /api/faculties/:facultyId/events/:eventId/selected-articles
@@ -538,6 +553,10 @@ router.get(
       });
   }
 );
+// ===========================================================================================
+
+
+// ================================================ moved to Event.js || /api/events/:eventId/rejected-articles
 
 /**
  * @method GET
@@ -662,6 +681,7 @@ router.get(
       });
   }
 );
+// ===========================================================================
 
 // =================================================== TEST CODE
 

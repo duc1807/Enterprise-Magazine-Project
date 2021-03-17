@@ -47,7 +47,7 @@ app
 	.use("/api/faculties", require("./api/faculty"))
 
 	// Event API (Event: Drive folder inside Faculty)
-	.use("/api/event", require("./api/event"))
+	.use("/api/events", require("./api/event"))
 
   // API for articles manipulating
 	.use("/api/article", require("./api/article"))
