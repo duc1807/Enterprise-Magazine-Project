@@ -177,6 +177,34 @@ const getPostedArticlesOfEvent = async (eventId) => {
 
 
 /**
+ * @description Get all user articles
+ * @params
+ *      - userId: Int
+ * @return 
+ *      - myArticles: Array[Object]
+ * @notes
+ */
+const getSelfArticles = (userId) => {
+  let db = getDataBaseConnection();
+  console.log("self : ", userId);
+
+  const sql = `SELECT ${DB_TABLE}.*, Event.event_title, Event.event_endDate
+              FROM ${DB_TABLE}
+              INNER JOIN Event
+              ON Article.FK_event_id = Event.event_id
+              WHERE Article.FK_account_id = ${userId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+}
+
+
+/**
  * @description Create new article
  * @params
  *      - articleInfo: Object
@@ -520,6 +548,7 @@ const setRejectedArticle = (articleId) => {
 
 module.exports = {
   getArticleById: getArticleById,
+  getSelfArticles: getSelfArticles,
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSelectedArticles: getSelectedArticlesByEventId,

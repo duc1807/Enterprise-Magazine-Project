@@ -13,6 +13,7 @@ const {
 const {
 	getPostedArticlesOfEvent,
 	getArticleById,
+	getSelfArticles,
 	createNewArticle,
 	getSubmittedArticles,
 	getSelectedArticles,
@@ -72,6 +73,8 @@ module.exports = {
 	// ======================================================= Article
 	// Get an article information
 	getArticleById: getArticleById,
+	// Get current student articles
+	getSelfArticles: getSelfArticles,
 	// Get all posted articles of event
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 	// Create new article

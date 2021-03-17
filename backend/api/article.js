@@ -9,6 +9,7 @@ const {
   setRejectedArticle,
   getArticleById,
   getFileByFileId,
+  getSelfArticles
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -23,11 +24,62 @@ const router = express.Router();
 const _COORDINATOR_PERMISSION_ID = 2;
 
 // Test code ================================================================
+
+/**
+ * @method GET
+ * @API /api/article/my-articles       ?????????????
+ * @permission
+ *    - Manager coordinator of exact faculty
+ * @description API for getting article's .doc file information & comments
+ * @params
+ * @return
+ *    - myArticles: Array[Object]
+ * @notes
+ *    - Need endDate2, Event.event_published
+ */
+ router.get("/my-articles", gwAccountValidation, async (req, res) => {
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
+
+  console.log("data: ", data);
+
+  // Get all articles of current user
+  const query = getSelfArticles(3);
+
+  await query
+    .then((result) => {
+      // Finally, response the selectedArticles[]
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        myArticles: result
+      });
+    })
+    .catch((err) => {
+      if (err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        // If err == false => Event not found
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
+    });
+});
+
+
 /**
  * @method GET
  * @API api/article/:articleId/
  * @permission
- *    - Manager coordinator of exact faculty
+ *    - Student (exact articleId)
  * @description API for getting article information
  * @params
  * 		- articleId: Int
@@ -163,6 +215,7 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
     });
 });
 // =========================================================================
+
 
 /**
  * @method GET
@@ -320,74 +373,70 @@ router.post(
  * 		- Should pass articleId in req.params ??? Or body ???
  *    - Still not validate permission
  */
-router.patch(
-  "/:articleId/select",
-  gwAccountValidation,
-  async (req, res) => {
-    // Get articleId from param
-    const { articleId } = req.params;
-    // Get userInfo passed from middleware
-    const data = res.locals.data;
+router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
+  // Get articleId from param
+  const { articleId } = req.params;
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
 
-    // Check permission is coordinator or not
-    if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
-      return res.status(401).json({
-        status: res.statusCode,
-        success: false,
-        message: "Permission required!",
-      });
-    }
+  // Check permission is coordinator or not
+  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Permission required!",
+    });
+  }
 
-    // Set article status to selected in database
-    const query = setSelectedArticle(articleId);
+  // Set article status to selected in database
+  const query = setSelectedArticle(articleId);
 
-    await query
-      .then(async (result) => {
-        // If updated successfully, the get event information by articleId
-        const query1 = getEventByArticleId(articleId);
+  await query
+    .then(async (result) => {
+      // If updated successfully, the get event information by articleId
+      const query1 = getEventByArticleId(articleId);
 
-        // After getting event information successfully, then alter folder in google drive
-        await query1
-          .then((articleAndEventInfo) => {
-            console.log(articleAndEventInfo);
+      // After getting event information successfully, then alter folder in google drive
+      await query1
+        .then((articleAndEventInfo) => {
+          console.log(articleAndEventInfo);
 
-            // Asynchronous move article folder to selected article in Drive
-            insertFolderToOtherFolder(articleAndEventInfo);
+          // Asynchronous move article folder to selected article in Drive
+          insertFolderToOtherFolder(articleAndEventInfo);
 
-            // Return the success status
-            return res.status(204).json({
-              status: res.statusCode,
-              success: true,
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(501).json({
-              status: res.statusCode,
-              success: false,
-              messages: "Bad request",
-            });
+          // Return the success status
+          return res.status(204).json({
+            status: res.statusCode,
+            success: true,
           });
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log("Err: ", err);
+        })
+        .catch((err) => {
+          console.log(err);
           return res.status(501).json({
             status: res.statusCode,
             success: false,
             messages: "Bad request",
           });
-        } else {
-          // If article || article status == 'pending' doesnt exist
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Invalid request!",
-          });
-        }
-      });
-  }
-);
+        });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          messages: "Bad request",
+        });
+      } else {
+        // If article || article status == 'pending' doesnt exist
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Invalid request!",
+        });
+      }
+    });
+});
 
 /**
  * @method PATCH
@@ -398,59 +447,55 @@ router.patch(
  * @note
  * 		- Should pass articleId in req.params ??? Or body ???
  */
-router.patch(
-  "/:articleId/reject",
-  gwAccountValidation,
-  async (req, res) => {
-    // Get articleId from req.params
-    const { articleId } = req.params;
+router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
+  // Get articleId from req.params
+  const { articleId } = req.params;
 
-    console.log("ARTICLEID: ", articleId);
+  console.log("ARTICLEID: ", articleId);
 
-    // Get the userInfo passed from middleware
-    const data = res.locals.data;
+  // Get the userInfo passed from middleware
+  const data = res.locals.data;
 
-    console.log("DATA USERINFO: ", data);
+  console.log("DATA USERINFO: ", data);
 
-    // Check if user has permisson to this api or not
-    if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
-      return res.status(401).json({
-        status: res.statusCode,
-        success: false,
-        message: "Permission required!",
-      });
-    }
-
-    // Set article status to rejected
-    const query = setRejectedArticle(articleId);
-
-    await query
-      .then((result) => {
-        return res.status(204).json({
-          status: res.statusCode,
-          success: true,
-          message: `Article ${articleId} has been rejected`,
-        });
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log(err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request!",
-          });
-        } else {
-          // Check if article || article status == 'pending' doesnt exist
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Invalid request!",
-          });
-        }
-      });
+  // Check if user has permisson to this api or not
+  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Permission required!",
+    });
   }
-);
+
+  // Set article status to rejected
+  const query = setRejectedArticle(articleId);
+
+  await query
+    .then((result) => {
+      return res.status(204).json({
+        status: res.statusCode,
+        success: true,
+        message: `Article ${articleId} has been rejected`,
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log(err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request!",
+        });
+      } else {
+        // Check if article || article status == 'pending' doesnt exist
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Invalid request!",
+        });
+      }
+    });
+});
 
 /**
  * @method POST
