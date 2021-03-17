@@ -551,7 +551,7 @@ router.get(
 
 /**
  * @method POST
- * @API /api/event/
+ * @API /api/events/
  * @description API for creating new event
  * @params
  *      - title: String
@@ -926,7 +926,7 @@ router.post("/", managerValidation, upload.single("file"), async (req, res) => {
 
 /**
  * @method PUT
- * @API /api/event/
+ * @API /api/events/
  * @description API for updating event
  * @params
  *      - id: Int
@@ -1034,7 +1034,7 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
 
 /**
  * @method DELETE
- * @API /api/event/
+ * @API /api/events/:eventId
  * @description API for deleting event
  * @params
  *      - eventId: Int
@@ -1042,8 +1042,8 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
  * @notes
  *      - Delete event on drive??? Or not??
  */
-router.delete("/", managerValidation, (req, res) => {
-  const { eventId } = req.body;
+router.delete("/:eventId", managerValidation, (req, res) => {
+  const { eventId } = req.params;
 
   // Delete event by eventId
   const query = deleteEventById(eventId);

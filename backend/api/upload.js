@@ -19,6 +19,7 @@ const STUDENT_ROLE_ID = 1;
 
 /**
  * @method POST
+ * @api api/upload
  * @description API for upload article submissions for students
  * @params
  *      - eventId: Int

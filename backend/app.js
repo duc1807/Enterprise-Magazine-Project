@@ -61,7 +61,10 @@ app
 	// API for student to upload articles
 	.use("/api/upload", require("./api/upload"))
 
-  // ============================= In development
+  // API for manager to view the statistics
+	.use("/api/statistic", require("./api/statistic"))
+
+  // ============================================================== In development
 	.use("/api/user", require("./api/user"))
 	.use("/api/notification", require("./api/mailnotification"))
 

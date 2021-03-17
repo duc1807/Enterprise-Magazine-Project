@@ -310,7 +310,7 @@ router.post(
 
 /**
  * @method PATCH
- * @API /api/article/:articleId/select-article
+ * @API /api/article/:articleId/select
  * @description API for select an article
  * @params
  * 		- articleId: Int
@@ -321,7 +321,7 @@ router.post(
  *    - Still not validate permission
  */
 router.patch(
-  "/:articleId/select-article",
+  "/:articleId/select",
   gwAccountValidation,
   async (req, res) => {
     // Get articleId from param
@@ -391,7 +391,7 @@ router.patch(
 
 /**
  * @method PATCH
- * @API /api/article/:articleId/reject-article
+ * @API /api/article/:articleId/reject
  * @description API for reject an article
  * @param
  * 		- articleId: Int
@@ -399,7 +399,7 @@ router.patch(
  * 		- Should pass articleId in req.params ??? Or body ???
  */
 router.patch(
-  "/:articleId/reject-article",
+  "/:articleId/reject",
   gwAccountValidation,
   async (req, res) => {
     // Get articleId from req.params
