@@ -6,9 +6,9 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "./temp");
     },
-    // Custom the file name: "DateTime_id | file_name"
+    // Custom the file name: "[Timestamp] file_name"
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()} | ${file.originalname}`);
+        cb(null, `[${Date.now()}] ${file.originalname}`);
     },
 });
 

@@ -3,7 +3,6 @@
 /package-lock.json
 /ZIP
 /download_temp
-/temp
 
 # secret files
 credentials.json

@@ -3,12 +3,10 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
-const webToken = require("jsonwebtoken");
 const async = require("async");
 const { google, Auth } = require("googleapis");
 
 // Import modules from other files
-const { getAuthClient, getUserProfile } = require("../utils/auth");
 const { gwAccountValidation } = require("./middleware/verification");
 const { getAuthServiceJwt } = require("../utils/driveAPI");
 const {
@@ -20,7 +18,6 @@ const { upload } = require("../utils/multerStorage");
 const SERVICE_KEY = require("../private_key.json");
 
 const STUDENT_ROLE_ID = 1;
-
 
 /**
  * @method POST
@@ -73,7 +70,8 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
   // STEP 3: If student and event are correct, assign data to studentInfo
   const studentInfo = data;
 
-  const facultyId = studentInfo.userInfo.FK_faculty_id
+  // Get facultyId from userInfo
+  const facultyId = studentInfo.userInfo.FK_faculty_id;
 
   // STEP 4: Get the event information and check if the student faculty is correct or not
   const query = getEventById(eventId, facultyId);
@@ -118,10 +116,8 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
   });
 
   // STEP 6: Create a folder to store student articles and upload to database
-  const currentTime = new Date();
-
   const studentFolderMetadata = {
-    name: `${studentInfo.userInfo.email} | ${currentTime.getTime()}`,
+    name: `${studentInfo.userInfo.email} | ${new Date().getTime()}`,
     mimeType: "application/vnd.google-apps.folder",
     parents: [eventInfo.folderId_allArticles],
   };
@@ -148,97 +144,100 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
         articleInfo.FK_account_id = studentInfo.userInfo.account_id;
         articleInfo.FK_event_id = eventInfo.event_id;
 
-        const query1 = createNewArticle(articleInfo)
+        const query1 = createNewArticle(articleInfo);
 
-        await query1.then(result => {
-          console.log(studentInfo.userInfo.email + " added new article to database.");
-        }).catch(err => {
-          console.log(err);
-          res.status(500).json({
-            status: res.statusCode,
-            success: false,
-            message: "Failed to submit new article"
-          })
-        })
+        await query1.then(async (result) => {
+          // Get insertId after create new article in database
+          console.log("articleId: ", result.insertId);
+
+          const uploadMultiple = upload.any("uploadedImages");
+
+          // Upload file to google drive
+          uploadMultiple(req, res, function (err) {
+            if (err) throw err;
+            console.log("files: ", req.files);
+
+            // Get files[] from request
+            const files = req.files;
+
+            // Map all elements in files
+            files.map((filedata) => {
+              // Create metadata for file
+              const filemetadata = {
+                name: filedata.filename,
+                parents: [articleInfo.articleFolderId],
+              };
+
+              // Create media type for file
+              const media = {
+                mimeType: filedata.mimetype,
+                body: fs.createReadStream(filedata.path),
+              };
+
+              // Upload file to google drive
+              drive.files.create(
+                {
+                  resource: filemetadata,
+                  media: media,
+                  fields: "id",
+                },
+                async (err, file) => {
+                  if (err) {
+                    res.json({
+                      status: 501,
+                      success: false,
+                      message: "Upload files to drive failed!",
+                    });
+                    fs.unlinkSync(filedata.path);
+                    return;
+                  }
+
+                  // STEP 8: Get the file id after uploaded successful
+                  console.log("File id: ", file.data.id);
+
+                  // Create file info Object to INSERT into database
+                  const fileInfo = {
+                    mimeType: filedata.mimetype,
+                    fileId: file.data.id,
+                    FK_article_id: result.insertId,
+                  };
+
+                  // Upload file into 'File' table
+                  const query2 = uploadFile(fileInfo);
+
+                  await query2
+                    .then((result1) => {
+                      fs.unlinkSync(filedata.path);
+                      return res.status(200).json({
+                        status: res.statusCode,
+                        success: true,
+                        message: "File uploaded successful",
+                      });
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      fs.unlinkSync(filedata.path);
+                      return res.status(500).json({
+                        status: res.statusCode,
+                        success: false,
+                        message: "Error when uploading files",
+                      });
+                    });
+                  // Delete the file in temp folder
+                  fs.unlinkSync(filedata.path);
+                }
+              );
+            });
+          });
+        });
       }
     }
   );
 
   // STEP 7: Upload files into student's folder above
-
-  const uploadMultiple = upload.any("uploadedImages");
-
-  // uploadMultiple(req, res, function (err) {
-  //   if (err) throw err;
-  //   console.log("files: ", req.files);
-
-  //   // For testing
-  //   // const folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
-
-  //   const files = req.files;
-
-  //   files.map((filedata) => {
-  //     const filemetadata = {
-  //       name: filedata.filename,
-  //       parents: [articleInfo.articleFolderId],
-  //     };
-
-  //     const media = {
-  //       mimeType: filedata.mimetype,
-  //       body: fs.createReadStream(filedata.path),
-  //     };
-
-  //     drive.files.create(
-  //       {
-  //         resource: filemetadata,
-  //         media: media,
-  //         fields: "id",
-  //       },
-  //       async (err, file) => {
-  //         if (err) {
-  //           res.json({
-  //             status: 501,
-  //             success: false,
-  //             message: "Upload files to drive failed!",
-  //           });
-  //           fs.unlinkSync(filedata.path);
-  //         }
-
-  //         // STEP 8: Get the file id and insert into database
-  //         console.log("File id: ", file.data.id);
-
-  //         const fileInfo = {
-  //           mimeType: filedata.mimetype,
-  //           fileId: file.data.id,
-  //           FK_article_id: articleInfo.articleFolderId, // ??? Using articleFolderId or unique id??
-  //         };
-  //         const query2 = uploadFile(fileInfo);
-
-  //         await query2
-  //           .then((result) => {
-  //             console.log(filedata.filename + " uploaded successfully");
-  //           })
-  //           .catch((err) => {
-  //             console.log(err);
-
-  //             // Return err ?
-  //             // return res.status(500).json({
-  //             //   status: res.statusCode,
-  //             //   success: false,
-  //             //   message: "Error when uploading files"
-  //             // })
-  //           });
-
-  //         // Delete the file in temp folder
-  //         fs.unlinkSync(filedata.path);
-  //       }
-  //     );
-  //   });
-  // });
 });
 
 module.exports = router;
-
 
 //=============================== OLD UPLOAD: Create submission folder in student article folder
 /**
