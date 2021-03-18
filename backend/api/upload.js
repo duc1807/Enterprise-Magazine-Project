@@ -41,9 +41,9 @@ const STUDENT_ROLE_ID = 1;
  *      - Startdate needed?
  *      - Complexity on uploadMultiple function
  */
-router.post("/", gwAccountValidation, async (req, res) => {
+router.post("/:eventId", gwAccountValidation, async (req, res) => {
   // Get eventId from request body
-  const { eventId } = req.body;
+  const { eventId } = req.params;
 
   // Create eventInfo variable
   let eventInfo = undefined;
