@@ -241,7 +241,6 @@ const createNewArticle = (articleInfo) => {
   const {
     articleSubmissionDate,
     articleFolderId,
-    parentFolderId,
     FK_account_id,
     FK_event_id,
   } = articleInfo;
@@ -249,9 +248,9 @@ const createNewArticle = (articleInfo) => {
   let db = getDataBaseConnection();
 
   const sql = `INSERT INTO ${DB_TABLE}
-              (article_submission_date, article_status, article_folderId, article_parentId, FK_account_id, FK_event_id)
+              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
               VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
-              '${parentFolderId}', ${FK_account_id}, ${FK_event_id})`;
+              ${FK_account_id}, ${FK_event_id})`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
