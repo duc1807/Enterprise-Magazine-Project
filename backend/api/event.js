@@ -13,18 +13,20 @@ const OAuth2Data = require("../credentials.json");
 const key = require("../private_key.json");
 
 const {
-  // Account service
+  // Account services
   getCoordinatorAccountsByFaculty,
   getStudentAccountByFaculty,
 
-  // Faculty service
+  // Faculty services
   getFacultyById,
 
-  // Event service
+  // Event services
   createNewEvent,
   updateEvent,
+  publishEventById,
   deleteEventById,
   getEventById,
+  // Article services
   getPostedArticlesOfEvent,
   getSubmittedArticles,
   getSelectedArticles,
@@ -557,7 +559,7 @@ router.get(
  *      - title: String
  *      - content: String
  *      - imageData: file
- * 		- startDate: Date (yyyy-mm-dd)
+ * 		  - startDate: Date (yyyy-mm-dd)
  *      - endDate: Date (yyyy-mm-dd)
  *      - facultyId: Int
  * @return
@@ -1031,6 +1033,47 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
       }
     });
 });
+
+
+/**
+ * @method PATCH
+ * @API /api/events/:eventId/publish
+ * @description API for publish event
+ * @params
+ *      - eventId: Int
+ * @return null
+ * @notes
+ */
+ router.patch("/:eventId/publish", managerValidation, (req, res) => {
+  const { eventId } = req.params;
+
+  // Publish event by eventId
+  const query = publishEventById(eventId);
+  query
+    .then((result) => {
+      return res.status(202).json({
+        success: true,
+        message: `Event ${result.event_title} published successfully`,
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: "Server error!",
+        });
+      } else {
+        // If err == false, return event not found
+        return res.status(404).json({
+          success: false,
+          message: "Invalid request!",
+        });
+      }
+    });
+});
+
+
 
 /**
  * @method DELETE

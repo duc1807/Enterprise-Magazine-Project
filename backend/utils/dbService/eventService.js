@@ -173,6 +173,32 @@ const updateEvent = async (eventInfo) => {
   });
 };
 
+const publishEventById = (eventId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${TABLE}
+                WHERE event_id = ${eventId};`;
+  const sql1 = `UPDATE ${TABLE}
+                SET event_publish = "TRUE"
+                WHERE event_id = ${eventId};`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      // Check if the Event is existed or not
+      if (!result || !result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          resolve(result1);
+        });
+      }
+      db.end();
+    });
+  });
+};
+
 const deleteEventById = (eventId) => {
   let db = getDataBaseConnection();
 
@@ -222,6 +248,7 @@ module.exports = {
   getEventById: getEventById,
   createNewEvent: createNewEvent,
   updateEvent: updateEvent,
+  publishEventById: publishEventById,
   deleteEventById: deleteEventById,
   getEventByArticleId: getEventByArticleId,
 };

@@ -11,7 +11,11 @@ const { google, Auth } = require("googleapis");
 const { getAuthClient, getUserProfile } = require("../utils/auth");
 const { gwAccountValidation } = require("./middleware/verification");
 const { getAuthServiceJwt } = require("../utils/driveAPI");
-const { getEventById, uploadFile, createNewArticle } = require("../utils/dbService/index");
+const {
+  getEventById,
+  uploadFile,
+  createNewArticle,
+} = require("../utils/dbService/index");
 const { upload } = require("../utils/multerStorage");
 const SERVICE_KEY = require("../private_key.json");
 
@@ -47,6 +51,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
   const articleInfo = {
     articleSubmissionDate: undefined,
     articleFolderId: "",
+    parentFolderId: "",
     FK_account_id: undefined,
     FK_event_id: undefined,
   };
@@ -67,9 +72,10 @@ router.post("/", gwAccountValidation, async (req, res) => {
 
   // STEP 3: If student and event are correct, assign data to studentInfo
   const studentInfo = data;
+  const facultyId = data.userInfo.FK_faculty_id
 
   // STEP 4: Get the event information and check if the student faculty is correct or not
-  const query = getEventById(eventId);
+  const query = getEventById(eventId, facultyId);
 
   await query
     .then((result) => {
@@ -124,7 +130,7 @@ router.post("/", gwAccountValidation, async (req, res) => {
       resource: studentFolderMetadata,
       fields: "id",
     },
-    async (err, file) => {
+    async (err, folder) => {
       if (err) {
         console.error(err);
         res.status(501).json({
@@ -133,26 +139,62 @@ router.post("/", gwAccountValidation, async (req, res) => {
           message: "Failed to upload files to the server!",
         });
       } else {
-        console.log("Student folder Id: ", file.data.id);
+        console.log("Student folder Id: ", folder.data.id);
 
         // Insert data to articleInfo Object and INSERT into database
         articleInfo.articleSubmissionDate = new Date().getTime();
-        articleInfo.articleFolderId = file.data.id;
+        articleInfo.parentFolderId = folder.data.id;
         articleInfo.FK_account_id = studentInfo.userInfo.account_id;
         articleInfo.FK_event_id = eventInfo.event_id;
 
-        const query1 = createNewArticle(articleInfo)
+        // Create submission folder for each file update / upload
+        const studentSubmissionFolderMetadata = {
+          name: `${currentTime.getTime()}`,
+          mimeType: "application/vnd.google-apps.folder",
+          parents: [articleInfo.parentFolderId],
+        };
+        await drive.files.create(
+          {
+            resource: studentSubmissionFolderMetadata,
+            fields: "id",
+          },
+          async (err, folder1) => {
+            if (err) {
+              console.error(err);
+              res.status(501).json({
+                status: res.statusCode,
+                success: false,
+                message: "Failed to upload files to the server!",
+              });
+            } else {
+              articleInfo.articleFolderId = folder1.data.id;
 
-        await query1.then(result => {
-          console.log(studentInfo.userInfo.email + " added new article to database.");
-        }).catch(err => {
-          console.log(err);
-          res.status(500).json({
-            status: res.statusCode,
-            success: false,
-            message: "Failed to submit new article"
-          })
-        })
+              // INSERT DATA INTO DATABASE
+              const query1 = createNewArticle(articleInfo);
+
+              await query1
+                .then((result) => {
+                  console.log(
+                    studentInfo.userInfo.email +
+                      " added new article to database."
+                  );
+                  res.status(200).json({
+                    status: res.statusCode,
+                    success: false,
+                    message: "Article uploaded successful",
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  res.status(500).json({
+                    status: res.statusCode,
+                    success: false,
+                    message: "Failed to submit new article",
+                  });
+                });
+            }
+          }
+        );
       }
     }
   );
@@ -164,9 +206,6 @@ router.post("/", gwAccountValidation, async (req, res) => {
   // uploadMultiple(req, res, function (err) {
   //   if (err) throw err;
   //   console.log("files: ", req.files);
-
-  //   // For testing
-  //   // const folderId = "1FC5OAoz8bud4TGCjjaEyIzwJvJE4nSHY";
 
   //   const files = req.files;
 

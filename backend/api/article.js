@@ -7,9 +7,12 @@ const {
   setSelectedArticle,
   getEventByArticleId,
   setRejectedArticle,
-  getArticleById,
+  getArticleDetailById,
   getFileByFileId,
-  getSelfArticles
+  getSelfArticles,
+  getArticleById,
+  createPostedArticle,
+  setNewArticleSubmissionFolderId
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -23,21 +26,19 @@ const router = express.Router();
 
 const _COORDINATOR_PERMISSION_ID = 2;
 
-// Test code ================================================================
-
 /**
  * @method GET
- * @API /api/article/my-articles       ?????????????
+ * @API /api/article/my-articles
  * @permission
- *    - Manager coordinator of exact faculty
- * @description API for getting article's .doc file information & comments
+ *    - Student
+ * @description API for getting student's articles information & comments
  * @params
  * @return
  *    - myArticles: Array[Object]
  * @notes
  *    - Need endDate2, Event.event_published
  */
- router.get("/my-articles", gwAccountValidation, async (req, res) => {
+router.get("/my-articles", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
@@ -52,7 +53,7 @@ const _COORDINATOR_PERMISSION_ID = 2;
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        myArticles: result
+        myArticles: result,
       });
     })
     .catch((err) => {
@@ -74,13 +75,12 @@ const _COORDINATOR_PERMISSION_ID = 2;
     });
 });
 
-
 /**
  * @method GET
  * @API api/article/:articleId/
  * @permission
  *    - Student (exact articleId)
- * @description API for getting article information
+ * @description API for getting article information (with files and comments)
  * @params
  * 		- articleId: Int
  * @return
@@ -95,7 +95,7 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
-  const query = getArticleById(articleId);
+  const query = getArticleDetailById(articleId);
 
   await query
     .then((result) => {
@@ -214,8 +214,6 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
       }
     });
 });
-// =========================================================================
-
 
 /**
  * @method GET
@@ -289,7 +287,7 @@ router.get(
 
 /**
  * @method POST
- * @API api/article/:articleId/add-comment
+ * @API api/article/:articleId/comment
  * @description API for adding new comment to the article
  * @params
  * 		- content: String (comment)
@@ -298,7 +296,7 @@ router.get(
  *      - (!!! CORS problems)
  */
 router.post(
-  "/:articleId/add-comment",
+  "/:articleId/comment",
   gwAccountValidation,
   async (req, res) => {
     // Get comment content
@@ -507,6 +505,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  * 		- author: String (email)
  * @return null
  * @notes
+ *    - Database not implement !!!!!!!!!!!
  */
 router.post("/post-article", gwAccountValidation, async (req, res) => {
   // Get information from param
@@ -535,7 +534,7 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
   };
 
   // INSERT article into 'Posted_Article' table
-  const query = postNewArticle(article);
+  const query = createPostedArticle(article);
 
   await query
     .then((result) => {
@@ -563,5 +562,200 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
       }
     });
 });
+
+/**
+ * @method PUT
+ * @API /api/article/:articleId/update-submission
+ * @description API for student to update articles
+ * @param
+ * 		- articleId: Int
+ * @note
+ */
+router.put(
+  "/:articleId/update-submission",
+  gwAccountValidation,
+  async (req, res) => {
+    // Get the userInfo passed from middleware
+    const data = res.locals.data;
+
+    // Get articleId from req.params and initialize facultyId
+    const { articleId } = req.params;
+    const facultyId = data.userInfo.FK_faculty_id;
+    let articleResult = undefined;
+
+    // Check if user has permisson to this api or not
+
+    // if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+    //   return res.status(401).json({
+    //     status: res.statusCode,
+    //     success: false,
+    //     message: "Permission required!",
+    //   });
+    // }
+
+    const query = getArticleById(articleId, data.userInfo.account_id);
+
+    await query
+      .then((result) => {
+        console.log("res: ", result);
+        // Get the article at the position 0 (Bcs only 1 article found)
+        articleResult = result[0];
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log(err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request!",
+          });
+        } else {
+          // Check if article submitted by current user doesnt exist
+          return res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Invalid request!",
+          });
+        }
+      });
+
+    // Create new articleFolder in Google Drive
+    const articleFolderMetadata = {
+      name: `${new Date().getTime()}`,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [articleResult.article_parentId],
+    };
+
+    // Initialize google auth service
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
+    });
+
+    // Create new drive folder for re-submission/update
+    await drive.files.create(
+      {
+        resource: articleFolderMetadata,
+        fields: "id",
+      },
+      async (err, folder) => {
+        if (err) {
+          console.error(err);
+          res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Failed to upload files to the server!",
+          });
+        } else {
+          console.log("New article submission folderId: ", folder);
+
+          // Update current article_folderId to the new submission folder
+          const query = setNewArticleSubmissionFolderId(folder, articleId)
+
+          // STEP 7: Upload files into student's folder above
+
+          const uploadMultiple = upload.any("uploadedImages");
+
+          // uploadMultiple(req, res, function (err) {
+          //   if (err) throw err;
+          //   console.log("files: ", req.files);
+
+          //   const files = req.files;
+
+          //   files.map((filedata) => {
+          //     const filemetadata = {
+          //       name: filedata.filename,
+          //       parents: [articleInfo.articleFolderId],
+          //     };
+
+          //     const media = {
+          //       mimeType: filedata.mimetype,
+          //       body: fs.createReadStream(filedata.path),
+          //     };
+
+          //     drive.files.create(
+          //       {
+          //         resource: filemetadata,
+          //         media: media,
+          //         fields: "id",
+          //       },
+          //       async (err, file) => {
+          //         if (err) {
+          //           res.json({
+          //             status: 501,
+          //             success: false,
+          //             message: "Upload files to drive failed!",
+          //           });
+          //           fs.unlinkSync(filedata.path);
+          //         }
+
+          //         // STEP 8: Get the file id and insert into database
+          //         console.log("File id: ", file.data.id);
+
+          //         const fileInfo = {
+          //           mimeType: filedata.mimetype,
+          //           fileId: file.data.id,
+          //           FK_article_id: articleInfo.articleFolderId, // ??? Using articleFolderId or unique id??
+          //         };
+          //         const query2 = uploadFile(fileInfo);
+
+          //         await query2
+          //           .then((result) => {
+          //             console.log(filedata.filename + " uploaded successfully");
+          //           })
+          //           .catch((err) => {
+          //             console.log(err);
+
+          //             // Return err ?
+          //             // return res.status(500).json({
+          //             //   status: res.statusCode,
+          //             //   success: false,
+          //             //   message: "Error when uploading files"
+          //             // })
+          //           });
+
+          //         // Delete the file in temp folder
+          //         fs.unlinkSync(filedata.path);
+          //       }
+          //     );
+          //   });
+          // });
+        }
+      }
+    );
+
+    console.log("Article: ", articleFolderMetadata);
+
+    // Set article status to rejected
+    // const query = updateSubmission(articleId);
+
+    // await query1
+    //   .then((result) => {
+    //     return res.status(204).json({
+    //       status: res.statusCode,
+    //       success: true,
+    //       message: `Article ${articleId} has been rejected`,
+    //     });
+    //   })
+    //   .catch((err) => {
+    //     if (!!err) {
+    //       console.log(err);
+    //       return res.status(501).json({
+    //         status: res.statusCode,
+    //         success: false,
+    //         message: "Bad request!",
+    //       });
+    //     } else {
+    //       // Check if article || article status == 'pending' doesnt exist
+    //       return res.status(404).json({
+    //         status: res.statusCode,
+    //         success: false,
+    //         message: "Invalid request!",
+    //       });
+    //     }
+    //   });
+  }
+);
 
 module.exports = router;

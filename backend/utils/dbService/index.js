@@ -3,6 +3,7 @@ const {
 	getEventById,
 	createNewEvent,
 	updateEvent,
+	publishEventById,
 	deleteEventById,
 	getEventByArticleId,
 } = require("../../utils/dbService/eventService");
@@ -11,8 +12,9 @@ const {
 	getFacultyById,
 } = require("../../utils/dbService/facultyService");
 const {
-	getPostedArticlesOfEvent,
 	getArticleById,
+	getPostedArticlesOfEvent,
+	getArticleDetailById,
 	getSelfArticles,
 	createNewArticle,
 	getSubmittedArticles,
@@ -23,6 +25,8 @@ const {
 	setSelectedArticle,
 	setRejectedArticle,
 	getFileByFileId,
+	createPostedArticle,
+	setNewArticleSubmissionFolderId
 } = require("../../utils/dbService/articleService");
 const {
 	getCoordinatorAccountsByFaculty,
@@ -64,6 +68,8 @@ module.exports = {
 	createNewEvent: createNewEvent,
 	// Update an event
 	updateEvent: updateEvent,
+	// Publish an event
+	publishEventById: publishEventById,
 	// Delete an event
 	deleteEventById: deleteEventById,
 	// Get event information by articleId
@@ -73,12 +79,16 @@ module.exports = {
 	// ======================================================= Article
 	// Get an article information
 	getArticleById: getArticleById,
+	// Get an article detail (with files and comments)
+	getArticleDetailById: getArticleDetailById,
 	// Get current student articles
 	getSelfArticles: getSelfArticles,
 	// Get all posted articles of event
 	getPostedArticlesOfEvent: getPostedArticlesOfEvent,
 	// Create new article
 	createNewArticle: createNewArticle,
+	// Create new posted article
+	createPostedArticle: createPostedArticle,
 	// Get all submitted articles by eventId
 	getSubmittedArticles: getSubmittedArticles,
 	//get all of selected articles by eventId
@@ -93,6 +103,8 @@ module.exports = {
 	setSelectedArticle: setSelectedArticle,
 	// Set status of article to 'rejected'
 	setRejectedArticle: setRejectedArticle,
+	// Set new article submission folderId
+	setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
 	// ================================================================
 
 	// ======================================================= File
