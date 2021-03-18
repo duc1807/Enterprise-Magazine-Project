@@ -143,6 +143,8 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
             article_submission_date: articleInfo.article_submission_date,
             article_status: articleInfo.article_status,
             article_folderId: articleInfo.article_folderId,
+            email: articleInfo.email,
+            FK_faculty_id: articleInfo.FK_faculty_id,
             FK_account_id: articleInfo.FK_account_id,
             FK_event_id: articleInfo.FK_event_id,
             files: [],

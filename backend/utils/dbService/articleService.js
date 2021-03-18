@@ -66,6 +66,8 @@ const getArticleDetailById = async (articleId) => {
   const sql = `SELECT * FROM ${DB_TABLE}
               INNER JOIN File
               ON File.FK_article_id = Article.article_id
+              INNER JOIN Account 
+              ON Account.account_id = Article.FK_account_id
               WHERE article_id = ${articleId};
               SELECT * FROM ${DB_TABLE}
               INNER JOIN Comment
@@ -346,7 +348,10 @@ const getSubmittedArticlesByEventId = (eventId, facultyId) => {
     // Select all articles of an event that status = pending, innerjoin with table "File"
     `SELECT *
             FROM ${DB_TABLE}
-            INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+            INNER JOIN File 
+            ON ${DB_TABLE}.article_id = File.FK_article_id
+            INNER JOIN Account 
+            ON Account.account_id = Article.FK_account_id
             WHERE FK_event_id = ${eventId} AND File.FK_article_id IS NOT NULL
             AND article_status = '${ARTICLE_STATUS.pending}'`;
 
@@ -388,7 +393,10 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
 	  WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
-    INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN File 
+    ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN Account 
+    ON Account.account_id = Article.FK_account_id
     WHERE ${DB_TABLE}.FK_event_id = ${eventId}
     AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.accepted}'`;
 
@@ -428,7 +436,10 @@ const getRejectedArticlesByEventId = (eventId, facultyId) => {
     WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
-    INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN File 
+    ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN Account 
+    ON Account.account_id = Article.FK_account_id
     WHERE ${DB_TABLE}.FK_event_id = ${eventId} 
     AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.rejected}'`;
 
