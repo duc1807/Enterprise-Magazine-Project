@@ -31,12 +31,42 @@ const getDataBaseConnection = () => {
  *          + file: Array[]
  * @notes
  */
-const getArticleById = async (articleId) => {
+const getArticleByIdAndUserId = async (articleId, userId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${DB_TABLE}
+              WHERE article_id = ${articleId}
+              AND FK_account_id = ${userId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false);
+      }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+/**
+ * @description Get the article detail (files & comments)
+ * @params
+ *      - articleId: Int (req.params)
+ * @return
+ *      - article: Object
+ *          + file: Array[]
+ * @notes
+ */
+const getArticleDetailById = async (articleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM ${DB_TABLE}
               INNER JOIN File
               ON File.FK_article_id = Article.article_id
+              INNER JOIN Account 
+              ON Account.account_id = Article.FK_account_id
               WHERE article_id = ${articleId};
               SELECT * FROM ${DB_TABLE}
               INNER JOIN Comment
@@ -52,8 +82,6 @@ const getArticleById = async (articleId) => {
   });
 };
 
-
-
 /**
  * @description Get the article's file information
  * @params
@@ -64,7 +92,7 @@ const getArticleById = async (articleId) => {
  * @notes
  *      - Put service in fileService.js   ?????
  */
-const getFileByFileId = async (fileId, articleId) => {
+const getFileAndCommentByFileId = async (fileId, articleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Article
@@ -72,17 +100,17 @@ const getFileByFileId = async (fileId, articleId) => {
               SELECT * FROM File
               WHERE file_id = ${fileId};
               SELECT * FROM Comment
-              WHERE FK_article_id = ${articleId}`
+              WHERE FK_article_id = ${articleId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
       // Check if Article && File is valid
       if (!result[0].length || !result[1].length) {
-        reject(false)
+        reject(false);
       }
       // Return the query[1] and query[2]
-      resolve([result[1],result[2]]);
+      resolve([result[1], result[2]]);
       db.end();
     });
   });
@@ -117,7 +145,7 @@ const getFileByFileId = async (fileId, articleId) => {
 //     //   WHERE event_id = ${eventId};`
 
 //     // Get articles (nullable)
-//     `SELECT * FROM ${DB_TABLE} 
+//     `SELECT * FROM ${DB_TABLE}
 //               WHERE FK_event_id = ${eventId}`;
 //   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
 //   // `;
@@ -151,7 +179,6 @@ const getPostedArticlesOfEvent = async (eventId) => {
     // Get event information
     `SELECT * FROM Event
               WHERE event_id = ${eventId};` +
-
     // Get articles (nullable)
     `SELECT * FROM ${DB_TABLE} 
               WHERE FK_event_id = ${eventId}`;
@@ -163,10 +190,10 @@ const getPostedArticlesOfEvent = async (eventId) => {
       if (!!err) reject(err);
 
       // Check if event is existed or not
-        if (!result[0].length) {
-          reject(false);
-        }
-        console.log("event res: ", result);
+      if (!result[0].length) {
+        reject(false);
+      }
+      console.log("event res: ", result);
       // Return result at the last position (Event info & Posted articles)
       resolve([result[0], result[1]]);
       db.end();
@@ -175,9 +202,35 @@ const getPostedArticlesOfEvent = async (eventId) => {
 };
 // ===============================================================
 
+/**
+ * @description Get all user articles
+ * @params
+ *      - userId: Int
+ * @return
+ *      - myArticles: Array[Object]
+ * @notes
+ */
+const getSelfArticles = (userId) => {
+  let db = getDataBaseConnection();
+  console.log("self : ", userId);
+
+  const sql = `SELECT ${DB_TABLE}.*, Event.event_title, Event.event_endDate
+              FROM ${DB_TABLE}
+              INNER JOIN Event
+              ON Article.FK_event_id = Event.event_id
+              WHERE Article.FK_account_id = ${userId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
 
 /**
- * @description Create new article
+ * @description Create new article submission
  * @params
  *      - articleInfo: Object
  * @return null
@@ -197,6 +250,31 @@ const createNewArticle = (articleInfo) => {
               (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
               VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
               ${FK_account_id}, ${FK_event_id})`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+/**
+ * @description Get the article detail (files & comments)
+ * @params
+ *      - articleId: Int (req.params)
+ * @return
+ *      - article: Object
+ *          + file: Array[]
+ * @notes
+ */
+const setNewArticleSubmissionFolderId = async (folderId, articleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `UPDATE ${DB_TABLE}
+              SET article_folderId = '${folderId}'
+              WHERE article_id = ${articleId};`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -259,14 +337,17 @@ const createNewArticle = (articleInfo) => {
 const getSubmittedArticlesByEventId = (eventId, facultyId) => {
   const db = getDataBaseConnection();
 
-    // Check if faculty exist event
-    const sql = 
-            `SELECT * FROM Event
+  // Check if faculty exist event
+  const sql =
+    `SELECT * FROM Event
 						WHERE event_id = ${eventId} AND FK_faculty_id = '${facultyId}';` +
     // Select all articles of an event that status = pending, innerjoin with table "File"
-            `SELECT *
+    `SELECT *
             FROM ${DB_TABLE}
-            INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+            INNER JOIN File 
+            ON ${DB_TABLE}.article_id = File.FK_article_id
+            INNER JOIN Account 
+            ON Account.account_id = Article.FK_account_id
             WHERE FK_event_id = ${eventId} AND File.FK_article_id IS NOT NULL
             AND article_status = '${ARTICLE_STATUS.pending}'`;
 
@@ -286,7 +367,6 @@ const getSubmittedArticlesByEventId = (eventId, facultyId) => {
   });
 };
 // ============================================================================
-
 
 // ========================================================= DEVELOPMENT CODE (getSelectedArticlesByEventId)
 
@@ -309,7 +389,10 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
 	  WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
-    INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN File 
+    ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN Account 
+    ON Account.account_id = Article.FK_account_id
     WHERE ${DB_TABLE}.FK_event_id = ${eventId}
     AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.accepted}'`;
 
@@ -327,7 +410,6 @@ const getSelectedArticlesByEventId = (eventId, facultyId) => {
   });
 };
 // =============================================================================================
-
 
 /**
  * @description Get the rejected articles of event
@@ -350,7 +432,10 @@ const getRejectedArticlesByEventId = (eventId, facultyId) => {
     WHERE event_id = ${eventId} AND FK_faculty_id = ${facultyId};` +
     // Get the selected articles of event with its files
     `SELECT * FROM ${DB_TABLE}
-    INNER JOIN File ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN File 
+    ON ${DB_TABLE}.article_id = File.FK_article_id
+    INNER JOIN Account 
+    ON Account.account_id = Article.FK_account_id
     WHERE ${DB_TABLE}.FK_event_id = ${eventId} 
     AND ${DB_TABLE}.article_status = '${ARTICLE_STATUS.rejected}'`;
 
@@ -443,6 +528,59 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
 };
 
 /**
+ * @description Create new posted article on event homepage
+ * @params
+ *      - article: Object
+ * @return null
+ * @notes
+ *      - Not finished
+ */
+const createPostedArticle = (articleInfo) => {
+  const { title, content, author, postedDate } = articleInfo;
+  let db = getDataBaseConnection();
+
+  // Check if the current user has permission to add comment to the article or not
+  const sql = ``;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+
+      // Check if the article exist or the faculty permission is valid
+      if (!result.length) {
+        reject(false);
+      }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+/**
+ * @description Set an article status to 'pending'
+ * @params
+ *      - articleId: Int
+ * @return null
+ * @notes
+ */
+const setPendingArticle = (articleId) => {
+  let db = getDataBaseConnection();
+
+  // Query for UPDATE article status to "accepted"
+  const sql = `UPDATE ${DB_TABLE}
+				SET Article.article_status = '${ARTICLE_STATUS.pending}'
+				WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+/**
  * @description Set an article status to 'accepted'
  * @params
  *      - articleId: Int
@@ -519,15 +657,20 @@ const setRejectedArticle = (articleId) => {
 };
 
 module.exports = {
-  getArticleById: getArticleById,
+  getArticleById: getArticleByIdAndUserId,
+  getArticleDetailById: getArticleDetailById,
+  getSelfArticles: getSelfArticles,
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSelectedArticles: getSelectedArticlesByEventId,
   getRejectedArticles: getRejectedArticlesByEventId,
   getSubmittedArticleById: getSubmittedArticleById,
-  getFileByFileId: getFileByFileId,
+  getFileAndCommentByFileId: getFileAndCommentByFileId,
   addNewCommentToArticle: addNewCommentToArticle,
   createNewArticle: createNewArticle,
+  createPostedArticle: createPostedArticle,
+  setPendingArticle: setPendingArticle,
   setSelectedArticle: setSelectedArticle,
   setRejectedArticle: setRejectedArticle,
+  setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
 };

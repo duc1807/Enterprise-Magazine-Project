@@ -73,19 +73,19 @@ const getOverallStats = () => {
 const getContributionByFaculty = (facultyId) => {
   let db = getDataBaseConnection();
   const sql =
-    `SELECT COUNT(Article.article_id) AS TotalContributions
+    `SELECT COUNT(Article.article_id) AS totalContributions
               FROM Article
               INNER JOIN Event ON Article.FK_event_id = Event.event_id
               WHERE Event.FK_faculty_id = ${facultyId};` +
-    `SELECT COUNT(Article.article_id) AS TotalOfPendingContributions
+    `SELECT COUNT(Article.article_id) AS totalPendingContributions
             FROM Article
             INNER JOIN Event ON Article.FK_event_id = Event.event_id
             WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'pending';` +
-    `SELECT COUNT(Article.article_id) AS TotalOfSelectedContributions
+    `SELECT COUNT(Article.article_id) AS totalSelectedContributions
             FROM Article
             INNER JOIN Event ON Article.FK_event_id = Event.event_id
             WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'accepted';` +
-    `SELECT COUNT(Article.article_id) AS TotalOfRejectedContributions
+    `SELECT COUNT(Article.article_id) AS totalRejectedContributions
             FROM Article
             INNER JOIN Event ON Article.FK_event_id = Event.event_id
             WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'rejected';`;

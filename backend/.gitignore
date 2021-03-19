@@ -3,12 +3,12 @@
 /package-lock.json
 /ZIP
 /download_temp
-/temp
+temp/*
 
 # secret files
 credentials.json
 private_key.json
 .env
-/utils/config
+utils/config/*
 
 

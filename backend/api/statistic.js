@@ -12,7 +12,6 @@ const router = express.Router();
 // API
 //
 router.get("/overall", managerValidation, async (req, res) => {
-  const data = res.locals.data;
   // const query = getTotalEvent();
   // await query
   //   .then((result) => {
@@ -77,29 +76,17 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
   const query = getContributionByFaculty(facultyId);
   await query
     .then(async (results) => {
-      console.log("results all contribution (static.js): ", results);
-      // await getContributionByStatus(facultyId)
-      //   .then((threeTotal) => {
-      //     console.log("other: ", threeTotal);
-      //     return res.status(200).json({
-      //       status: res.statusCode,
-      //       success: true,
-      //       all_contribution: results,
-      //       detai_contribution: threeTotal,
-      //     });
-      //   })
-      //   .catch((err) => {
-      //     console.log(err);
-      //     return res.status(501).json({
-      //       status: res.statusCode,
-      //       success: false,
-      //       messages: "Bad request",
-      //     });
-      //   });
+      console.log("results all contribution (static.js): ", results[1][0]);
+      const queryResult = {
+        totalContributions: results[0][0].totalContributions,
+        totalPendingContributions: results[1][0].totalPendingContributions,
+        totalSelectedContributions: results[2][0].totalSelectedContributions,
+        totalRejectedContributions: results[3][0].totalRejectedContributions,
+      };
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        data: results,
+        contribution: queryResult,
       });
     })
     .catch((err) => {

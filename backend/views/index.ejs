@@ -24,9 +24,21 @@
 
             <p>Login or Register with:</p>
 
+            <!-- <form action="/api/upload/39" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" id="input-files" multiple />
+                <button type="submit">Submit</button>
+            </form> -->
+
+            <form action="/api/article/60/update-submission" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" id="input-files" multiple />
+                <button type="submit">Update</button>
+            </form>
+
             <div class="g-signin2" data-onsuccess="onSignIn"></div>
 
             <a href="#" onclick="signOut();">Sign out</a>
+
+           
 
         </div>
     </div>

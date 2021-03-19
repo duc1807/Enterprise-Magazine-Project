@@ -13,22 +13,25 @@ const OAuth2Data = require("../credentials.json");
 const key = require("../private_key.json");
 
 const {
-  // Account service
+  // Account services
   getCoordinatorAccountsByFaculty,
   getStudentAccountByFaculty,
 
-  // Faculty service
+  // Faculty services
   getFacultyById,
 
-  // Event service
+  // Event services
   createNewEvent,
   updateEvent,
+  publishEventById,
   deleteEventById,
   getEventById,
+  getPublishedEventOfFacultyId,
+  // Article services
   getPostedArticlesOfEvent,
   getSubmittedArticles,
   getSelectedArticles,
-  getRejectedArticles
+  getRejectedArticles,
 } = require("../utils/dbService/index");
 
 // Import middleware validation
@@ -57,6 +60,48 @@ const eventFolderConstants = {
 };
 
 // ================================================= DEVELOPMENT CODE
+
+/**
+ * @method GET
+ * @api /api/events/published?faculty=(facultyId)
+ * @permissions
+ *      - Anyone (with account)
+ * @description API for getting published event information
+ * @params
+ *      - eventId: Int (req.params)
+ * @return
+ *      - events: Array[]
+ *          + .................................. ???
+ * @notes
+ *      - Should put this API before /api/events/:eventId -> the request will run into that API
+ *      - Permission for all ??? If true, all account and specially guest account should have faculty_id field inside userInfo
+ */
+router.get("/published", async (req, res) => {
+  // Get facultyId from req.query
+  const facultyId = req.query.faculty;
+
+  //  Get event info and its posted articles by eventId and facultyId
+  const query = getPublishedEventOfFacultyId(facultyId);
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        publishedEvents: result
+      });
+    })
+    .catch((err) => {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          messages: "Bad request",
+        })
+    });
+});
 
 /**
  * @method GET
@@ -257,6 +302,8 @@ router.get(
               article_submission_date: articleInfo.article_submission_date,
               article_status: articleInfo.article_status,
               article_folderId: articleInfo.article_folderId,
+              email: articleInfo.email,
+              FK_faculty_id: articleInfo.FK_faculty_id,
               FK_account_id: articleInfo.FK_account_id,
               FK_event_id: articleInfo.FK_event_id,
               files: [],
@@ -381,6 +428,8 @@ router.get(
               article_submission_date: articleInfo.article_submission_date,
               article_status: articleInfo.article_status,
               article_folderId: articleInfo.article_folderId,
+              email: articleInfo.email,
+              FK_faculty_id: articleInfo.FK_faculty_id,
               FK_account_id: articleInfo.FK_account_id,
               FK_event_id: articleInfo.FK_event_id,
               files: [],
@@ -506,6 +555,8 @@ router.get(
               article_submission_date: articleInfo.article_submission_date,
               article_status: articleInfo.article_status,
               article_folderId: articleInfo.article_folderId,
+              email: articleInfo.email,
+              FK_faculty_id: articleInfo.FK_faculty_id,
               FK_account_id: articleInfo.FK_account_id,
               FK_event_id: articleInfo.FK_event_id,
               files: [],
@@ -557,7 +608,7 @@ router.get(
  *      - title: String
  *      - content: String
  *      - imageData: file
- * 		- startDate: Date (yyyy-mm-dd)
+ * 		  - startDate: Date (yyyy-mm-dd)
  *      - endDate: Date (yyyy-mm-dd)
  *      - facultyId: Int
  * @return
@@ -1027,6 +1078,44 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
         return res.status(404).json({
           success: false,
           message: "Not found!",
+        });
+      }
+    });
+});
+
+/**
+ * @method PATCH
+ * @API /api/events/:eventId/publish
+ * @description API for publish event
+ * @params
+ *      - eventId: Int
+ * @return null
+ * @notes
+ */
+router.patch("/:eventId/publish", managerValidation, (req, res) => {
+  const { eventId } = req.params;
+
+  // Publish event by eventId
+  const query = publishEventById(eventId);
+  query
+    .then((result) => {
+      return res.status(202).json({
+        success: true,
+        message: `Event ${result.event_title} published successfully`,
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log(err);
+        return res.status(500).json({
+          success: false,
+          message: "Server error!",
+        });
+      } else {
+        // If err == false, return event not found
+        return res.status(404).json({
+          success: false,
+          message: "Invalid request!",
         });
       }
     });
