@@ -63,7 +63,7 @@ const eventFolderConstants = {
 
 /**
  * @method GET
- * @api /api/events/published/?faculty=(facultyId)
+ * @api /api/events/published?faculty=(facultyId)
  * @permissions
  *      - Anyone (with account)
  * @description API for getting published event information

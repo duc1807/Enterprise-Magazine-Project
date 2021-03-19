@@ -26,7 +26,7 @@ const {
 	setPendingArticle,
 	setSelectedArticle,
 	setRejectedArticle,
-	getFileByFileId,
+	getFileAndCommentByFileId,
 	createPostedArticle,
 	setNewArticleSubmissionFolderId
 } = require("../../utils/dbService/articleService");
@@ -41,7 +41,7 @@ const { getImageById } = require("../../utils/dbService/imageService");
 const {
 	getAdminAccountByUsername,
 } = require("../../utils/dbService/adminService");
-const { uploadFile } = require("../../utils/dbService/fileService");
+const { uploadFile, deleteFileByFileId } = require("../../utils/dbService/fileService");
 
 module.exports = {
 	// ======================================================= Admin
@@ -83,6 +83,8 @@ module.exports = {
 	// ======================================================= Article
 	// Get an article information
 	getArticleById: getArticleById,
+	// Get article's specific files and comment
+	getFileAndCommentByFileId: getFileAndCommentByFileId,
 	// Get an article detail (with files and comments)
 	getArticleDetailById: getArticleDetailById,
 	// Get current student articles
@@ -115,7 +117,7 @@ module.exports = {
 
 	// ======================================================= File
 	uploadFile: uploadFile,
-	getFileByFileId: getFileByFileId,
+	deleteFileByFileId: deleteFileByFileId,
 	// ================================================================
 
 	// ======================================================= Student

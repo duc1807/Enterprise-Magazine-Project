@@ -92,7 +92,7 @@ const getArticleDetailById = async (articleId) => {
  * @notes
  *      - Put service in fileService.js   ?????
  */
-const getFileByFileId = async (fileId, articleId) => {
+const getFileAndCommentByFileId = async (fileId, articleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Article
@@ -665,7 +665,7 @@ module.exports = {
   getSelectedArticles: getSelectedArticlesByEventId,
   getRejectedArticles: getRejectedArticlesByEventId,
   getSubmittedArticleById: getSubmittedArticleById,
-  getFileByFileId: getFileByFileId,
+  getFileAndCommentByFileId: getFileAndCommentByFileId,
   addNewCommentToArticle: addNewCommentToArticle,
   createNewArticle: createNewArticle,
   createPostedArticle: createPostedArticle,

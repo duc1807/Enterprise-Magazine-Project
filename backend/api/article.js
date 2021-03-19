@@ -12,11 +12,12 @@ const {
   setPendingArticle,
   setRejectedArticle,
   getArticleDetailById,
-  getFileByFileId,
+  getFileAndCommentByFileId,
   getSelfArticles,
   getArticleById,
   createPostedArticle,
   uploadFile,
+  deleteFileByFileId
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -91,6 +92,7 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  *    - article: Object
  * @notes
  *    - Not yet validate permission
+ *    - Not add permission for student to view self-article ?? Need ????
  */
 router.get("/:articleId", coordinatorValidation, async (req, res) => {
   // Get articleId from params
@@ -246,7 +248,7 @@ router.get(
     const data = res.locals.data;
 
     // Get files and comments by fileId and articleId
-    const query = getFileByFileId(fileId, articleId);
+    const query = getFileAndCommentByFileId(fileId, articleId);
 
     await query
       .then(async (result) => {
@@ -290,6 +292,64 @@ router.get(
       });
   }
 );
+
+
+/**
+ * @method DELETE
+ * @API /api/article/:articleId/file/:fileId/        ?????????????
+ * @permission
+ *    - Student with exact articleId
+ * @description API for deleting a file of an article
+ * @params
+ *    - articleId: Int
+ * 		- fileId: Int
+ * @return null
+ * @notes
+ *    - Dont need articleId ?????
+ */
+ router.delete(
+  "/:articleId/file/:fileId",
+  gwAccountValidation,
+  async (req, res) => {
+    // Get articleId from params
+    const { articleId, fileId } = req.params;
+
+    // Get userInfo passed from middleware
+    const data = res.locals.data;
+
+    // Check if user is student or not
+
+    // Get files and comments by fileId and articleId
+    const query = deleteFileByFileId(fileId, data.userInfo.account_id);
+
+    await query
+      .then(async (result) => {
+        return res.status(200).json({
+          status: res.statusCode,
+          success: true,
+          message: "File deleted successful"
+        });
+      })
+      .catch((err) => {
+        if (err) {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
+        } else {
+          // If err == false => Event not found
+          return res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Not found",
+          });
+        }
+      });
+  }
+);
+
 
 /**
  * @method POST
@@ -500,6 +560,8 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
 /**
  * @method POST
  * @API /api/article/post-article
+ * @permission 
+ *    - Coordinator (Exact faculty)
  * @description API for post article to event homepage
  * @params
  * 		- title: String
@@ -837,7 +899,7 @@ router.post("/:articleId/update-submission", gwAccountValidation, async (req, re
     });
   });
 
-  // Set article status to pending
+  // Set article status to pending and update time
   const query3 = setPendingArticle(articleResult.article_id);
 
   await query3
