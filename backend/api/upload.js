@@ -44,6 +44,8 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
 
   // Create eventInfo variable
   let eventInfo = undefined;
+  // Create filesArray[] to store files information
+  let filesArray = [];
 
   // Create articleInfo Object to store article information
   const articleInfo = {
@@ -161,7 +163,7 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
             const files = req.files;
 
             // Map all elements in files
-            files.map((filedata) => {
+            files.map((filedata, index) => {
               // Create metadata for file
               const filemetadata = {
                 name: filedata.filename,
@@ -202,28 +204,66 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
                     FK_article_id: result.insertId,
                   };
 
-                  // Upload file into 'File' table
-                  const query2 = uploadFile(fileInfo);
+                  // Push files into filesArray[]
+                  filesArray.push(fileInfo);
+                  // Check if all files have been pushed into filesArray[]
+                  // If true, get all the files and comments of current article and return
 
-                  await query2
-                    .then((result1) => {
-                      fs.unlinkSync(filedata.path);
-                      return res.status(200).json({
-                        status: res.statusCode,
-                        success: true,
-                        message: "File uploaded successful",
+                  if (filesArray.length == files.length) {
+                    // INSERT new file into database 'File'
+                    const query2 = uploadFile(filesArray);
+
+                    await query2
+                      .then(async (result2) => {
+                        console.log(
+                          filedata.filename + " uploaded successfully"
+                        );
+
+                        // Check if the last file is INSERT into database or not
+                        // If all file inserted, return article's files list
+                        if (index == files.length - 1) {
+
+                          // Get all files and comments of current article
+                          // ?????????????? Should return 
+                          
+                        }
+                      })
+                      .catch((err) => {
+                        console.log(err);
+                        // Return err
+                        return res.status(500).json({
+                          status: res.statusCode,
+                          success: false,
+                          message: "Error when uploading files",
+                        });
                       });
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                      fs.unlinkSync(filedata.path);
-                      return res.status(500).json({
-                        status: res.statusCode,
-                        success: false,
-                        message: "Error when uploading files",
-                      });
-                    });
+                  }
+
+                  // OLD CODE ================================
+
+                  // // Upload file into 'File' table
+                  // const query2 = uploadFile(fileInfo);
+
+                  // await query2
+                  //   .then((result1) => {
+                  //     fs.unlinkSync(filedata.path);
+                  //     return res.status(200).json({
+                  //       status: res.statusCode,
+                  //       success: true,
+                  //       message: "File uploaded successful",
+                  //     });
+                  //   })
+                  //   .catch((err) => {
+                  //     console.log(err);
+                  //     fs.unlinkSync(filedata.path);
+                  //     return res.status(500).json({
+                  //       status: res.statusCode,
+                  //       success: false,
+                  //       message: "Error when uploading files",
+                  //     });
+                  //   });
                   // Delete the file in temp folder
+
                   fs.unlinkSync(filedata.path);
                 }
               );
