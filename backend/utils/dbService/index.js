@@ -22,6 +22,7 @@ const {
 	getRejectedArticles,
 	getSubmittedArticleById,
 	addNewCommentToArticle,
+	setPendingArticle,
 	setSelectedArticle,
 	setRejectedArticle,
 	getFileByFileId,
@@ -99,6 +100,8 @@ module.exports = {
 	getSubmittedArticleById: getSubmittedArticleById,
 	// Add a comment to an article
 	addNewCommentToArticle: addNewCommentToArticle,
+	// Set status of article to 'pending'
+	setPendingArticle: setPendingArticle,
 	// Set status of article to 'selected'
 	setSelectedArticle: setSelectedArticle,
 	// Set status of article to 'rejected'

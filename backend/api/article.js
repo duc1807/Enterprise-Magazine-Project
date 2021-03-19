@@ -1,18 +1,22 @@
 require("dotenv").config();
 const express = require("express");
 const { google } = require("googleapis");
+const router = express.Router();
+const fs = require("fs");
+const { upload } = require("../utils/multerStorage");
 
 const {
   addNewCommentToArticle,
   setSelectedArticle,
   getEventByArticleId,
+  setPendingArticle,
   setRejectedArticle,
   getArticleDetailById,
   getFileByFileId,
   getSelfArticles,
   getArticleById,
   createPostedArticle,
-  setNewArticleSubmissionFolderId
+  uploadFile,
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -22,9 +26,9 @@ const {
   gwAccountValidation,
   coordinatorValidation,
 } = require("./middleware/verification");
-const router = express.Router();
 
 const _COORDINATOR_PERMISSION_ID = 2;
+const _STUDENT_PERMISSION_ID = 1;
 
 /**
  * @method GET
@@ -297,69 +301,65 @@ router.get(
  * @notes
  *      - (!!! CORS problems)
  */
-router.post(
-  "/:articleId/comment",
-  gwAccountValidation,
-  async (req, res) => {
-    // Get comment content
-    const { content } = req.body;
-    // Get articleId from params
-    const { articleId } = req.params;
+router.post("/:articleId/comment", gwAccountValidation, async (req, res) => {
+  // Get comment content
+  const { content } = req.body;
+  // Get articleId from params
+  const { articleId } = req.params;
 
-    // Get userInfo passed from middleware
-    const data = res.locals.data;
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
 
-    // Check permission is coordinator or not
-    if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
-      return res.status(401).json({
-        status: res.statusCode,
-        success: false,
-        message: "Permission required!",
-      });
-    }
-
-    // Log the data for testing
-    console.log("data: ", data);
-
-    // Get the current time
-    const currentTime = new Date();
-
-    // Create comment data to INSERT into database
-    const commentData = {
-      content: content,
-      time: currentTime.getTime(),
-      FK_article_id: articleId,
-      FK_coordinator_id: data.userInfo.account_id,
-    };
-
-    // Await database query
-    await addNewCommentToArticle(commentData, data.userInfo)
-      .then((result) => {
-        return res.status(201).json({
-          status: res.statusCode,
-          success: true,
-          commentInfo: commentData,
-        });
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log("Err: ", err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            messages: "Bad request",
-          });
-        } else {
-          // If article doesnt exist or permission invalid
-          return res.status(401).json({
-            status: res.statusCode,
-            success: false,
-            message: "Invalid request!",
-          });
-        }
-      });
+  // Check permission is coordinator or not
+  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Permission required!",
+    });
   }
-);
+
+  // Log the data for testing
+  console.log("data: ", data);
+
+  // Get the current time
+  const currentTime = new Date();
+
+  // Create comment data to INSERT into database
+  const commentData = {
+    content: content,
+    time: currentTime.getTime(),
+    FK_article_id: articleId,
+    FK_coordinator_id: data.userInfo.account_id,
+  };
+
+  // Await database query
+  await addNewCommentToArticle(commentData, data.userInfo)
+    .then((result) => {
+      return res.status(201).json({
+        status: res.statusCode,
+        success: true,
+        commentInfo: commentData,
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          messages: "Bad request",
+        });
+      } else {
+        // If article doesnt exist or permission invalid
+        return res.status(401).json({
+          status: res.statusCode,
+          success: false,
+          message: "Invalid request!",
+        });
+      }
+    });
+});
 
 /**
  * @method PATCH
@@ -568,196 +568,289 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
 /**
  * @method PUT
  * @API /api/article/:articleId/update-submission
- * @description API for student to update articles
+ * @description API for student to update submitted articles and then return articleInfo
  * @param
  * 		- articleId: Int
  * @note
  */
-router.put(
-  "/:articleId/update-submission",
-  gwAccountValidation,
-  async (req, res) => {
-    // Get the userInfo passed from middleware
-    const data = res.locals.data;
+router.post("/:articleId/update-submission", gwAccountValidation, async (req, res) => {
+  // Get the userInfo passed from middleware
+  const data = res.locals.data;
 
-    // Get articleId from req.params and initialize facultyId
-    const { articleId } = req.params;
-    const facultyId = data.userInfo.FK_faculty_id;
-    let articleResult = undefined;
+  // Get articleId from req.params and initialize facultyId
+  const { articleId } = req.params;
+  const facultyId = data.userInfo.FK_faculty_id;
 
-    // Check if user has permisson to this api or not
+  // Initialize the articleResult to hold the result return from query
+  let articleResult = undefined;
+  // Create filesArray[] to store files information
+  let filesArray = [];
 
-    // if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
-    //   return res.status(401).json({
-    //     status: res.statusCode,
-    //     success: false,
-    //     message: "Permission required!",
-    //   });
-    // }
+  // Check if user has permisson to the article or not
+  if (data.userInfo.FK_role_id != _STUDENT_PERMISSION_ID) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      message: "Permission required!",
+    });
+  }
 
-    const query = getArticleById(articleId, data.userInfo.account_id);
+  // Get article information by 'article_id' and User 'account_id'
+  const query = getArticleById(articleId, data.userInfo.account_id);
 
-    await query
-      .then((result) => {
-        console.log("res: ", result);
-        // Get the article at the position 0 (Bcs only 1 article found)
-        articleResult = result[0];
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log(err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request!",
-          });
-        } else {
-          // Check if article submitted by current user doesnt exist
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Invalid request!",
-          });
-        }
-      });
-
-    // Create new articleFolder in Google Drive
-    const articleFolderMetadata = {
-      name: `${new Date().getTime()}`,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: [articleResult.article_parentId],
-    };
-
-    // Initialize google auth service
-    const jwToken = await getAuthServiceJwt();
-    const drive = google.drive({
-      version: "v3",
-      auth: jwToken,
+  await query
+    .then((result) => {
+      console.log("res: ", result);
+      // Get the article at the position 0 (Bcs only 1 article found)
+      articleResult = result[0];
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log(err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request!",
+        });
+      } else {
+        // Check if article submitted by current user doesnt exist
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Invalid request!",
+        });
+      }
     });
 
-    // Create new drive folder for re-submission/update
-    await drive.files.create(
-      {
-        resource: articleFolderMetadata,
-        fields: "id",
-      },
-      async (err, folder) => {
-        if (err) {
-          console.error(err);
-          res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Failed to upload files to the server!",
-          });
-        } else {
-          console.log("New article submission folderId: ", folder);
+  // Initialize google auth service
+  const jwToken = await getAuthServiceJwt();
+  const drive = google.drive({
+    version: "v3",
+    auth: jwToken,
+  });
 
-          // Update current article_folderId to the new submission folder
-          const query = setNewArticleSubmissionFolderId(folder, articleId)
+  // Upload files into article submission folder from query result (articleResult{})
 
-          // STEP 7: Upload files into student's folder above
+  // Get multer storage upload function
+  const uploadMultiple = upload.any("uploadedImages");
 
-          const uploadMultiple = upload.any("uploadedImages");
+  // Upload file function
+  uploadMultiple(req, res, function (err) {
+    if (err) throw err;
+    console.log("files: ", req.files);
 
-          // uploadMultiple(req, res, function (err) {
-          //   if (err) throw err;
-          //   console.log("files: ", req.files);
+    const files = req.files;
 
-          //   const files = req.files;
+    // Create file metadata
+    files.map((filedata, index) => {
+      const filemetadata = {
+        name: filedata.filename,
+        parents: [articleResult.article_folderId],
+      };
 
-          //   files.map((filedata) => {
-          //     const filemetadata = {
-          //       name: filedata.filename,
-          //       parents: [articleInfo.articleFolderId],
-          //     };
+      // Create media type for file
+      const media = {
+        mimeType: filedata.mimetype,
+        body: fs.createReadStream(filedata.path),
+      };
 
-          //     const media = {
-          //       mimeType: filedata.mimetype,
-          //       body: fs.createReadStream(filedata.path),
-          //     };
+      // Upload file to google drive
+      drive.files.create(
+        {
+          resource: filemetadata,
+          media: media,
+          fields: "id",
+        },
+        async (err, file) => {
+          if (err) {
+            res.json({
+              status: 501,
+              success: false,
+              message: "Upload files to drive failed!",
+            });
+            fs.unlinkSync(filedata.path);
+          }
 
-          //     drive.files.create(
-          //       {
-          //         resource: filemetadata,
-          //         media: media,
-          //         fields: "id",
-          //       },
-          //       async (err, file) => {
-          //         if (err) {
-          //           res.json({
-          //             status: 501,
-          //             success: false,
-          //             message: "Upload files to drive failed!",
-          //           });
-          //           fs.unlinkSync(filedata.path);
-          //         }
+          // STEP 8: Get the file id and create fileInfo Object
+          const fileInfo = {
+            mimeType: filedata.mimetype,
+            fileId: file.data.id,
+            FK_article_id: articleResult.article_id, // ??? Using articleFolderId or unique id??
+          };
 
-          //         // STEP 8: Get the file id and insert into database
-          //         console.log("File id: ", file.data.id);
+          // Push files into filesArray[]
+          filesArray.push(fileInfo);
+          // Check if all files have been pushed into filesArray[]
+          // If true, get all the files and comments of current article and return
+          if (filesArray.length == files.length) {
+            // INSERT new file into database 'File'
+            const query2 = uploadFile(filesArray);
 
-          //         const fileInfo = {
-          //           mimeType: filedata.mimetype,
-          //           fileId: file.data.id,
-          //           FK_article_id: articleInfo.articleFolderId, // ??? Using articleFolderId or unique id??
-          //         };
-          //         const query2 = uploadFile(fileInfo);
+            await query2
+              .then(async (result2) => {
+                console.log(filedata.filename + " uploaded successfully");
 
-          //         await query2
-          //           .then((result) => {
-          //             console.log(filedata.filename + " uploaded successfully");
-          //           })
-          //           .catch((err) => {
-          //             console.log(err);
+                // Check if the last file is INSERT into database or not
+                // If all file inserted, return article
+                if (index == files.length - 1) {
 
-          //             // Return err ?
-          //             // return res.status(500).json({
-          //             //   status: res.statusCode,
-          //             //   success: false,
-          //             //   message: "Error when uploading files"
-          //             // })
-          //           });
+                  // Get all files and comments of current article
+                  const query4 = getArticleDetailById(articleId);
 
-          //         // Delete the file in temp folder
-          //         fs.unlinkSync(filedata.path);
-          //       }
-          //     );
-          //   });
-          // });
+                  await query4
+                    .then((result) => {
+                      // result[0] : article and its files
+                      // result[1] : article and its comments
+                      console.log("result: ", result);
+
+                      // Create array to store final data to return to frontend
+                      let articlesResult = [];
+
+                      // Create array for storing distinc iterated article_id
+                      let passedArticlesId = [];
+
+                      // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
+                      let articlesPositionDetail = {};
+
+                      // Itarate each data in result[0] (article files)
+                      result[0].map((articleInfo) => {
+                        // Check if this article is exist in 'articlesResult' array or not
+                        if (passedArticlesId.includes(articleInfo.article_id)) {
+                          // If this article existed in 'articlesResult' array, push its file into 'article.files'
+
+                          // Get position of the article in 'articlesResult[]'
+                          let articlePosition =
+                            articlesPositionDetail[
+                              articleInfo.article_folderId
+                            ];
+                          console.log("position: ", articlePosition);
+
+                          // Create file Object to store file information
+                          let file = {
+                            file_id: articleInfo.file_id,
+                            file_mimeType: articleInfo.file_mimeType,
+                            file_fileId: articleInfo.file_fileId,
+                            FK_article_id: articleInfo.FK_article_id,
+                          };
+
+                          // Insert file Object to its article in 'articlesResult[]'
+                          articlesResult[articlePosition].files.push(file);
+                        } else {
+                          // If this article not exist, push the article_id into 'passedArticlesId'
+                          passedArticlesId.push(articleInfo.article_id);
+
+                          // Create article Object to store information from result
+                          let article = {
+                            article_id: articleInfo.article_id,
+                            article_submission_date:
+                              articleInfo.article_submission_date,
+                            article_status: articleInfo.article_status,
+                            article_folderId: articleInfo.article_folderId,
+                            email: articleInfo.email,
+                            FK_faculty_id: articleInfo.FK_faculty_id,
+                            FK_account_id: articleInfo.FK_account_id,
+                            FK_event_id: articleInfo.FK_event_id,
+                            files: [],
+                            comments: [],
+                          };
+
+                          // Create file Object to store file information
+                          let file = {
+                            file_id: articleInfo.file_id,
+                            file_mimeType: articleInfo.file_mimeType,
+                            file_fileId: articleInfo.file_fileId,
+                            FK_article_id: articleInfo.FK_article_id,
+                          };
+
+                          // Push file Object into 'article.files' (only in first-time run)
+                          article.files.push(file);
+
+                          // Finally, push article information into 'articlesResult[]'
+                          articlesResult.push(article);
+
+                          // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
+                          articlesPositionDetail[articleInfo.article_folderId] =
+                            articlesResult.length - 1;
+                        }
+                      });
+
+                      // Itarate each data in result[1] (article comments)
+                      result[1].map((articleInfo) => {
+                        // Get position of the article in 'articlesResult[]'
+                        let articlePosition =
+                          articlesPositionDetail[articleInfo.article_folderId];
+                        console.log("position: ", articlePosition);
+
+                        // Create comment Object to store comment information
+                        let comment = {
+                          comment_id: articleInfo.comment_id,
+                          comment_time: articleInfo.comment_time,
+                          comment_content: articleInfo.comment_content,
+                          FK_article_id: articleInfo.FK_article_id,
+                          FK_coordinator_id: articleInfo.FK_coordinator_id,
+                        };
+
+                        // Insert comment Object to its article in 'articlesResult[]'
+                        articlesResult[articlePosition].comments.push(comment);
+                      });
+
+                      // Finally, response the articleInfo {}
+                      return res.status(200).json({
+                        status: res.statusCode,
+                        success: true,
+                        article: articlesResult,
+                      });
+                    })
+                    .catch((err) => {
+                      if (err) {
+                        console.log("Err: ", err);
+                        return res.status(501).json({
+                          status: res.statusCode,
+                          success: false,
+                          message: "Bad request",
+                        });
+                      } else {
+                        // If err == false => Event not found
+                        return res.status(404).json({
+                          status: res.statusCode,
+                          success: false,
+                          message: "Event not found",
+                        });
+                      }
+                    });
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+                // Return err
+                return res.status(500).json({
+                  status: res.statusCode,
+                  success: false,
+                  message: "Error when uploading files",
+                });
+              });
+          }
+          // Delete the file in temp folder
+          fs.unlinkSync(filedata.path);
         }
-      }
-    );
+      );
+    });
+  });
 
-    console.log("Article: ", articleFolderMetadata);
+  // Set article status to pending
+  const query3 = setPendingArticle(articleResult.article_id);
 
-    // Set article status to rejected
-    // const query = updateSubmission(articleId);
-
-    // await query1
-    //   .then((result) => {
-    //     return res.status(204).json({
-    //       status: res.statusCode,
-    //       success: true,
-    //       message: `Article ${articleId} has been rejected`,
-    //     });
-    //   })
-    //   .catch((err) => {
-    //     if (!!err) {
-    //       console.log(err);
-    //       return res.status(501).json({
-    //         status: res.statusCode,
-    //         success: false,
-    //         message: "Bad request!",
-    //       });
-    //     } else {
-    //       // Check if article || article status == 'pending' doesnt exist
-    //       return res.status(404).json({
-    //         status: res.statusCode,
-    //         success: false,
-    //         message: "Invalid request!",
-    //       });
-    //     }
-    //   });
-  }
-);
+  await query3
+    .then((result3) => {
+      console.log("Article status set to pending");
+    })
+    .catch((err) => {
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request!",
+      });
+    });
+});
 
 module.exports = router;

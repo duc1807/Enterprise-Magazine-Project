@@ -31,7 +31,7 @@ const getDataBaseConnection = () => {
  *          + file: Array[]
  * @notes
  */
- const getArticleByIdAndUserId = async (articleId, userId) => {
+const getArticleByIdAndUserId = async (articleId, userId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM ${DB_TABLE}
@@ -41,15 +41,14 @@ const getDataBaseConnection = () => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      if(!result.length) {
-        reject(false)
+      if (!result.length) {
+        reject(false);
       }
       resolve(result);
       db.end();
     });
   });
 };
-
 
 /**
  * @description Get the article detail (files & comments)
@@ -261,7 +260,6 @@ const createNewArticle = (articleInfo) => {
   });
 };
 
-
 /**
  * @description Get the article detail (files & comments)
  * @params
@@ -271,7 +269,7 @@ const createNewArticle = (articleInfo) => {
  *          + file: Array[]
  * @notes
  */
- const setNewArticleSubmissionFolderId = async (folderId, articleId) => {
+const setNewArticleSubmissionFolderId = async (folderId, articleId) => {
   let db = getDataBaseConnection();
 
   const sql = `UPDATE ${DB_TABLE}
@@ -286,7 +284,6 @@ const createNewArticle = (articleInfo) => {
     });
   });
 };
-
 
 /**
  * @description Get the sumitted articles of event
@@ -531,15 +528,15 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
 };
 
 /**
- * @description Add new comment to a specific article
+ * @description Create new posted article on event homepage
  * @params
- *      - commentInfo: Object
- * 		  - userInfo: Object
+ *      - article: Object
  * @return null
  * @notes
+ *      - Not finished
  */
-const createPostedArticle = (article) => {
-  const { title, content, author, postedDate } = commentInfo;
+const createPostedArticle = (articleInfo) => {
+  const { title, content, author, postedDate } = articleInfo;
   let db = getDataBaseConnection();
 
   // Check if the current user has permission to add comment to the article or not
@@ -553,6 +550,30 @@ const createPostedArticle = (article) => {
       if (!result.length) {
         reject(false);
       }
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+/**
+ * @description Set an article status to 'pending'
+ * @params
+ *      - articleId: Int
+ * @return null
+ * @notes
+ */
+const setPendingArticle = (articleId) => {
+  let db = getDataBaseConnection();
+
+  // Query for UPDATE article status to "accepted"
+  const sql = `UPDATE ${DB_TABLE}
+				SET Article.article_status = '${ARTICLE_STATUS.pending}'
+				WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
       resolve(result);
       db.end();
     });
@@ -648,7 +669,8 @@ module.exports = {
   addNewCommentToArticle: addNewCommentToArticle,
   createNewArticle: createNewArticle,
   createPostedArticle: createPostedArticle,
+  setPendingArticle: setPendingArticle,
   setSelectedArticle: setSelectedArticle,
   setRejectedArticle: setRejectedArticle,
-  setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId
+  setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
 };
