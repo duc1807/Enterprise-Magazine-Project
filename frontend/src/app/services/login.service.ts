@@ -7,8 +7,8 @@ import { IdToken, LoginContent } from '../models/login-content.model';
   providedIn: 'root',
 })
 export class LoginService {
-  private loginUrl = 'http://localhost:5000/api/admin/login'; // URL to web api
-  private loginWithGoogle = 'http://localhost:5000/api/authentication/login'; // URL to web api
+  private loginForAdmin = 'http://localhost:5000/api/admin/login'; // URL to web api
+  private loginWithGoogle = 'http://localhost:5000/api/authentication'; // URL to web api
 
   private httpOptions = {
     headers: new HttpHeaders({
@@ -18,19 +18,31 @@ export class LoginService {
 
   constructor(private http: HttpClient) {}
 
-  sendLoginContent(us, pw): Observable<any> {
+  loginByAccount(us, pw): Observable<any> {
     return this.http.post<any>(
-      this.loginUrl,
+      this.loginForAdmin,
       { username: us, password: pw } as LoginContent,
       this.httpOptions
     );
   }
 
-  loginWithGoogleAccount(token: string): Observable<any> {
-    return this.http.post<any>(
-      this.loginWithGoogle,
-      { id_token: token } as IdToken,
-      this.httpOptions
-    );
+  loginWithGoogleAccount(idToken: IdToken): Observable<any> {
+    // login url
+    const url = `${this.loginWithGoogle}/login`;
+
+    // Test idToken
+    console.log(idToken);
+    // console.log(JSON.stringify(idToken));
+
+    return this.http.post<any>(url, idToken, this.httpOptions);
+  }
+
+  logout(): Observable<any> {
+    const url = `${this.loginWithGoogle}/logout`;
+    return this.http.post<any>(url, this.httpOptions);
+  }
+
+  isLoggedIn(): Observable<any> {
+    return this.http.get<any>(this.loginWithGoogle, this.httpOptions);
   }
 }

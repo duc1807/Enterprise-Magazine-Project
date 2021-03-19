@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { FacultyService } from '../../services/faculty.service';
+import { TheEvent } from '../../models/event.model';
+import { SaveDataService } from '../../services/save-data.service';
+import { Article } from '../../models/article.model';
 
 @Component({
   selector: 'app-detail-event',
@@ -6,9 +10,33 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./detail-event.component.css'],
 })
 export class DetailEventComponent implements OnInit {
-  constructor() {}
+  facultyId: number;
+  eventId: number;
 
-  ngOnInit(): void {}
+  eventInfo: TheEvent;
+  articles: Article[];
 
-  article = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  constructor(
+    private facultyService: FacultyService,
+    private saveDataService: SaveDataService
+  ) {}
+
+  ngOnInit(): void {
+    this.facultyId = this.saveDataService.getFaculty();
+    this.eventId = this.saveDataService.getEvent();
+
+    this.getArticleOfEvent();
+  }
+
+  getArticleOfEvent(): void {
+    this.facultyService
+      .getAnEventInfo(this.facultyId, this.eventId)
+      .subscribe((data) => {
+        this.eventInfo = data.event;
+        this.articles = data.articles;
+
+        console.log(this.eventInfo);
+        console.log(this.articles);
+      });
+  }
 }

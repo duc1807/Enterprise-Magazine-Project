@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { FacultyService } from '../../services/faculty.service';
+import { TheEvent } from '../../models/event.model';
+import { SaveDataService } from '../../services/save-data.service';
 
 @Component({
   selector: 'app-event-manager',
@@ -6,9 +9,28 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./event-manager.component.css'],
 })
 export class EventManagerComponent implements OnInit {
-  constructor() {}
+  id: number;
+  events: TheEvent[];
 
-  ngOnInit(): void {}
+  constructor(
+    private facultyService: FacultyService,
+    private saveDataService: SaveDataService
+  ) {}
 
-  events = [1, 2, 3, 4, 5, 6];
+  ngOnInit(): void {
+    this.id = this.saveDataService.getFaculty();
+
+    this.getEventsByFaculty();
+  }
+
+  getEventsByFaculty(): void {
+    this.facultyService.getEventsByFaculty(this.id).subscribe((data) => {
+      this.events = data.events;
+      console.log(this.events);
+    });
+  }
+
+  setEvent(value: number): void {
+    this.saveDataService.setEvent(value);
+  }
 }

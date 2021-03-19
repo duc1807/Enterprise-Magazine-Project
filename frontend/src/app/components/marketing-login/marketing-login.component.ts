@@ -33,20 +33,24 @@ export class MarketingLoginComponent implements OnInit {
       this.isLoggedin = user != null;
 
       // Send login idToken
-      this.loginService.loginWithGoogleAccount(user.idToken).subscribe(
-        () => {
-          this.router.navigate(['homepage']).then((r) => {
-            if (r) {
-              console.log('Navigation is successful!');
-            } else {
-              console.log('Navigation has failed!');
-            }
-          });
-        },
-        (err: HttpErrorResponse) => {
-          console.log(err);
-        }
-      );
+      this.loginService
+        .loginWithGoogleAccount({ id_token: user.idToken })
+        .subscribe(
+          (response) => {
+            console.log('When login ', response);
+
+            this.router.navigate(['faculty']).then((r) => {
+              if (r) {
+                console.log('Navigation is successful!');
+              } else {
+                console.log('Navigation has failed!');
+              }
+            });
+          },
+          (err: HttpErrorResponse) => {
+            console.log(err);
+          }
+        );
     });
   }
 }

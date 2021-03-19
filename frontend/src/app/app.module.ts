@@ -31,7 +31,6 @@ import {
   SocialAuthServiceConfig,
   SocialLoginModule,
 } from 'angularx-social-login';
-import { FooterComponent } from './components/footer/footer.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -54,7 +53,6 @@ import { FooterComponent } from './components/footer/footer.component';
     HomepageCoorComponent,
     EventCoorComponent,
     ArticleManageComponent,
-    FooterComponent,
   ],
   imports: [
     BrowserModule,
