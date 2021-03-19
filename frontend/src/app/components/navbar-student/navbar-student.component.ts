@@ -17,11 +17,14 @@ export class NavbarStudentComponent implements OnInit {
 
   logOut(): void {
     this.socialAuthService.signOut();
+    this.socialAuthService.authState.subscribe((user) => {
+      console.log('When log out ', user.idToken);
+    });
     this.router.navigate(['login']).then((r) => {
       if (r) {
-        console.log('Navigation is successful!');
+        console.log('Log out succeed!');
       } else {
-        console.log('Navigation has failed!');
+        console.log('Log out failed');
       }
     });
   }

@@ -48,6 +48,7 @@
     </li>
   </ul>
   <div class="tab-content" id="myTabContent">
+    <!-- Tab 1: Submitted articles -->
     <div
       class="tab-pane fade show active"
       id="home"
@@ -103,7 +104,11 @@
                   data-toggle="modal"
                   [attr.data-target]="'#modal' + i"
                   ><i class="fas fa-file-pdf fa-4x ml-4 p-2"></i>
-                  <p class="p-2">2 attachment(s)</p></a
+                  <p class="p-2">
+                    {{ art.files.length }} attachment{{
+                      art.files.length > 1 ? "s" : ""
+                    }}
+                  </p></a
                 >
 
                 <h6 class="card-subtitle mb-2 text-muted">Submitted</h6>
@@ -113,6 +118,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab 2: Accepted Articles -->
     <div
       class="tab-pane fade"
       id="profile"
@@ -143,6 +150,8 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab 3: Rejected articles -->
     <div
       class="tab-pane fade"
       id="contact"
@@ -212,7 +221,7 @@
             >
               <iframe
                 class="embed-responsive-item"
-                src="https://drive.google.com/file/d/1I8Ud7Rhx7tsIqVjbPY55HJyqe1yfLTG2/preview?fbclid=IwAR0DY9CRm8xgUBbr_4VLzDmPgk_Wfgmsj6Z79kGQ-e6BP73fy0PUfFEo-dQ"
+                src="https://drive.google.com/file/d/1OZLQ1pTCgCh1Pbi_Ek2la9LYzLXSj6TB/preview"
                 height="800px"
                 width="1000px"
               ></iframe>

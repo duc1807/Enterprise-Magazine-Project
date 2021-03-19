@@ -1,5 +1,7 @@
-import { splitAtColon } from '@angular/compiler/src/util';
 import { Component, OnInit } from '@angular/core';
+import { SchoolEvent } from 'src/app/models/event.model';
+import { EventService } from 'src/app/services/event.service';
+import { SaveDataService } from '../../services/save-data.service';
 
 @Component({
   selector: 'app-create-event',
@@ -7,17 +9,40 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./create-event.component.css'],
 })
 export class CreateEventComponent implements OnInit {
-  constructor() {}
+  canSubmit = true;
+  today = Date.now();
+  startdate = Date;
+  enddate = Date;
 
-  ngOnInit(): void {}
+  constructor(
+    private eventService: EventService,
+    private saveDataService: SaveDataService
+  ) {}
 
-  today = formatDate();
-  startdate = '';
-  enddate = '';
+  ngOnInit(): void {
+    console.log('Today ', this.today);
+  }
 
   // split = this.startdate.split('-');
   // enddate = [parseInt(this.split[0]) + 1 + '', this.split[1], this.split[2]];
   // minenddate = this.enddate.join('-');
+
+  submitEvent(tle, ctent, sDate, eDate): void {
+    const newEvent: SchoolEvent = {
+      title: tle,
+      content: ctent,
+      startDate: sDate,
+      endDate: eDate,
+      facultyId: this.saveDataService.getFaculty(),
+    };
+
+    // Test log the event
+    console.log(newEvent);
+
+    this.eventService.createEvent(newEvent).subscribe(() => {
+      console.log('Event was sent!');
+    });
+  }
 }
 
 function formatDate() {

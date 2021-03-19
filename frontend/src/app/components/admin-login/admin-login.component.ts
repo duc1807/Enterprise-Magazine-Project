@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { LoginService } from '../../services/login.service';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-login',
@@ -14,16 +14,12 @@ import { Router } from '@angular/router';
 })
 export class AdminLoginComponent implements OnInit {
   loginResponse: any;
-  constructor(
-    private login: LoginService,
-    private router: Router,
-    private http: HttpClient
-  ) {}
+  constructor(private login: LoginService, private router: Router) {}
 
   ngOnInit(): void {}
 
   sendLogin(us, pw): void {
-    this.login.sendLoginContent(us, pw).subscribe(
+    this.login.loginByAccount(us, pw).subscribe(
       (res) => {
         console.log('This is the response: ', res);
         this.loginResponse = res;
@@ -38,7 +34,7 @@ export class AdminLoginComponent implements OnInit {
     if (this.loginResponse.success === true) {
       this.router.navigate(['homepage']).then((r) => {
         if (r) {
-          console.log('Navigation is successful!');
+          console.log('Navigate to admin homepage.');
         } else {
           console.log('Navigation has failed!');
         }
