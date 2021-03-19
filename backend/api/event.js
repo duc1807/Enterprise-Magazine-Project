@@ -26,11 +26,12 @@ const {
   publishEventById,
   deleteEventById,
   getEventById,
+  getPublishedEventOfFacultyId,
   // Article services
   getPostedArticlesOfEvent,
   getSubmittedArticles,
   getSelectedArticles,
-  getRejectedArticles
+  getRejectedArticles,
 } = require("../utils/dbService/index");
 
 // Import middleware validation
@@ -59,6 +60,48 @@ const eventFolderConstants = {
 };
 
 // ================================================= DEVELOPMENT CODE
+
+/**
+ * @method GET
+ * @api /api/events/published/?faculty=(facultyId)
+ * @permissions
+ *      - Anyone (with account)
+ * @description API for getting published event information
+ * @params
+ *      - eventId: Int (req.params)
+ * @return
+ *      - events: Array[]
+ *          + .................................. ???
+ * @notes
+ *      - Should put this API before /api/events/:eventId -> the request will run into that API
+ *      - Permission for all ??? If true, all account and specially guest account should have faculty_id field inside userInfo
+ */
+router.get("/published", async (req, res) => {
+  // Get facultyId from req.query
+  const facultyId = req.query.faculty;
+
+  //  Get event info and its posted articles by eventId and facultyId
+  const query = getPublishedEventOfFacultyId(facultyId);
+
+  await query
+    .then((result) => {
+      console.log("result: ", result);
+
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        publishedEvents: result
+      });
+    })
+    .catch((err) => {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          messages: "Bad request",
+        })
+    });
+});
 
 /**
  * @method GET
@@ -1040,7 +1083,6 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
     });
 });
 
-
 /**
  * @method PATCH
  * @API /api/events/:eventId/publish
@@ -1050,7 +1092,7 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
  * @return null
  * @notes
  */
- router.patch("/:eventId/publish", managerValidation, (req, res) => {
+router.patch("/:eventId/publish", managerValidation, (req, res) => {
   const { eventId } = req.params;
 
   // Publish event by eventId
@@ -1078,8 +1120,6 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
       }
     });
 });
-
-
 
 /**
  * @method DELETE

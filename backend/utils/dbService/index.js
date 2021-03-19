@@ -6,6 +6,7 @@ const {
 	publishEventById,
 	deleteEventById,
 	getEventByArticleId,
+	getPublishedEventOfFacultyId
 } = require("../../utils/dbService/eventService");
 const {
 	getAllFaculty,
@@ -65,6 +66,8 @@ module.exports = {
 	getEventById: getEventById,
 	// Get all events of a faculty
 	getEventsByFacultyId: getEventsByFacultyId,
+	// Get all published events of a faculty
+	getPublishedEventOfFacultyId: getPublishedEventOfFacultyId,
 	// Create new event
 	createNewEvent: createNewEvent,
 	// Update an event
