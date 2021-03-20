@@ -41,7 +41,7 @@ app
 	.use("/api/authentication", require("./api/Authentication/googleAuth"))
 
 	// Authentication API for admin
-	.use("api/admin/authentication", require("./api/Authentication/admin"))
+	.use("api/authentication/admin", require("./api/Authentication/admin"))
 
 	// Faculty API
 	.use("/api/faculties", require("./api/faculty"))
@@ -63,6 +63,9 @@ app
 
   // API for manager to view the statistics
 	.use("/api/statistic", require("./api/statistic"))
+
+  // API for admin role
+	.use("/api/admin/", require("./api/admin"))
 
   // ============================================================== In development
 	.use("/api/user", require("./api/user"))

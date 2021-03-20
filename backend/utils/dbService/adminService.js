@@ -26,12 +26,16 @@ const getAdminAccountByUsername = async (username) => {
   });
 };
 
-const getAdminAccountByUsernameAndPassword = (username, password) => {
+
+const createNewAccount = (accountInfo) => {
+  const { email, roleId, facultyId } = accountInfo
 
   let db = getDataBaseConnection();
 
-  const sql = `SELECT * FROM ${_ROLE} 
-    WHERE username = '${username}' AND password = '${password}'`;
+  // INSERT account into database, with enabled = 1 (TRUE) 
+  const sql = `INSERT INTO Account (email, FK_role_id, FK_faculty_id, enabled)
+                VALUES ('${email}', ${roleId}, ${facultyId}, 1)`;
+
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -41,7 +45,69 @@ const getAdminAccountByUsernameAndPassword = (username, password) => {
   });
 };
 
+
+const createAccountInformation = (accountDetail, accountId) => {
+  const { firstName, surName } = accountDetail
+
+  let db = getDataBaseConnection();
+
+  const sql = `INSERT INTO Account_Info (first_name, sur_name, FK_account_id)
+                VALUES ('${firstName}', '${surName}', ${accountId})`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+const updateAccount = (accountDetail, accountId) => {
+  const { email, roleId, facultyId } = accountDetail
+
+  let db = getDataBaseConnection();
+
+  const sql = `UPDATE Account
+                SET 
+                email = '${email}', 
+                FK_role_id = ${roleId}, 
+                FK_faculty_id = ${facultyId}
+                WHERE account_id = ${accountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+const updateAccountInformation = (accountDetail, accountId) => {
+  const { firstName, surName } = accountDetail
+
+  let db = getDataBaseConnection();
+
+  const sql = `UPDATE Account_Info
+                SET 
+                first_name = '${firstName}', 
+                sur_name = '${surName}'
+                WHERE FK_account_id = ${accountId}`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
 module.exports = {
   getAdminAccountByUsername: getAdminAccountByUsername,
-  authorizationAdmin: getAdminAccountByUsernameAndPassword
+  createNewAccount: createNewAccount,
+  createAccountInformation: createAccountInformation,
+  updateAccount: updateAccount,
+  updateAccountInformation: updateAccountInformation
 };

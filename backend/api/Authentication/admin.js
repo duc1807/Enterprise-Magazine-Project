@@ -15,7 +15,7 @@ const _ROUTER_ROLE = "admin";
 
 /**
  * @method GET
- * @API /api/admin/authentication
+ * @API /api/authentication/admin/
  * @description API for admin to get login credentials
  * @param null
  * @returns
@@ -33,8 +33,10 @@ const _ROUTER_ROLE = "admin";
  */
 router.get("/", adminValidation, (req, res) => {
   console.log("data", res.locals.data);
+  // Get user info passed from middleware
   const data = res.locals.data;
 
+  // Set header respones ????
   res.setHeader(
     "X-Content-Type-Options",
     "nosniff",
@@ -45,13 +47,13 @@ router.get("/", adminValidation, (req, res) => {
   res.status(200).json({
     status: res.statusCode,
     success: true,
-    data: data,
+    user: data,
   });
 });
 
 /**
  * @method POST
- * @API /api/admin/authentication/login
+ * @API /api/authentication/admin/login
  * @description API route to signin the user
  * @param
  *    - username: String
@@ -111,12 +113,12 @@ router.post("/login", async (req, res) => {
             userInfo: userInfo,
           };
 
-          // Generate token with userInfo payload
+          // Generate token with userInfo payload (expired in 30mins)
           const token = webToken.sign(
             payload,
             process.env.ACCESS_TOKEN_SECRET,
             {
-              expiresIn: "900s",
+              expiresIn: "1800s",
             }
           );
 

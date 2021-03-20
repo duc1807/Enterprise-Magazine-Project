@@ -33,8 +33,8 @@ const adminValidation = (req, res, next) => {
         success: false,
         message: "Session expired! Please login",
       });
-    // If the account's role_name is not "admin" return 401
-    else if (data.userInfo.role_name != _ADMIN_ROLE) {
+    // If the account's role_name is not "admin" or undefined return 401
+    else if (!data.userInfo.role_name || data.userInfo.role_name != _ADMIN_ROLE) {
       return res.status(401).json({
         status: res.statusCode,
         success: false,

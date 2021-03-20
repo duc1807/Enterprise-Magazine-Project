@@ -40,6 +40,10 @@ const { getAccountByEmail } = require("../../utils/dbService/accountService");
 const { getImageById } = require("../../utils/dbService/imageService");
 const {
   getAdminAccountByUsername,
+  createNewAccount,
+  createAccountInformation,
+  updateAccount,
+  updateAccountInformation
 } = require("../../utils/dbService/adminService");
 const {
   uploadFile,
@@ -54,6 +58,13 @@ const {
 module.exports = {
   // ======================================================= Admin
   getAdminAccountByUsername: getAdminAccountByUsername,
+  // Create new account
+  createNewAccount: createNewAccount,
+  // Create new account's information
+  createAccountInformation: createAccountInformation,
+  // Update an account information
+  updateAccount: updateAccount,
+  updateAccountInformation: updateAccountInformation,
   // ================================================================
 
   // ======================================================= Coordinator
