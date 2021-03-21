@@ -43,7 +43,9 @@ const {
   createNewAccount,
   createAccountInformation,
   updateAccount,
-  updateAccountInformation
+  updateAccountInformation,
+  getAllRolesInformation,
+  getAccountsByRole
 } = require("../../utils/dbService/adminService");
 const {
   uploadFile,
@@ -65,6 +67,10 @@ module.exports = {
   // Update an account information
   updateAccount: updateAccount,
   updateAccountInformation: updateAccountInformation,
+  // Get all roles from database
+  getAllRolesInformation: getAllRolesInformation,
+  // Get all accounts by role
+  getAccountsByRole: getAccountsByRole,
   // ================================================================
 
   // ======================================================= Coordinator

@@ -13,6 +13,37 @@ const getDataBaseConnection = () => {
   return connection;
 };
 
+const getAllRolesInformation = () => {
+
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Role`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+const getAccountsByRole = (roleId) => {
+
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Account
+              WHERE FK_role_id = ${roleId}`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
 const getAdminAccountByUsername = async (username) => {
   let db = getDataBaseConnection();
 
@@ -109,5 +140,7 @@ module.exports = {
   createNewAccount: createNewAccount,
   createAccountInformation: createAccountInformation,
   updateAccount: updateAccount,
-  updateAccountInformation: updateAccountInformation
+  updateAccountInformation: updateAccountInformation,
+  getAllRolesInformation: getAllRolesInformation,
+  getAccountsByRole: getAccountsByRole,
 };
