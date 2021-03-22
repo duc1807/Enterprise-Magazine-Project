@@ -41,8 +41,10 @@ const { getImageById } = require("../../utils/dbService/imageService");
 const {
   getAdminAccountByUsername,
   createNewAccount,
+  createNewGuestAccount,
   createAccountInformation,
   updateAccount,
+  updateGuestAccount,
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole
@@ -71,6 +73,10 @@ module.exports = {
   getAllRolesInformation: getAllRolesInformation,
   // Get all accounts by role
   getAccountsByRole: getAccountsByRole,
+  // Create new guest account
+  createNewGuestAccount: createNewGuestAccount,
+  // Update guest account
+  updateGuestAccount: updateGuestAccount,
   // ================================================================
 
   // ======================================================= Coordinator

@@ -11,6 +11,8 @@ const {
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
+  createNewGuestAccount,
+  updateGuestAccount,
 } = require("../utils/dbService/index");
 
 /**
@@ -103,6 +105,62 @@ router.post("/accounts", async (req, res) => {
 });
 
 /**
+ * @method POST
+ * @API /api/admin/guest-accounts
+ * @description API route to create new guest account
+ * @param
+ *    - username: String
+ *    - password: String
+ *    - facultyId: Int
+ * @returns
+ */
+router.post("/guest-accounts", async (req, res) => {
+  const { username, password, facultyId } = req.body;
+
+  const guestAccountInfo = {
+    username: username,
+    password: password,
+    facultyId: facultyId,
+  };
+
+  const query = createNewGuestAccount(guestAccountInfo);
+
+  await query
+    .then(async (result) => {
+      const accountDetail = {
+        firstName: firstName,
+        surName: surName,
+      };
+      const query1 = createAccountInformation(accountDetail, result.insertId);
+
+      await query1
+        .then((result1) => {
+          return res.status(200).json({
+            status: res.statusCode,
+            success: true,
+            message: "Account created successfully",
+          });
+        })
+        .catch((err) => {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
+        });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
  * @method GET
  * @API /api/admin/accounts/:roleId
  * @description API route to get all accounts by role
@@ -116,7 +174,7 @@ router.post("/accounts", async (req, res) => {
 router.get("/accounts/:roleId", async (req, res) => {
   // Get accountId from params
   const { roleId } = req.params;
-  
+
   const query = getAccountsByRole(roleId);
 
   await query
@@ -191,6 +249,48 @@ router.put("/accounts/:accountId", async (req, res) => {
             message: "Bad request",
           });
         });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
+ * @method PUT
+ * @API /api/admin/guest-accounts/:accountId
+ * @description API route to update guest account
+ * @param
+ *    - username: String
+ *    - password: String
+ *    - facultyId: Int
+ * @returns
+ */
+router.put("/guest-accounts/:accountId", async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  const { username, password, facultyId } = req.body;
+
+  const guestAccountInfo = {
+    username: username,
+    password: password,
+    facultyId: facultyId,
+  };
+
+  const query = updateGuestAccount(guestAccountInfo, accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Guest account updated successfully",
+      });
     })
     .catch((err) => {
       console.log("Err: ", err);

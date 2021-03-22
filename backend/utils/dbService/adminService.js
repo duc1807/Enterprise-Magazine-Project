@@ -76,6 +76,24 @@ const createNewAccount = (accountInfo) => {
   });
 };
 
+// =============================================== NOT IMPLEMENT
+const createNewGuestAccount = (guestAccountInfo) => {
+  const { username, password, facultyId } = guestAccountInfo
+
+  let db = getDataBaseConnection();
+
+  // INSERT guest account into database, with enabled = 1 (TRUE) 
+  const sql = ``;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
 
 const createAccountInformation = (accountDetail, accountId) => {
   const { firstName, surName } = accountDetail
@@ -114,6 +132,24 @@ const updateAccount = (accountDetail, accountId) => {
   });
 };
 
+// =============================================== NOT IMPLEMENT
+const updateGuestAccount = (guestAccountInfo) => {
+  const { username, password, facultyId } = guestAccountInfo
+
+  let db = getDataBaseConnection();
+
+  // UPDATE guest account in database
+  const sql = ``;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
 
 const updateAccountInformation = (accountDetail, accountId) => {
   const { firstName, surName } = accountDetail
@@ -138,8 +174,10 @@ const updateAccountInformation = (accountDetail, accountId) => {
 module.exports = {
   getAdminAccountByUsername: getAdminAccountByUsername,
   createNewAccount: createNewAccount,
+  createNewGuestAccount: createNewGuestAccount,
   createAccountInformation: createAccountInformation,
   updateAccount: updateAccount,
+  updateGuestAccount: updateGuestAccount,
   updateAccountInformation: updateAccountInformation,
   getAllRolesInformation: getAllRolesInformation,
   getAccountsByRole: getAccountsByRole,
