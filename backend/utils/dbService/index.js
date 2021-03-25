@@ -23,12 +23,14 @@ const {
   getRejectedArticles,
   getSubmittedArticleById,
   addNewCommentToArticle,
+  setArticleCommentOntime,
   setPendingArticle,
   setSelectedArticle,
   setRejectedArticle,
   getFileAndCommentByFileId,
   createPostedArticle,
   setNewArticleSubmissionFolderId,
+  getArticleInformationById,
 } = require("../../utils/dbService/articleService");
 const {
   getCoordinatorAccountsByFaculty,
@@ -144,6 +146,10 @@ module.exports = {
   setRejectedArticle: setRejectedArticle,
   // Set new article submission folderId
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
+  // Set article comment_onTime to TRUE
+  setArticleCommentOntime: setArticleCommentOntime,
+  // Get article information by article_id
+  getArticleInformationById: getArticleInformationById,
   // ================================================================
 
   // ======================================================= File

@@ -41,7 +41,7 @@ app
 	.use("/api/authentication", require("./api/Authentication/googleAuth"))
 
 	// Authentication API for admin
-	.use("api/authentication/admin", require("./api/Authentication/admin"))
+	.use("/api/authentication/admin", require("./api/Authentication/admin"))
 
 	// Faculty API
 	.use("/api/faculties", require("./api/faculty"))

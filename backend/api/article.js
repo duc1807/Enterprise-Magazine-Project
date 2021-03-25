@@ -17,7 +17,9 @@ const {
   getArticleById,
   createPostedArticle,
   uploadFile,
-  deleteFileByFileId
+  deleteFileByFileId,
+  setArticleCommentOntime,
+  getArticleInformationById,
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -190,7 +192,7 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
           comment_time: articleInfo.comment_time,
           comment_content: articleInfo.comment_content,
           FK_article_id: articleInfo.FK_article_id,
-          FK_coordinator_id: articleInfo.FK_coordinator_id,
+          FK_account_id: articleInfo.FK_account_id,
         };
 
         // Insert file Object to its article in 'articlesResult[]'
@@ -293,7 +295,6 @@ router.get(
   }
 );
 
-
 /**
  * @method DELETE
  * @API /api/article/:articleId/file/:fileId/        ?????????????
@@ -307,7 +308,7 @@ router.get(
  * @notes
  *    - Dont need articleId ?????
  */
- router.delete(
+router.delete(
   "/:articleId/file/:fileId",
   gwAccountValidation,
   async (req, res) => {
@@ -327,7 +328,7 @@ router.get(
         return res.status(200).json({
           status: res.statusCode,
           success: true,
-          message: "File deleted successful"
+          message: "File deleted successful",
         });
       })
       .catch((err) => {
@@ -349,7 +350,6 @@ router.get(
       });
   }
 );
-
 
 /**
  * @method POST
@@ -390,17 +390,75 @@ router.post("/:articleId/comment", gwAccountValidation, async (req, res) => {
     content: content,
     time: currentTime.getTime(),
     FK_article_id: articleId,
-    FK_coordinator_id: data.userInfo.account_id,
+    FK_account_id: data.userInfo.account_id,
   };
 
   // Await database query
   await addNewCommentToArticle(commentData, data.userInfo)
-    .then((result) => {
-      return res.status(201).json({
-        status: res.statusCode,
-        success: true,
-        commentInfo: commentData,
-      });
+    .then(async (result) => {
+      await getArticleInformationById(articleId)
+        .then((result1) => {
+          console.log(result1);
+          // Get defalt article at position[0]
+          console.log(result1[0].article_submission_date);
+          const articleSubmittedDate = result1[0].article_submission_date;
+          const commentOntime = result1[0].comment_onTime;
+
+          // If commentOntime == null
+          // => If comment time < articleSubmissionDate + 14 days
+          // => update Article.comment_onTime = true/false
+          if (commentOntime == null) {
+            if (currentTime.getTime() < articleSubmittedDate + 1209600000) {
+              setArticleCommentOntime(articleId, true)
+                .then((result2) => {
+                  return res.status(201).json({
+                    status: res.statusCode,
+                    success: true,
+                    commentInfo: commentData,
+                  });
+                })
+                .catch((err) => {
+                  console.log("Err: ", err);
+                  return res.status(501).json({
+                    status: res.statusCode,
+                    success: false,
+                    messages: "Bad request",
+                  });
+                });
+            } else {
+              setArticleCommentOntime(articleId, false)
+                .then((result3) => {
+                  return res.status(201).json({
+                    status: res.statusCode,
+                    success: true,
+                    commentInfo: commentData,
+                  });
+                })
+                .catch((err) => {
+                  console.log("Err: ", err);
+                  return res.status(501).json({
+                    status: res.statusCode,
+                    success: false,
+                    messages: "Bad request",
+                  });
+                });
+            }
+          } else {
+            return res.status(201).json({
+              status: res.statusCode,
+              success: true,
+              commentInfo: commentData,
+            });
+          }
+        })
+        .catch((err) => {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            messages: "Bad request",
+          });
+        });
     })
     .catch((err) => {
       if (!!err) {
@@ -560,7 +618,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
 /**
  * @method POST
  * @API /api/article/post-article
- * @permission 
+ * @permission
  *    - Coordinator (Exact faculty)
  * @description API for post article to event homepage
  * @params
@@ -635,151 +693,214 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
  * 		- articleId: Int
  * @note
  */
-router.post("/:articleId/update-submission", gwAccountValidation, async (req, res) => {
-  // Get the userInfo passed from middleware
-  const data = res.locals.data;
+router.post(
+  "/:articleId/update-submission",
+  gwAccountValidation,
+  async (req, res) => {
+    // Get the userInfo passed from middleware
+    const data = res.locals.data;
 
-  // Get articleId from req.params and initialize facultyId
-  const { articleId } = req.params;
-  const facultyId = data.userInfo.FK_faculty_id;
+    // Get articleId from req.params and initialize facultyId
+    const { articleId } = req.params;
+    const facultyId = data.userInfo.FK_faculty_id;
 
-  // Initialize the articleResult to hold the result return from query
-  let articleResult = undefined;
-  // Create filesArray[] to store files information
-  let filesArray = [];
+    // Initialize the articleResult to hold the result return from query
+    let articleResult = undefined;
+    // Create filesArray[] to store files information
+    let filesArray = [];
 
-  // Check if user has permisson to the article or not
-  if (data.userInfo.FK_role_id != _STUDENT_PERMISSION_ID) {
-    return res.status(401).json({
-      status: res.statusCode,
-      success: false,
-      message: "Permission required!",
+    // Check if user has permisson to the article or not
+    if (data.userInfo.FK_role_id != _STUDENT_PERMISSION_ID) {
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Permission required!",
+      });
+    }
+
+    // Get article information by 'article_id' and User 'account_id'
+    const query = getArticleById(articleId, data.userInfo.account_id);
+
+    await query
+      .then((result) => {
+        console.log("res: ", result);
+        // Get the article at the position 0 (Bcs only 1 article found)
+        articleResult = result[0];
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log(err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request!",
+          });
+        } else {
+          // Check if article submitted by current user doesnt exist
+          return res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Invalid request!",
+          });
+        }
+      });
+
+    // Initialize google auth service
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
     });
-  }
 
-  // Get article information by 'article_id' and User 'account_id'
-  const query = getArticleById(articleId, data.userInfo.account_id);
+    // Upload files into article submission folder from query result (articleResult{})
 
-  await query
-    .then((result) => {
-      console.log("res: ", result);
-      // Get the article at the position 0 (Bcs only 1 article found)
-      articleResult = result[0];
-    })
-    .catch((err) => {
-      if (!!err) {
-        console.log(err);
-        return res.status(501).json({
-          status: res.statusCode,
-          success: false,
-          message: "Bad request!",
-        });
-      } else {
-        // Check if article submitted by current user doesnt exist
-        return res.status(404).json({
-          status: res.statusCode,
-          success: false,
-          message: "Invalid request!",
-        });
-      }
-    });
+    // Get multer storage upload function
+    const uploadMultiple = upload.any("uploadedImages");
 
-  // Initialize google auth service
-  const jwToken = await getAuthServiceJwt();
-  const drive = google.drive({
-    version: "v3",
-    auth: jwToken,
-  });
+    // Upload file function
+    uploadMultiple(req, res, function (err) {
+      if (err) throw err;
+      console.log("files: ", req.files);
 
-  // Upload files into article submission folder from query result (articleResult{})
+      const files = req.files;
 
-  // Get multer storage upload function
-  const uploadMultiple = upload.any("uploadedImages");
+      // Create file metadata
+      files.map((filedata, index) => {
+        const filemetadata = {
+          name: filedata.filename,
+          parents: [articleResult.article_folderId],
+        };
 
-  // Upload file function
-  uploadMultiple(req, res, function (err) {
-    if (err) throw err;
-    console.log("files: ", req.files);
+        // Create media type for file
+        const media = {
+          mimeType: filedata.mimetype,
+          body: fs.createReadStream(filedata.path),
+        };
 
-    const files = req.files;
+        // Upload file to google drive
+        drive.files.create(
+          {
+            resource: filemetadata,
+            media: media,
+            fields: "id",
+          },
+          async (err, file) => {
+            if (err) {
+              res.json({
+                status: 501,
+                success: false,
+                message: "Upload files to drive failed!",
+              });
+              fs.unlinkSync(filedata.path);
+            }
 
-    // Create file metadata
-    files.map((filedata, index) => {
-      const filemetadata = {
-        name: filedata.filename,
-        parents: [articleResult.article_folderId],
-      };
+            // STEP 8: Get the file id and create fileInfo Object
+            const fileInfo = {
+              mimeType: filedata.mimetype,
+              fileId: file.data.id,
+              FK_article_id: articleResult.article_id, // ??? Using articleFolderId or unique id??
+            };
 
-      // Create media type for file
-      const media = {
-        mimeType: filedata.mimetype,
-        body: fs.createReadStream(filedata.path),
-      };
+            // Push files into filesArray[]
+            filesArray.push(fileInfo);
+            // Check if all files have been pushed into filesArray[]
+            // If true, get all the files and comments of current article and return
+            if (filesArray.length == files.length) {
+              // INSERT new file into database 'File'
+              const query2 = uploadFile(filesArray);
 
-      // Upload file to google drive
-      drive.files.create(
-        {
-          resource: filemetadata,
-          media: media,
-          fields: "id",
-        },
-        async (err, file) => {
-          if (err) {
-            res.json({
-              status: 501,
-              success: false,
-              message: "Upload files to drive failed!",
-            });
-            fs.unlinkSync(filedata.path);
-          }
+              await query2
+                .then(async (result2) => {
+                  console.log(filedata.filename + " uploaded successfully");
 
-          // STEP 8: Get the file id and create fileInfo Object
-          const fileInfo = {
-            mimeType: filedata.mimetype,
-            fileId: file.data.id,
-            FK_article_id: articleResult.article_id, // ??? Using articleFolderId or unique id??
-          };
+                  // Check if the last file is INSERT into database or not
+                  // If all file inserted, return article
+                  if (index == files.length - 1) {
+                    // Get all files and comments of current article
+                    const query4 = getArticleDetailById(articleId);
 
-          // Push files into filesArray[]
-          filesArray.push(fileInfo);
-          // Check if all files have been pushed into filesArray[]
-          // If true, get all the files and comments of current article and return
-          if (filesArray.length == files.length) {
-            // INSERT new file into database 'File'
-            const query2 = uploadFile(filesArray);
+                    await query4
+                      .then((result) => {
+                        // result[0] : article and its files
+                        // result[1] : article and its comments
+                        console.log("result: ", result);
 
-            await query2
-              .then(async (result2) => {
-                console.log(filedata.filename + " uploaded successfully");
+                        // Create array to store final data to return to frontend
+                        let articlesResult = [];
 
-                // Check if the last file is INSERT into database or not
-                // If all file inserted, return article
-                if (index == files.length - 1) {
+                        // Create array for storing distinc iterated article_id
+                        let passedArticlesId = [];
 
-                  // Get all files and comments of current article
-                  const query4 = getArticleDetailById(articleId);
+                        // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
+                        let articlesPositionDetail = {};
 
-                  await query4
-                    .then((result) => {
-                      // result[0] : article and its files
-                      // result[1] : article and its comments
-                      console.log("result: ", result);
+                        // Itarate each data in result[0] (article files)
+                        result[0].map((articleInfo) => {
+                          // Check if this article is exist in 'articlesResult' array or not
+                          if (
+                            passedArticlesId.includes(articleInfo.article_id)
+                          ) {
+                            // If this article existed in 'articlesResult' array, push its file into 'article.files'
 
-                      // Create array to store final data to return to frontend
-                      let articlesResult = [];
+                            // Get position of the article in 'articlesResult[]'
+                            let articlePosition =
+                              articlesPositionDetail[
+                                articleInfo.article_folderId
+                              ];
+                            console.log("position: ", articlePosition);
 
-                      // Create array for storing distinc iterated article_id
-                      let passedArticlesId = [];
+                            // Create file Object to store file information
+                            let file = {
+                              file_id: articleInfo.file_id,
+                              file_mimeType: articleInfo.file_mimeType,
+                              file_fileId: articleInfo.file_fileId,
+                              FK_article_id: articleInfo.FK_article_id,
+                            };
 
-                      // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
-                      let articlesPositionDetail = {};
+                            // Insert file Object to its article in 'articlesResult[]'
+                            articlesResult[articlePosition].files.push(file);
+                          } else {
+                            // If this article not exist, push the article_id into 'passedArticlesId'
+                            passedArticlesId.push(articleInfo.article_id);
 
-                      // Itarate each data in result[0] (article files)
-                      result[0].map((articleInfo) => {
-                        // Check if this article is exist in 'articlesResult' array or not
-                        if (passedArticlesId.includes(articleInfo.article_id)) {
-                          // If this article existed in 'articlesResult' array, push its file into 'article.files'
+                            // Create article Object to store information from result
+                            let article = {
+                              article_id: articleInfo.article_id,
+                              article_submission_date:
+                                articleInfo.article_submission_date,
+                              article_status: articleInfo.article_status,
+                              article_folderId: articleInfo.article_folderId,
+                              email: articleInfo.email,
+                              FK_faculty_id: articleInfo.FK_faculty_id,
+                              FK_account_id: articleInfo.FK_account_id,
+                              FK_event_id: articleInfo.FK_event_id,
+                              files: [],
+                              comments: [],
+                            };
 
+                            // Create file Object to store file information
+                            let file = {
+                              file_id: articleInfo.file_id,
+                              file_mimeType: articleInfo.file_mimeType,
+                              file_fileId: articleInfo.file_fileId,
+                              FK_article_id: articleInfo.FK_article_id,
+                            };
+
+                            // Push file Object into 'article.files' (only in first-time run)
+                            article.files.push(file);
+
+                            // Finally, push article information into 'articlesResult[]'
+                            articlesResult.push(article);
+
+                            // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
+                            articlesPositionDetail[
+                              articleInfo.article_folderId
+                            ] = articlesResult.length - 1;
+                          }
+                        });
+
+                        // Itarate each data in result[1] (article comments)
+                        result[1].map((articleInfo) => {
                           // Get position of the article in 'articlesResult[]'
                           let articlePosition =
                             articlesPositionDetail[
@@ -787,132 +908,79 @@ router.post("/:articleId/update-submission", gwAccountValidation, async (req, re
                             ];
                           console.log("position: ", articlePosition);
 
-                          // Create file Object to store file information
-                          let file = {
-                            file_id: articleInfo.file_id,
-                            file_mimeType: articleInfo.file_mimeType,
-                            file_fileId: articleInfo.file_fileId,
+                          // Create comment Object to store comment information
+                          let comment = {
+                            comment_id: articleInfo.comment_id,
+                            comment_time: articleInfo.comment_time,
+                            comment_content: articleInfo.comment_content,
                             FK_article_id: articleInfo.FK_article_id,
-                          };
-
-                          // Insert file Object to its article in 'articlesResult[]'
-                          articlesResult[articlePosition].files.push(file);
-                        } else {
-                          // If this article not exist, push the article_id into 'passedArticlesId'
-                          passedArticlesId.push(articleInfo.article_id);
-
-                          // Create article Object to store information from result
-                          let article = {
-                            article_id: articleInfo.article_id,
-                            article_submission_date:
-                              articleInfo.article_submission_date,
-                            article_status: articleInfo.article_status,
-                            article_folderId: articleInfo.article_folderId,
-                            email: articleInfo.email,
-                            FK_faculty_id: articleInfo.FK_faculty_id,
                             FK_account_id: articleInfo.FK_account_id,
-                            FK_event_id: articleInfo.FK_event_id,
-                            files: [],
-                            comments: [],
                           };
 
-                          // Create file Object to store file information
-                          let file = {
-                            file_id: articleInfo.file_id,
-                            file_mimeType: articleInfo.file_mimeType,
-                            file_fileId: articleInfo.file_fileId,
-                            FK_article_id: articleInfo.FK_article_id,
-                          };
+                          // Insert comment Object to its article in 'articlesResult[]'
+                          articlesResult[articlePosition].comments.push(
+                            comment
+                          );
+                        });
 
-                          // Push file Object into 'article.files' (only in first-time run)
-                          article.files.push(file);
-
-                          // Finally, push article information into 'articlesResult[]'
-                          articlesResult.push(article);
-
-                          // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
-                          articlesPositionDetail[articleInfo.article_folderId] =
-                            articlesResult.length - 1;
+                        // Finally, response the articleInfo {}
+                        return res.status(200).json({
+                          status: res.statusCode,
+                          success: true,
+                          article: articlesResult,
+                        });
+                      })
+                      .catch((err) => {
+                        if (err) {
+                          console.log("Err: ", err);
+                          return res.status(501).json({
+                            status: res.statusCode,
+                            success: false,
+                            message: "Bad request",
+                          });
+                        } else {
+                          // If err == false => Event not found
+                          return res.status(404).json({
+                            status: res.statusCode,
+                            success: false,
+                            message: "Event not found",
+                          });
                         }
                       });
-
-                      // Itarate each data in result[1] (article comments)
-                      result[1].map((articleInfo) => {
-                        // Get position of the article in 'articlesResult[]'
-                        let articlePosition =
-                          articlesPositionDetail[articleInfo.article_folderId];
-                        console.log("position: ", articlePosition);
-
-                        // Create comment Object to store comment information
-                        let comment = {
-                          comment_id: articleInfo.comment_id,
-                          comment_time: articleInfo.comment_time,
-                          comment_content: articleInfo.comment_content,
-                          FK_article_id: articleInfo.FK_article_id,
-                          FK_coordinator_id: articleInfo.FK_coordinator_id,
-                        };
-
-                        // Insert comment Object to its article in 'articlesResult[]'
-                        articlesResult[articlePosition].comments.push(comment);
-                      });
-
-                      // Finally, response the articleInfo {}
-                      return res.status(200).json({
-                        status: res.statusCode,
-                        success: true,
-                        article: articlesResult,
-                      });
-                    })
-                    .catch((err) => {
-                      if (err) {
-                        console.log("Err: ", err);
-                        return res.status(501).json({
-                          status: res.statusCode,
-                          success: false,
-                          message: "Bad request",
-                        });
-                      } else {
-                        // If err == false => Event not found
-                        return res.status(404).json({
-                          status: res.statusCode,
-                          success: false,
-                          message: "Event not found",
-                        });
-                      }
-                    });
-                }
-              })
-              .catch((err) => {
-                console.log(err);
-                // Return err
-                return res.status(500).json({
-                  status: res.statusCode,
-                  success: false,
-                  message: "Error when uploading files",
+                  }
+                })
+                .catch((err) => {
+                  console.log(err);
+                  // Return err
+                  return res.status(500).json({
+                    status: res.statusCode,
+                    success: false,
+                    message: "Error when uploading files",
+                  });
                 });
-              });
+            }
+            // Delete the file in temp folder
+            fs.unlinkSync(filedata.path);
           }
-          // Delete the file in temp folder
-          fs.unlinkSync(filedata.path);
-        }
-      );
-    });
-  });
-
-  // Set article status to pending and update time
-  const query3 = setPendingArticle(articleResult.article_id);
-
-  await query3
-    .then((result3) => {
-      console.log("Article status set to pending");
-    })
-    .catch((err) => {
-      return res.status(501).json({
-        status: res.statusCode,
-        success: false,
-        message: "Bad request!",
+        );
       });
     });
-});
+
+    // Set article status to pending and update time
+    const query3 = setPendingArticle(articleResult.article_id);
+
+    await query3
+      .then((result3) => {
+        console.log("Article status set to pending");
+      })
+      .catch((err) => {
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request!",
+        });
+      });
+  }
+);
 
 module.exports = router;
