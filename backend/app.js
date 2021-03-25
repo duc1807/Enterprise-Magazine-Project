@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 var cors = require("cors");
 const async = require("async");
+const schedule = require('node-schedule');
 
 const app = express();
 
@@ -89,6 +90,12 @@ app.get("/google", (req, res) => {
 		clientID:
 			"701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com",
 	});
+});
+
+// Create new schedule for the system to auto create new year folder on drive
+// The schedule will run on 1/1 each year (1:00 am)
+schedule.scheduleJob('0 0 1 1 1 *', () => {
+  console.log('The world is going to end today.');
 });
 
 app.listen(5000, () => {

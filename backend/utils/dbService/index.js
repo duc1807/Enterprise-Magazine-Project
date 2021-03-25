@@ -55,6 +55,7 @@ const {
   uploadFile,
   deleteFileByFileId,
 } = require("../../utils/dbService/fileService");
+const { getCommentByArticleId } = require("../../utils/dbService/commentService")
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -163,6 +164,10 @@ module.exports = {
 
   // ======================================================= Image
   getImageById: getImageById,
+  // ================================================================
+
+  // ======================================================= Comment
+  getCommentByArticleId: getCommentByArticleId,
   // ================================================================
 
   // ======================================================= Statistic

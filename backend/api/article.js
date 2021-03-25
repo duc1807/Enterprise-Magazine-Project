@@ -20,6 +20,7 @@ const {
   deleteFileByFileId,
   setArticleCommentOntime,
   getArticleInformationById,
+  getCommentByArticleId,
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
@@ -232,12 +233,14 @@ router.get("/:articleId", coordinatorValidation, async (req, res) => {
  *    - Manager coordinator of exact faculty
  * @description API for getting article's .doc file information & comments
  * @params
+ *    - articleId: Int
  * 		- fileId: Int
  * @return
  *    - file: Object
  *    - comments: Array[Object]
  * @notes
  *    - Not yet validate permission
+ *    - Replace ??? Dont need
  */
 router.get(
   "/:articleId/file/:fileId",
@@ -294,6 +297,47 @@ router.get(
       });
   }
 );
+
+/**
+ * @method GET
+ * @API /api/article/:articleId/comments       ?????????????
+ * @permission
+ *    - Manager coordinator of exact faculty
+ * @description API for getting article's comments
+ * @params
+ * 		- articleId: Int
+ * @return
+ *    - comments: Array[Object]
+ * @notes
+ */
+router.get("/:articleId/comments", async (req, res) => {
+  // Get articleId from params
+  const { articleId } = req.params;
+
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
+
+  // Get files and comments by fileId and articleId
+  const query = getCommentByArticleId(articleId);
+
+  await query
+    .then(async (result) => {
+      // Finally, response the comments[]
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        comments: result,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
 
 /**
  * @method DELETE
@@ -353,7 +397,7 @@ router.delete(
 
 /**
  * @method POST
- * @API api/article/:articleId/comment
+ * @API api/article/:articleId/comments
  * @description API for adding new comment to the article
  * @params
  * 		- content: String (comment)
@@ -361,7 +405,7 @@ router.delete(
  * @notes
  *      - (!!! CORS problems)
  */
-router.post("/:articleId/comment", gwAccountValidation, async (req, res) => {
+router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get comment content
   const { content } = req.body;
   // Get articleId from params
