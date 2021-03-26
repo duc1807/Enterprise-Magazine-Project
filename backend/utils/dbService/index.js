@@ -43,7 +43,7 @@ const {
   createNewAccount,
   createAccountInformation,
   updateAccount,
-  updateAccountInformation
+  updateAccountInformation,
 } = require("../../utils/dbService/adminService");
 const {
   uploadFile,
@@ -53,6 +53,9 @@ const {
   getOverallStats,
   getContributionByFaculty,
   getContributionByStatus,
+  getAverageSelectedStats,
+  getAverageCommentStats,
+  getContributionEachMonthByYear,
 } = require("./statisticService");
 
 module.exports = {
@@ -152,5 +155,10 @@ module.exports = {
   getOverallStats: getOverallStats,
   // Count total of Contribution By Faculty And Article_STATUS
   getContributionByFaculty: getContributionByFaculty,
-  getContributionByStatus: getContributionByStatus,
+  // Count selected article on total contribution
+  getAverageSelectedStats: getAverageSelectedStats,
+  // Count the stats of article has comment on time
+  getAverageCommentStats: getAverageCommentStats,
+  // Count posted articles each months by year
+  getContributionEachMonthByYear: getContributionEachMonthByYear,
 };
