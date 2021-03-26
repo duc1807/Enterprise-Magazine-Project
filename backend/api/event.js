@@ -54,6 +54,7 @@ const { upload } = require("../utils/multerStorage");
 //   "https://www.googleapis.com/auth/drive.metadata ";
 
 // Constants
+const eventImageFolderId = "1GiaqwUdxaL5kNFS7HhEArmduStkRwamT";
 const eventFolderConstants = {
   acceptedArticlesFolderName: "Selected Articles",
   allArticlesFolderName: "All Articles",
@@ -90,16 +91,16 @@ router.get("/published", async (req, res) => {
       res.status(200).json({
         status: res.statusCode,
         success: true,
-        publishedEvents: result
+        publishedEvents: result,
       });
     })
     .catch((err) => {
-        console.log("Err: ", err);
-        return res.status(501).json({
-          status: res.statusCode,
-          success: false,
-          messages: "Bad request",
-        })
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        messages: "Bad request",
+      });
     });
 });
 
@@ -616,11 +617,11 @@ router.get(
  * @notes
  *      - event image upload not implemented
  */
-router.post("/", managerValidation, upload.single("file"), async (req, res) => {
+router.post("/", managerValidation, async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
   const { title, content, startDate, endDate, facultyId } = req.body;
 
-  // Get coordinator accounts of a faculty
+  // Get all coordinator accounts of a faculty
   const query = getCoordinatorAccountsByFaculty(facultyId);
   let coordinatorAccounts = [];
 
@@ -709,7 +710,8 @@ router.post("/", managerValidation, upload.single("file"), async (req, res) => {
   const eventData = {
     title: title,
     content: content,
-    // imageData: imageData,
+    // Image data will be set (fileId) after upload image to drive
+    imageData: "",
     startDate: newStartDate,
     endDate: newEndDate,
     createdAt: currentTime.getTime(),
@@ -943,33 +945,97 @@ router.post("/", managerValidation, upload.single("file"), async (req, res) => {
             eventData.selectedArticles = result.acceptedArticlesId;
             eventData.allArticles = result.allArticlesId;
 
-            // Insert eventData into database
-            console.log("event: ", eventData);
+            const uploadMultiple = upload.any("file");
 
-            createNewEvent(eventData)
-              .then((result) => {
-                console.log("Result: ", result);
-                return res.status(201).json({
-                  eventInfo: eventData,
-                });
-              })
-              .catch((err) => {
-                if (!!err) {
-                  console.log(err);
-                  return res.status(500).json({
-                    success: false,
-                    message: "Server error!",
-                  });
-                } else {
-                  // If err = false, return faculty not found error
-                  return res.status(404).json({
-                    success: false,
-                    message: "Faculty not found!",
-                  });
-                }
+            // Insert event image into drive
+            uploadMultiple(req, res, function (err) {
+              if (err) throw err;
+              console.log("files: ", req.files);
+
+              // Get files[] from request
+              const files = req.files;
+
+              // Map all elements in files
+              files.map((filedata) => {
+                // Create metadata for file
+                const filemetadata = {
+                  name: `${currentTime.getTime()} | ${eventData.title}`,
+                  parents: [eventImageFolderId],
+                };
+
+                // Create media type for file
+                const media = {
+                  mimeType: filedata.mimetype,
+                  body: fs.createReadStream(filedata.path),
+                };
+
+                // Upload file to google drive
+                drive.files.create(
+                  {
+                    resource: filemetadata,
+                    media: media,
+                    fields: "id",
+                  },
+                  async (err, file) => {
+                    if (err) {
+                      res.json({
+                        status: 501,
+                        success: false,
+                        message: "Upload files to drive failed!",
+                      });
+                      fs.unlinkSync(filedata.path);
+                      return;
+                    }
+
+                    // STEP 8: Get the file id after uploaded successful
+                    console.log("File id: ", file.data.id);
+
+                    fs.unlinkSync(filedata.path);
+
+                    eventData.imageData = file.data.id;
+
+                    // Insert eventData into database
+                    console.log("event: ", eventData);
+
+                    createNewEvent(eventData)
+                      .then((result) => {
+                        console.log("Result: ", result);
+                        return res.status(201).json({
+                          status: res.statusCode,
+                          success: true,
+                          eventInfo: eventData,
+                        });
+                      })
+                      .catch((err) => {
+                        if (!!err) {
+                          console.log(err);
+                          return res.status(500).json({
+                            status: res.statusCode,
+                            success: false,
+                            message: "Server error!",
+                          });
+                        } else {
+                          // If err = false, return faculty not found error
+                          return res.status(404).json({
+                            status: res.statusCode,
+                            success: false,
+                            message: "Faculty not found!",
+                          });
+                        }
+                      });
+                  }
+                );
               });
+            });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {
+            console.log(err);
+            return res.status(500).json({
+              status: res.statusCode,
+              success: false,
+              message: "Server error!",
+            });
+          });
       }
     }
   );

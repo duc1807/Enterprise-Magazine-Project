@@ -102,7 +102,7 @@ const createNewEvent = async (eventInfo) => {
   const {
     title,
     content,
-    // imageData,
+    imageData,
     startDate,
     endDate,
     createdAt,
@@ -112,8 +112,6 @@ const createNewEvent = async (eventInfo) => {
     allArticles,
     FK_faculty_id,
   } = eventInfo;
-
-  let imageData = "test";
 
   let db = getDataBaseConnection();
 
@@ -134,8 +132,7 @@ const createNewEvent = async (eventInfo) => {
         db.query(sql1, (err, result) => {
           if (!!err) reject(err);
           resolve(result);
-          // db.end();
-          // connection.destroy();
+          db.end();
         });
       }
       db.end();
