@@ -2,15 +2,12 @@ require("dotenv").config();
 
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
-const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 const async = require("async");
-const { google, Auth } = require("googleapis");
 const { OAuth2Client } = require("google-auth-library");
 
 // Import modules from other files
-const { getAuthClient, getUserProfile } = require("../../utils/auth");
+const { getAuthClient } = require("../../utils/auth");
 
 // Middleware authentication
 const {
@@ -86,7 +83,7 @@ router.get("/", gwAccountValidation, (req, res) => {
  */
 router.post("/login", async (req, res) => {
   const { id_token } = req.body;
-  let email = "";
+  // Create oauthUser variable to store user information from payload
   let oauthUser = undefined;
 
   // Check if id_token is exist or not
@@ -120,9 +117,6 @@ router.post("/login", async (req, res) => {
 
     // Get oauthUser information from payload 
     oauthUser = payload;
-
-    // Get email of user and assign to 'email'
-    email = payload.email; ////////// ============================= Test
 
     console.log("User: ", payload);
   }

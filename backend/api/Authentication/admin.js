@@ -149,47 +149,6 @@ router.post("/login", async (req, res) => {
           message: "Bad request",
         });
       });
-
-    // Old authentication way
-
-    // if (queryResult.length) {
-    //   // Success
-    //   console.log("Signin successful");
-
-    //   // Create userInfo Object
-    //   let userInfo = {};
-    //   userInfo.username = queryResult[0].username;
-    //   userInfo.role_name = _ROUTER_ROLE;
-
-    //   // Pass userInfo to payload
-    //   const payload = {
-    //     userInfo: userInfo,
-    //   };
-
-    //   // Generate token with userInfo payload
-    //   const token = webToken.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-    //     expiresIn: "900s",
-    //   });
-
-    //   // Storing Token in cookie, with httpOnly and secure set to true
-    //   // (only allow token on secure website)
-    //   res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
-
-    //   res.status(200).json({
-    //     status: res.statusCode,
-    //     success: true,
-    //     message: "Logged In successfully",
-    //     userInfo: userInfo,
-    //   });
-    // } else {
-    //   // Failed
-    //   console.log("Signin failed");
-    //   res.status(401).json({
-    //     success: false,
-    //     status: res.statusCode,
-    //     message: "Invalid login information",
-    //   });
-    // }
   }
 });
 

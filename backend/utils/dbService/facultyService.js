@@ -17,7 +17,9 @@ const getDataBaseConnection = () => {
 const getAllFaculty = async () => {
   let db = getDataBaseConnection();
   
-  const sql = `SELECT * FROM ${TABLE}`;
+  // SELECT all faculty where folderId is NOT NULL (role 99)
+  const sql = `SELECT * FROM ${TABLE}
+              WHERE faculty_folderId IS NOT NULL`;
   return new Promise((resolve, reject) => {
       db.query(sql, (err, result) => {
         if (!!err) reject(err);

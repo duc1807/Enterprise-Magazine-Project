@@ -3,8 +3,11 @@ const express = require("express");
 const { google } = require("googleapis");
 const router = express.Router();
 const fs = require("fs");
+
+// Import multer upload function
 const { upload } = require("../utils/multerStorage");
 
+// Import services
 const {
   addNewCommentToArticle,
   setSelectedArticle,
@@ -31,6 +34,7 @@ const {
   coordinatorValidation,
 } = require("./middleware/verification");
 
+// Constants
 const _COORDINATOR_PERMISSION_ID = 2;
 const _STUDENT_PERMISSION_ID = 1;
 
@@ -39,7 +43,7 @@ const _STUDENT_PERMISSION_ID = 1;
  * @API /api/article/my-articles
  * @permission
  *    - Student
- * @description API for getting student's articles information & comments
+ * @description API for getting student's articles information
  * @params
  * @return
  *    - myArticles: Array[Object]
@@ -52,8 +56,8 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
 
   console.log("data: ", data);
 
-  // Get all articles of current user
-  const query = getSelfArticles(3);
+  // Get all articles list of current user
+  const query = getSelfArticles(data.userInfo.account_id);
 
   await query
     .then((result) => {
@@ -94,16 +98,38 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  * @return
  *    - article: Object
  * @notes
- *    - Not yet validate permission
- *    - Not add permission for student to view self-article ?? Need ????
+ *    - Not yet validation coordinator with exact faculty
  */
-router.get("/:articleId", coordinatorValidation, async (req, res) => {
+router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Get articleId from params
   const { articleId } = req.params;
 
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
+  // Check if user's role is student =? check if student has permission to get this article
+  if(data.userInfo.account_id != _COORDINATOR_PERMISSION_ID) {
+    getArticleById(articleId, data.userInfo.account_id)
+    .then(result => {
+      if (!result.length) {
+        return res.status(401).json({
+          status: res.statusCode,
+          success: false,
+          messsage: "Permission required"
+        })
+      }
+    })
+    .catch(err => {
+      console.log("Err: ", err)
+      return res.status(500).json({
+        status: res.statusCode,
+        success: false,
+        message: "Server error"
+      })
+    })
+  }
+
+  // Get article information (with files & comments)
   const query = getArticleDetailById(articleId);
 
   await query
@@ -300,7 +326,7 @@ router.get(
 
 /**
  * @method GET
- * @API /api/article/:articleId/comments       ?????????????
+ * @API /api/article/:articleId/comments   
  * @permission
  *    - Manager coordinator of exact faculty
  * @description API for getting article's comments
@@ -310,7 +336,7 @@ router.get(
  *    - comments: Array[Object]
  * @notes
  */
-router.get("/:articleId/comments", async (req, res) => {
+router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get articleId from params
   const { articleId } = req.params;
 
@@ -351,6 +377,7 @@ router.get("/:articleId/comments", async (req, res) => {
  * @return null
  * @notes
  *    - Dont need articleId ?????
+ *    - Delete on drive also
  */
 router.delete(
   "/:articleId/file/:fileId",
