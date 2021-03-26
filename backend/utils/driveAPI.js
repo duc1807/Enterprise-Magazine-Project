@@ -6,12 +6,12 @@ const { google } = require("googleapis");
 
 const key = require("../private_key.json");
 
-/** 
+/**
  * @description Function that return the auth ServiceJWT
  * @params null
  * @return
  *      - jwToken: Object ???????????
- * @notes 
+ * @notes
  *      - Check if authJWT is created (return JWT) or not (create new JWT and return)   ????
  */
 const getAuthServiceJwt = () => {
@@ -32,18 +32,16 @@ const getAuthServiceJwt = () => {
   return jwToken;
 };
 
-
-/** 
+/**
  * @description Asynchronous create permission for a specific drive folder
- * @params 
+ * @params
  *      - permissionList: Array[]
  *      - folderId: String
  * @return null
- *      
- * @notes 
+ *
+ * @notes
  */
 const insertPermissionsToFolderId = async (permissionList, folderId) => {
-  
   const jwToken = await getAuthServiceJwt();
 
   const drive = google.drive({
@@ -85,18 +83,17 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
   );
 };
 
-
-/** 
+/**
  * @description Asynchronous create permission for a specific drive folder
- * @params 
+ * @params
  *      - Article info INNER JOIN Event info
  * @return null
- *      
- * @notes 
+ *
+ * @notes
  *      - Using try catch to retry in case the drive API is down
  */
-  const insertFolderToOtherFolder = async (articleAndEventInfo) => {
-  const data = articleAndEventInfo
+const insertFolderToOtherFolder = async (articleAndEventInfo) => {
+  const data = articleAndEventInfo;
   const jwToken = await getAuthServiceJwt();
 
   const drive = google.drive({
@@ -104,22 +101,51 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
     auth: jwToken,
   });
 
-  drive.files.update({
-    fileId: data.article_folderId,
-    addParents: data.folderId_selectedArticles,
-    removeParents: data.folderId_allArticles,
-    fields: 'id, parents'
-  }, function (err, file) {
-    if (err) {
-      console.log(err)
-    } else {
-      console.log("Article folder moved to selected article successfully");
+  drive.files.update(
+    {
+      fileId: data.article_folderId,
+      addParents: data.folderId_selectedArticles,
+      removeParents: data.folderId_allArticles,
+      fields: "id, parents",
+    },
+    function (err, file) {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("Article folder moved to selected article successfully");
+      }
     }
+  );
+};
+
+const deleteFileOnDrive = async (fileDriveId) => {
+  // Get jwt auth service
+  const jwToken = await getAuthServiceJwt();
+  const drive = google.drive({
+    version: "v3",
+    auth: jwToken,
   });
+
+  // await drive.files.delete({
+  //   fileId: `${fileDriveId}`
+  // })
+
+  drive.files.delete(
+    {
+      fileId: `${fileDriveId}`
+    },
+    async (err, file) => {
+      if (err) {
+        console.log("Err: ", err);
+      }
+      console.log(`File ${fileDriveId} removed successful`);
+    }
+  );
 };
 
 module.exports = {
-    insertPermissionsToFolderId: insertPermissionsToFolderId,
-    getAuthServiceJwt: getAuthServiceJwt,
-    insertFolderToOtherFolder: insertFolderToOtherFolder
+  insertPermissionsToFolderId: insertPermissionsToFolderId,
+  getAuthServiceJwt: getAuthServiceJwt,
+  insertFolderToOtherFolder: insertFolderToOtherFolder,
+  deleteFileOnDrive: deleteFileOnDrive,
 };

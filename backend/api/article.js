@@ -24,10 +24,12 @@ const {
   setArticleCommentOntime,
   getArticleInformationById,
   getCommentByArticleId,
+  getFileDetailById
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
   getAuthServiceJwt,
+  deleteFileOnDrive
 } = require("../utils/driveAPI");
 const {
   gwAccountValidation,
@@ -108,25 +110,25 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check if user's role is student =? check if student has permission to get this article
-  if(data.userInfo.account_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.account_id != _COORDINATOR_PERMISSION_ID) {
     getArticleById(articleId, data.userInfo.account_id)
-    .then(result => {
-      if (!result.length) {
-        return res.status(401).json({
+      .then((result) => {
+        if (!result.length) {
+          return res.status(401).json({
+            status: res.statusCode,
+            success: false,
+            messsage: "Permission required",
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("Err: ", err);
+        return res.status(500).json({
           status: res.statusCode,
           success: false,
-          messsage: "Permission required"
-        })
-      }
-    })
-    .catch(err => {
-      console.log("Err: ", err)
-      return res.status(500).json({
-        status: res.statusCode,
-        success: false,
-        message: "Server error"
-      })
-    })
+          message: "Server error",
+        });
+      });
   }
 
   // Get article information (with files & comments)
@@ -326,7 +328,7 @@ router.get(
 
 /**
  * @method GET
- * @API /api/article/:articleId/comments   
+ * @API /api/article/:articleId/comments
  * @permission
  *    - Manager coordinator of exact faculty
  * @description API for getting article's comments
@@ -391,15 +393,21 @@ router.delete(
 
     // Check if user is student or not
 
-    // Get files and comments by fileId and articleId
-    const query = deleteFileByFileId(fileId, data.userInfo.account_id);
+    // Get file information
+    const query = getFileDetailById(fileId)
 
-    await query
-      .then(async (result) => {
+    query.then(async (result) => {
+    // Get files and comments by fileId and articleId
+    const query1 = deleteFileByFileId(fileId, data.userInfo.account_id);
+
+    await query1
+      .then(async (result1) => {
+        // Delete file on Google Drive
+        deleteFileOnDrive(result[0].file_fileId)
         return res.status(200).json({
           status: res.statusCode,
           success: true,
-          message: "File deleted successful",
+          message: "File removed",
         });
       })
       .catch((err) => {
@@ -418,7 +426,11 @@ router.delete(
             message: "Not found",
           });
         }
-      });
+      })
+    }).catch(err => {
+      console.log("Err: ", err);
+    })
+
   }
 );
 

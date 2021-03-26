@@ -34,6 +34,25 @@ const getDataBaseConnection = () => {
 //   });
 // };
 
+const getFileDetailById = async (fileId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM File
+      WHERE file_id = ${fileId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false);
+      } else {
+        resolve(result);
+      }
+      db.end();
+    });
+  });
+};
+
 const uploadFile = async (filesInfo) => {
   let db = getDataBaseConnection();
 
@@ -63,7 +82,7 @@ const deleteFileByFileId = (fileId, studentId) => {
               AND File.file_id = ${fileId}`;
 
   const sql1 = `DELETE FROM File
-                WHERE file_id = ${fileId}`
+                WHERE file_id = ${fileId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -82,6 +101,7 @@ const deleteFileByFileId = (fileId, studentId) => {
 };
 
 module.exports = {
+  getFileDetailById: getFileDetailById,
   uploadFile: uploadFile,
   deleteFileByFileId: deleteFileByFileId,
 };

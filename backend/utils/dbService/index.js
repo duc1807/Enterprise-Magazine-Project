@@ -52,6 +52,7 @@ const {
   getAccountsByRole,
 } = require("../../utils/dbService/adminService");
 const {
+  getFileDetailById,
   uploadFile,
   deleteFileByFileId,
 } = require("../../utils/dbService/fileService");
@@ -159,6 +160,8 @@ module.exports = {
   // ================================================================
 
   // ======================================================= File
+  // Get file information
+  getFileDetailById: getFileDetailById,
   uploadFile: uploadFile,
   deleteFileByFileId: deleteFileByFileId,
   // ================================================================
