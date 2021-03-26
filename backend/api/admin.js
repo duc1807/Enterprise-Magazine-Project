@@ -56,7 +56,7 @@ router.get("/roles", async (req, res) => {
  *    - Check which fields will be updated ???????
  *    - where account_id will be passed ?? req.body or req.params?
  */
- router.get("/accounts/:roleId", async (req, res) => {
+router.get("/accounts/:roleId", async (req, res) => {
   // Get accountId from params
   const { roleId } = req.params;
 
@@ -170,30 +170,11 @@ router.post("/guest-accounts", async (req, res) => {
   await query
     .then(async (result) => {
       // If guest account inserted into database successful  ????
-
-
-      // const accountDetail = {
-      //   firstName: firstName,
-      //   surName: surName,
-      // };
-      // const query1 = createAccountInformation(accountDetail, result.insertId);
-
-      // await query1
-      //   .then((result1) => {
-      //     return res.status(200).json({
-      //       status: res.statusCode,
-      //       success: true,
-      //       message: "Account created successfully",
-      //     });
-      //   })
-      //   .catch((err) => {
-      //     console.log("Err: ", err);
-      //     return res.status(501).json({
-      //       status: res.statusCode,
-      //       success: false,
-      //       message: "Bad request",
-      //     });
-      //   });
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Guest acccount created successfully",
+      });
     })
     .catch((err) => {
       console.log("Err: ", err);
@@ -204,7 +185,6 @@ router.post("/guest-accounts", async (req, res) => {
       });
     });
 });
-
 
 /**
  * @method PUT

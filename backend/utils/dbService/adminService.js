@@ -82,8 +82,9 @@ const createNewGuestAccount = (guestAccountInfo) => {
 
   let db = getDataBaseConnection();
 
-  // INSERT guest account into database, with enabled = 1 (TRUE) 
-  const sql = ``;
+  // INSERT guest account into database
+  const sql = `INSERT INTO Guest(guest_name, password, FK_faculty_id)
+              VALUES ('${username}', '${password}', ${facultyId})`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -133,13 +134,17 @@ const updateAccount = (accountDetail, accountId) => {
 };
 
 // =============================================== NOT IMPLEMENT
-const updateGuestAccount = (guestAccountInfo) => {
+const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
   const { username, password, facultyId } = guestAccountInfo
 
   let db = getDataBaseConnection();
 
   // UPDATE guest account in database
-  const sql = ``;
+  const sql = `UPDATE Guest
+              SET guest_name = '${username}', 
+              password = '${password}', 
+              FK_faculty_id= ${facultyId}
+              WHERE guest_id = ${guestAccountId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
