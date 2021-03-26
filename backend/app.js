@@ -39,10 +39,10 @@ app.get("/testUpload", (req, res) => {
 // API controllers
 app
 	// Login validation API for student and staff (Google Auth)
-	.use("/api/authentication", require("./api/Authentication/googleAuth"))
+	.use("/api/authentication", require("./api/authAPI/googleAuth"))
 
 	// Authentication API for admin
-	.use("/api/authentication/admin", require("./api/Authentication/admin"))
+	.use("/api/authentication/admin", require("./api/authAPI/admin"))
 
 	// Faculty API
 	.use("/api/faculties", require("./api/faculty"))
@@ -71,8 +71,6 @@ app
   // ============================================================== In development
 	.use("/api/user", require("./api/user"))
 	.use("/api/notification", require("./api/mailnotification"))
-
-  
 
 // .use("/api/student", require("./api/Authentication/student"));
 

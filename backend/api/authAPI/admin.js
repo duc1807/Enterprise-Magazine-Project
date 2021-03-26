@@ -17,8 +17,8 @@ const _ROUTER_ROLE = "admin";
  * @method GET
  * @API /api/authentication/admin/
  * @description API for admin to get login credentials
- * @param null
- * @returns
+ * @params null
+ * @return
  *      - status: Int
  *      - success: Boolean
  *      - message: String
@@ -55,10 +55,10 @@ router.get("/", adminValidation, (req, res) => {
  * @method POST
  * @API /api/authentication/admin/login
  * @description API route to signin the user
- * @param
+ * @params
  *    - username: String
  *    - password: String
- * @returns
+ * @return
  *    - status: statusCode
  *    - success: Boolean
  *    - message: String

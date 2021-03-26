@@ -7,7 +7,7 @@ const fs = require("fs");
 // Import multer upload function
 const { upload } = require("../utils/multerStorage");
 
-// Import services
+// Import database services
 const {
   addNewCommentToArticle,
   setSelectedArticle,
@@ -157,7 +157,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
 
           // Get position of the article in 'articlesResult[]'
           let articlePosition =
-            articlesPositionDetail[articleInfo.article_folderId];
+          articlesPositionDetail[articleInfo.article_folderId];
           console.log("position: ", articlePosition);
 
           // Create file Object to store file information
