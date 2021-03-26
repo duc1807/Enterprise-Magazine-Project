@@ -23,12 +23,14 @@ const {
   getRejectedArticles,
   getSubmittedArticleById,
   addNewCommentToArticle,
+  setArticleCommentOntime,
   setPendingArticle,
   setSelectedArticle,
   setRejectedArticle,
   getFileAndCommentByFileId,
   createPostedArticle,
   setNewArticleSubmissionFolderId,
+  getArticleInformationById,
 } = require("../../utils/dbService/articleService");
 const {
   getCoordinatorAccountsByFaculty,
@@ -41,14 +43,21 @@ const { getImageById } = require("../../utils/dbService/imageService");
 const {
   getAdminAccountByUsername,
   createNewAccount,
+  createNewGuestAccount,
   createAccountInformation,
   updateAccount,
+  updateGuestAccount,
   updateAccountInformation,
+  getAllRolesInformation,
+  getAccountsByRole,
 } = require("../../utils/dbService/adminService");
 const {
   uploadFile,
   deleteFileByFileId,
 } = require("../../utils/dbService/fileService");
+const {
+  getCommentByArticleId,
+} = require("../../utils/dbService/commentService");
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -68,6 +77,14 @@ module.exports = {
   // Update an account information
   updateAccount: updateAccount,
   updateAccountInformation: updateAccountInformation,
+  // Get all roles from database
+  getAllRolesInformation: getAllRolesInformation,
+  // Get all accounts by role
+  getAccountsByRole: getAccountsByRole,
+  // Create new guest account
+  createNewGuestAccount: createNewGuestAccount,
+  // Update guest account
+  updateGuestAccount: updateGuestAccount,
   // ================================================================
 
   // ======================================================= Coordinator
@@ -135,6 +152,10 @@ module.exports = {
   setRejectedArticle: setRejectedArticle,
   // Set new article submission folderId
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
+  // Set article comment_onTime to TRUE
+  setArticleCommentOntime: setArticleCommentOntime,
+  // Get article information by article_id
+  getArticleInformationById: getArticleInformationById,
   // ================================================================
 
   // ======================================================= File
@@ -148,6 +169,10 @@ module.exports = {
 
   // ======================================================= Image
   getImageById: getImageById,
+  // ================================================================
+
+  // ======================================================= Comment
+  getCommentByArticleId: getCommentByArticleId,
   // ================================================================
 
   // ======================================================= Statistic

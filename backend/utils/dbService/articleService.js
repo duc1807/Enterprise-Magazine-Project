@@ -50,6 +50,21 @@ const getArticleByIdAndUserId = async (articleId, userId) => {
   });
 };
 
+const getArticleInformationById = async (articleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM ${DB_TABLE}
+              WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
 /**
  * @description Get the article detail (files & comments)
  * @params
@@ -489,7 +504,7 @@ const getSubmittedArticleById = (articleId) => {
  * @notes
  */
 const addNewCommentToArticle = (commentInfo, userInfo) => {
-  const { content, time, FK_article_id, FK_coordinator_id } = commentInfo;
+  const { content, time, FK_article_id, FK_account_id } = commentInfo;
   let db = getDataBaseConnection();
 
   // Check if the current user has permission to add comment to the article or not
@@ -506,8 +521,8 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
 
   // SQL for insert comment into database
   const sql1 = `INSERT INTO
-                Comment (comment_content, comment_time, FK_article_id, FK_coordinator_id)
-				VALUES ('${content}', '${time}', '${FK_article_id}', '${FK_coordinator_id}')`;
+                Comment (comment_content, comment_time, FK_article_id, FK_account_id)
+				VALUES ('${content}', '${time}', '${FK_article_id}', '${FK_account_id}')`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -522,6 +537,23 @@ const addNewCommentToArticle = (commentInfo, userInfo) => {
           resolve(result1);
         });
       }
+      db.end();
+    });
+  });
+};
+
+const setArticleCommentOntime = (articleId, status) => {
+  let db = getDataBaseConnection();
+
+  // Set the comment_onTime status to 1 or 0 (status)
+  const sql = `Update Article
+              SET Article.comment_onTime = ${status ? 1 : 0}
+				      WHERE Article.article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
       db.end();
     });
   });
@@ -667,10 +699,12 @@ module.exports = {
   getSubmittedArticleById: getSubmittedArticleById,
   getFileAndCommentByFileId: getFileAndCommentByFileId,
   addNewCommentToArticle: addNewCommentToArticle,
+  setArticleCommentOntime: setArticleCommentOntime,
   createNewArticle: createNewArticle,
   createPostedArticle: createPostedArticle,
   setPendingArticle: setPendingArticle,
   setSelectedArticle: setSelectedArticle,
   setRejectedArticle: setRejectedArticle,
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
+  getArticleInformationById: getArticleInformationById,
 };

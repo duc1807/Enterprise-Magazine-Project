@@ -13,6 +13,37 @@ const getDataBaseConnection = () => {
   return connection;
 };
 
+const getAllRolesInformation = () => {
+
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Role`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+const getAccountsByRole = (roleId) => {
+
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Account
+              WHERE FK_role_id = ${roleId}`
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
 const getAdminAccountByUsername = async (username) => {
   let db = getDataBaseConnection();
 
@@ -35,6 +66,24 @@ const createNewAccount = (accountInfo) => {
   // INSERT account into database, with enabled = 1 (TRUE) 
   const sql = `INSERT INTO Account (email, FK_role_id, FK_faculty_id, enabled)
                 VALUES ('${email}', ${roleId}, ${facultyId}, 1)`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
+// =============================================== NOT IMPLEMENT
+const createNewGuestAccount = (guestAccountInfo) => {
+  const { username, password, facultyId } = guestAccountInfo
+
+  let db = getDataBaseConnection();
+
+  // INSERT guest account into database, with enabled = 1 (TRUE) 
+  const sql = ``;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -83,6 +132,24 @@ const updateAccount = (accountDetail, accountId) => {
   });
 };
 
+// =============================================== NOT IMPLEMENT
+const updateGuestAccount = (guestAccountInfo) => {
+  const { username, password, facultyId } = guestAccountInfo
+
+  let db = getDataBaseConnection();
+
+  // UPDATE guest account in database
+  const sql = ``;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
 
 const updateAccountInformation = (accountDetail, accountId) => {
   const { firstName, surName } = accountDetail
@@ -107,7 +174,11 @@ const updateAccountInformation = (accountDetail, accountId) => {
 module.exports = {
   getAdminAccountByUsername: getAdminAccountByUsername,
   createNewAccount: createNewAccount,
+  createNewGuestAccount: createNewGuestAccount,
   createAccountInformation: createAccountInformation,
   updateAccount: updateAccount,
-  updateAccountInformation: updateAccountInformation
+  updateGuestAccount: updateGuestAccount,
+  updateAccountInformation: updateAccountInformation,
+  getAllRolesInformation: getAllRolesInformation,
+  getAccountsByRole: getAccountsByRole,
 };
