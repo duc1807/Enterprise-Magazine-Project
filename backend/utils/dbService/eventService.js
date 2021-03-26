@@ -142,7 +142,7 @@ const createNewEvent = async (eventInfo) => {
 
 const updateEvent = async (eventInfo) => {
   const {
-    id,
+    eventId,
     title,
     content,
     startDate,
@@ -157,7 +157,7 @@ const updateEvent = async (eventInfo) => {
   const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
                 FROM Event
                 INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-                WHERE event_id = ${id} AND Faculty.faculty_id = '${FK_faculty_id}'`;
+                WHERE event_id = ${eventId} AND Faculty.faculty_id = '${FK_faculty_id}'`;
 
   const sql1 = `UPDATE Event 
                   SET
@@ -167,7 +167,7 @@ const updateEvent = async (eventInfo) => {
                   event_endDate = '${endDate}', 
                   event_lastUpdate = '${lastUpdate}'
                   WHERE 
-                  event_id = ${id}`;
+                  event_id = ${eventId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {

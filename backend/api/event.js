@@ -1043,10 +1043,9 @@ router.post("/", managerValidation, async (req, res) => {
 
 /**
  * @method PUT
- * @API /api/events/
+ * @API /api/events/:eventId
  * @description API for updating event
  * @params
- *      - id: Int
  *      - title: String
  *      - content: String
  *      - imageData: file
@@ -1064,9 +1063,8 @@ router.post("/", managerValidation, async (req, res) => {
  *      - Image data not implemented
  *      - Startdate needed?
  */
-router.put("/", managerValidation, upload.single("file"), (req, res) => {
+router.put("/:eventId", managerValidation, upload.single("file"), (req, res) => {
   const {
-    id,
     title,
     content,
     // imageData,
@@ -1075,6 +1073,8 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
     folderId,
     FK_faculty_id,
   } = req.body;
+
+  const { eventId } = req.params
 
   /// Image base64 encoded upload
 
@@ -1111,7 +1111,7 @@ router.put("/", managerValidation, upload.single("file"), (req, res) => {
   // Get current time constants and create data Object
   const currentTime = new Date();
   const data = {
-    id: id,
+    eventId: eventId,
     title: title,
     content: content,
     // imageData: imageData,
