@@ -184,7 +184,7 @@ const getPostedArticlesOfEvent = async (eventId) => {
     `SELECT * FROM Event
               WHERE event_id = ${eventId};` +
     // Get articles (nullable)
-    `SELECT * FROM ${DB_TABLE} 
+    `SELECT * FROM Posted_Article 
               WHERE FK_event_id = ${eventId}`;
   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
   // `;
@@ -551,27 +551,38 @@ const setArticleCommentOntime = (articleId, status) => {
 /**
  * @description Create new posted article on event homepage
  * @params
- *      - article: Object
+ *      - articleInfo: Object
+ *      - coordinatorId: Int
  * @return null
  * @notes
- *      - Not finished
  */
-const createPostedArticle = (articleInfo) => {
-  const { title, content, author, postedDate } = articleInfo;
+const createPostedArticle = (articleInfo, coordinatorId) => {
+  const { title, content, author, postedDate, eventId } = articleInfo;
   let db = getDataBaseConnection();
 
   // Check if the current user has permission to add comment to the article or not
-  const sql = ``;
-
+  const sql = `SELECT * FROM Event
+              INNER JOIN Account
+              ON Event.FK_faculty_id = Account.FK_faculty_id
+              WHERE Account.account_id = ${coordinatorId}
+              AND Event.event_id = ${eventId}`;
+  // Create new posted article
+  const sql1 = `INSERT INTO Posted_Article(PA_title, PA_content, PA_author, PA_posted_date, FK_event_id)
+                VALUES ('${title}', '${content}', '${author}', ${postedDate}, ${eventId})`
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-
       // Check if the article exist or the faculty permission is valid
       if (!result.length) {
         reject(false);
+      } else {
+        // If valid, create posted article
+        db.query(sql1, (err, result1) => 
+        {
+          if (!!err) reject(err);
+          resolve(result1);
+        })
       }
-      resolve(result);
       db.end();
     });
   });

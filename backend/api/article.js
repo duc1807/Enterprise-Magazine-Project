@@ -114,13 +114,13 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   const roleValidation = new Promise((resolve, reject) => {
       // If role is "student", check if student has permission to get this article
   if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
+    // Get article by id and student_id to check if student has permission to access the article
     getArticleById(articleId, data.userInfo.account_id)
       .then((result) => {
         resolve()
       })
       .catch((err) => {
         if (!!err) {
-          console.log("ERRRRRRRRR");
           console.log("Err: ", err);
           return res.status(500).json({
             status: res.statusCode,
@@ -265,8 +265,6 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
       }
     });
   })
-
-
 });
 
 /**
@@ -726,11 +724,13 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  * 		- author: String (email)
  * @return null
  * @notes
- *    - Database not implement !!!!!!!!!!!
+ *    - Not yet implement upload images
  */
-router.post("/post-article", gwAccountValidation, async (req, res) => {
+router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
   // Get information from param
-  const { title, content, author } = req.params;
+  const { eventId } = req.params
+  // Get data from req.body
+  const { title, content, author } = req.body;
 
   // Get userInfo passed from middleware
   const data = res.locals.data;
@@ -752,13 +752,22 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
     content: content,
     author: author,
     postedDate: currentTime.getTime(),
+    eventId: eventId
   };
 
   // INSERT article into 'Posted_Article' table
-  const query = createPostedArticle(article);
+  const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
 
   await query
     .then((result) => {
+      // Get posted_article id
+      const postedArticleId = result.insertId
+      
+      // Upload images to drive public "Images storage" folder
+      // Upload into new folder: ${postedDate} | Event ${event_id} - Article ${article_id} - ${author}
+      // Then INSERT uploaded images information to PA_Image
+
+
       return res.status(201).json({
         status: res.statusCode,
         success: true,
