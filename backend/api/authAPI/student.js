@@ -10,7 +10,7 @@ const { studentValidation } = require('../middleware/verification')
 // const {  } = require('../../utils/dbService/studentService')
 
 // Import modules from other files
-const { getAuthClient, getUserProfile, getAuthUrl } = require("../../utils/auth");
+// const { getAuthClient, getUserProfile, getAuthUrl } = require("../../utils/auth");
 
 // Using middleware
 router.use(studentValidation)

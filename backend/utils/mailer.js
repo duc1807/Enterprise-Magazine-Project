@@ -17,12 +17,12 @@ const transporter = nodemailer.createTransport(mailerConfig);
  *      
  * @notes 
  */
-const sendMail = (coordinatorEmail, studentEmail, eventInfo, facultyInfo) => {
+const sendMail = (coordinatorEmail, studentEmail, eventInfo) => {
   const details = {
     from: "vuatrochoi.theblue@gmail.com", // The mail used to send the OTP code
     to: coordinatorEmail, // The coordinator email
     subject: `New article submitted to ${eventInfo.event_title}.`, // Content of the mail
-    html: studentEmail + ` has submitted new post. Click the url to check: https://gw-magazine.site/api/faculties/${facultyInfo.faculty_id}/events/${eventInfo.event_id}/newsubmission`,
+    html: studentEmail + ` has submitted new post. Click the url to check: https://gw-magazine.site/api/events/${eventInfo.event_id}/submitted-articles`,
   };
   // Send mail
   transporter.sendMail(details, function (error, data) {

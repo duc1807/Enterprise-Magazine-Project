@@ -152,4 +152,35 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * @method POST
+ * @API /api/authentication/admin/logout
+ * @description API for logging out admin account
+ * @params null
+ * @return
+ *      - status: Int
+ *      - success: Boolean
+ *      - message: String
+ * @notes
+ */
+ router.post("/logout", (req, res) => {
+  const token = req.cookies["Token"];
+  // If the token is not existed, throw 401 error
+  if (!token) {
+    return res.status(500).json({
+      status: res.statusCode,
+      success: false,
+      message: "Bad request",
+    });
+  }
+
+  res.clearCookie("Token");
+
+  res.status(200).json({
+    status: res.statusCode,
+    success: true,
+    message: "Signed out",
+  });
+});
+
 module.exports = router;

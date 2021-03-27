@@ -44,6 +44,9 @@ app
 	// Authentication API for admin
 	.use("/api/authentication/admin", require("./api/authAPI/admin"))
 
+  // Authentication API for guest
+	.use("/api/authentication/guest", require("./api/authAPI/guest"))
+
 	// Faculty API
 	.use("/api/faculties", require("./api/faculty"))
 

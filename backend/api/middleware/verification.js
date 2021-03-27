@@ -5,7 +5,7 @@ const webToken = require("jsonwebtoken");
 // Constants
 const _MANAGER_ROLE_ID = 3;
 const _COORDINATOR_ROLE_ID = 2
-const _GW_GROUP_ROLE_ID = [1, 2, 3]
+const _GW_GROUP_ROLE_ID = [1, 2, 3, 4]
 const _ADMIN_ROLE = "admin"
 const env = process.env
 
@@ -195,7 +195,7 @@ const studentValidation = (req, res, next) => {
   });
 };
 
-const loginValidation = (req, res, next) => {
+const accessValidation = (req, res, next) => {
   // Retrieve the token from cookies
   const token = req.cookies["Token"];
   // If the token is not existed, throw 401 error
@@ -226,7 +226,7 @@ const loginValidation = (req, res, next) => {
 module.exports = {
   adminValidation: adminValidation,
   studentValidation: studentValidation,
-  loginValidation: loginValidation,
+  accessValidation: accessValidation,
   managerValidation: managerValidation,
   coordinatorValidation: coordinatorValidation,
   gwAccountValidation: gwAccountValidation
