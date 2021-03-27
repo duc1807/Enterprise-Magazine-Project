@@ -46,10 +46,10 @@ const uploadFile = async (filesInfo) => {
   let db = getDataBaseConnection();
 
   const sql =
-    `INSERT INTO ${DB_TABLE} (file_mimeType, file_fileId, FK_article_id)
+    `INSERT INTO ${DB_TABLE} (file_mimeType, file_name, file_fileId, FK_article_id)
               VALUES ` +
     `${filesInfo.map(
-      (file) => `('${file.mimeType}', '${file.fileId}', ${file.FK_article_id})`
+      (file) => `('${file.mimeType}', '${file.fileName}', '${file.fileId}', ${file.FK_article_id})`
     )}`;
 
   return new Promise((resolve, reject) => {

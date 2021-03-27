@@ -163,6 +163,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
           let file = {
             file_id: articleInfo.file_id,
             file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
             file_fileId: articleInfo.file_fileId,
             FK_article_id: articleInfo.FK_article_id,
           };
@@ -191,6 +192,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
           let file = {
             file_id: articleInfo.file_id,
             file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
             file_fileId: articleInfo.file_fileId,
             FK_article_id: articleInfo.FK_article_id,
           };
@@ -775,7 +777,7 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
  * 		- articleId: Int
  * @note
  */
-router.post(
+router.put(
   "/:articleId/update-submission",
   gwAccountValidation,
   async (req, res) => {
@@ -879,6 +881,7 @@ router.post(
             // STEP 8: Get the file id and create fileInfo Object
             const fileInfo = {
               mimeType: filedata.mimetype,
+              fileName: filedata.originalname,
               fileId: file.data.id,
               FK_article_id: articleResult.article_id, // ??? Using articleFolderId or unique id??
             };
@@ -935,6 +938,7 @@ router.post(
                             let file = {
                               file_id: articleInfo.file_id,
                               file_mimeType: articleInfo.file_mimeType,
+                              file_name: articleInfo.file_name,
                               file_fileId: articleInfo.file_fileId,
                               FK_article_id: articleInfo.FK_article_id,
                             };
@@ -964,6 +968,7 @@ router.post(
                             let file = {
                               file_id: articleInfo.file_id,
                               file_mimeType: articleInfo.file_mimeType,
+                              file_name: articleInfo.file_name,
                               file_fileId: articleInfo.file_fileId,
                               FK_article_id: articleInfo.FK_article_id,
                             };

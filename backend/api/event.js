@@ -302,6 +302,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -329,6 +330,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -428,6 +430,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -455,6 +458,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -555,6 +559,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -582,6 +587,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
