@@ -32,6 +32,7 @@ app.use(
 // Parse application/json
 app.use(bodyParser.json());
 
+// =================================== TEST
 app.get("/testUpload", (req, res) => {
 	res.render("success", { name: "test", pic: "hi", success: true });
 });
@@ -85,7 +86,7 @@ app
 //   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
 
-// Test
+// ====================================================== Test
 app.get("/google", (req, res) => {
 	res.render("index", {
 		clientID:

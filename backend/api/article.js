@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const { google } = require("googleapis");
 const router = express.Router();
@@ -37,8 +36,8 @@ const {
 } = require("./middleware/verification");
 
 // Constants
-const _COORDINATOR_PERMISSION_ID = 2;
-const _STUDENT_PERMISSION_ID = 1;
+const _COORDINATOR_ROLE_ID = 2;
+const _STUDENT_ROLE_ID = 1;
 
 /**
  * @method GET
@@ -110,7 +109,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check if user's role is student =? check if student has permission to get this article
-  if (data.userInfo.account_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.account_id != _COORDINATOR_ROLE_ID) {
     getArticleById(articleId, data.userInfo.account_id)
       .then((result) => {
         if (!result.length) {
@@ -454,7 +453,7 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -581,7 +580,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -660,7 +659,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
   console.log("DATA USERINFO: ", data);
 
   // Check if user has permisson to this api or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -720,7 +719,7 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -793,7 +792,7 @@ router.post(
     let filesArray = [];
 
     // Check if user has permisson to the article or not
-    if (data.userInfo.FK_role_id != _STUDENT_PERMISSION_ID) {
+    if (data.userInfo.FK_role_id != _STUDENT_ROLE_ID) {
       return res.status(401).json({
         status: res.statusCode,
         success: false,

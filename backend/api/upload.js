@@ -273,8 +273,6 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
       }
     }
   );
-
-  // STEP 7: Upload files into student's folder above
 });
 
 module.exports = router;
