@@ -23,12 +23,12 @@ const {
   setArticleCommentOntime,
   getArticleInformationById,
   getCommentByArticleId,
-  getFileDetailById
+  getFileDetailById,
 } = require("../utils/dbService/index");
 const {
   insertFolderToOtherFolder,
   getAuthServiceJwt,
-  deleteFileOnDrive
+  deleteFileOnDrive,
 } = require("../utils/driveAPI");
 const {
   gwAccountValidation,
@@ -93,13 +93,15 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  * @API api/article/:articleId/
  * @permission
  *    - Student (exact articleId)
+ *    - Coordinator
  * @description API for getting article information (with files and comments)
  * @params
  * 		- articleId: Int
  * @return
  *    - article: Object
  * @notes
- *    - Not yet validation coordinator with exact faculty
+ *    - Not yet validation coordinator with exact faculty ??? Is coordinator need this API ??? Already have another API
+ *    - if needed, can get article JOIN account_submission => then check coordinator faculty with account_submission faculty
  */
 router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Get articleId from params
@@ -108,28 +110,37 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
-  // Check if user's role is student =? check if student has permission to get this article
-  if (data.userInfo.account_id != _COORDINATOR_ROLE_ID) {
+  // Promise to check user role is student or coordinator
+  const roleValidation = new Promise((resolve, reject) => {
+      // If role is "student", check if student has permission to get this article
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     getArticleById(articleId, data.userInfo.account_id)
       .then((result) => {
-        if (!result.length) {
+        resolve()
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("ERRRRRRRRR");
+          console.log("Err: ", err);
+          return res.status(500).json({
+            status: res.statusCode,
+            success: false,
+            message: "Server error",
+          });
+        } else {
           return res.status(401).json({
             status: res.statusCode,
             success: false,
             messsage: "Permission required",
           });
         }
-      })
-      .catch((err) => {
-        console.log("Err: ", err);
-        return res.status(500).json({
-          status: res.statusCode,
-          success: false,
-          message: "Server error",
-        });
       });
+  } else {
+    resolve()
   }
+  });
 
+  roleValidation.then(async() => {
   // Get article information (with files & comments)
   const query = getArticleDetailById(articleId);
 
@@ -156,7 +167,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
 
           // Get position of the article in 'articlesResult[]'
           let articlePosition =
-          articlesPositionDetail[articleInfo.article_folderId];
+            articlesPositionDetail[articleInfo.article_folderId];
           console.log("position: ", articlePosition);
 
           // Create file Object to store file information
@@ -253,6 +264,9 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
         });
       }
     });
+  })
+
+
 });
 
 /**
@@ -395,43 +409,44 @@ router.delete(
     // Check if user is student or not
 
     // Get file information
-    const query = getFileDetailById(fileId)
+    const query = getFileDetailById(fileId);
 
-    query.then(async (result) => {
-    // Get files and comments by fileId and articleId
-    const query1 = deleteFileByFileId(fileId, data.userInfo.account_id);
+    query
+      .then(async (result) => {
+        // Get files and comments by fileId and articleId
+        const query1 = deleteFileByFileId(fileId, data.userInfo.account_id);
 
-    await query1
-      .then(async (result1) => {
-        // Delete file on Google Drive
-        deleteFileOnDrive(result[0].file_fileId)
-        return res.status(200).json({
-          status: res.statusCode,
-          success: true,
-          message: "File removed",
-        });
+        await query1
+          .then(async (result1) => {
+            // Delete file on Google Drive
+            deleteFileOnDrive(result[0].file_fileId);
+            return res.status(200).json({
+              status: res.statusCode,
+              success: true,
+              message: "File removed",
+            });
+          })
+          .catch((err) => {
+            if (err) {
+              console.log("Err: ", err);
+              return res.status(501).json({
+                status: res.statusCode,
+                success: false,
+                message: "Bad request",
+              });
+            } else {
+              // If err == false => Event not found
+              return res.status(404).json({
+                status: res.statusCode,
+                success: false,
+                message: "Not found",
+              });
+            }
+          });
       })
       .catch((err) => {
-        if (err) {
-          console.log("Err: ", err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request",
-          });
-        } else {
-          // If err == false => Event not found
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Not found",
-          });
-        }
-      })
-    }).catch(err => {
-      console.log("Err: ", err);
-    })
-
+        console.log("Err: ", err);
+      });
   }
 );
 
