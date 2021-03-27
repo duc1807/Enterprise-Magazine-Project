@@ -1,17 +1,6 @@
-const mysql = require("mysql2");
-const { dbconfig } = require("../config/dbconfig");
+const { getDataBaseConnection } = require('./connection/dbConnection')
 
 const _TABLE_ACCOUNT = "Account";
-
-const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
-};
 
 const getAccountByEmail = async (email) => {
   let db = getDataBaseConnection();

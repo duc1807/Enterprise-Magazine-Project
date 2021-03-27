@@ -1,18 +1,7 @@
-const mysql = require("mysql2");
-const { dbconfig } = require("../config/dbconfig");
+const { getDataBaseConnection } = require('./connection/dbConnection')
 
 const _ROLE = "Account";
 const _ROLE_ID = '1'
-
-const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
-};
 
 const getStudentAccountByFaculty = async (facultyId) => {
   let db = getDataBaseConnection();

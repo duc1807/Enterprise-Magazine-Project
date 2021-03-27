@@ -1,16 +1,4 @@
-const mysql = require("mysql2");
-const { dbconfig } = require("../config/dbconfig");
-
-// Create connection to db for query
-const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
-};
+const { getDataBaseConnection } = require('./connection/dbConnection')
 
 // Query for get overall stats includes (Received article, Publish,..)
 const getOverallStats = async () => {

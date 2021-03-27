@@ -1,5 +1,4 @@
-const mysql = require("mysql2");
-const { dbconfig } = require("../config/dbconfig");
+const { getDataBaseConnection } = require('./connection/dbConnection')
 
 const DB_TABLE = "Article";
 
@@ -8,16 +7,6 @@ const ARTICLE_STATUS = {
   accepted: "accepted",
   pending: "pending",
   rejected: "rejected",
-};
-
-const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
 };
 
 // Test code ================================================================

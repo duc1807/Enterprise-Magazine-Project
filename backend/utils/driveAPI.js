@@ -126,10 +126,6 @@ const deleteFileOnDrive = async (fileDriveId) => {
     auth: jwToken,
   });
 
-  // await drive.files.delete({
-  //   fileId: `${fileDriveId}`
-  // })
-
   drive.files.delete(
     {
       fileId: `${fileDriveId}`

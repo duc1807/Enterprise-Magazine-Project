@@ -1,15 +1,4 @@
-const mysql = require("mysql2");
-const { dbconfig } = require("../config/dbconfig");
-
-const getDataBaseConnection = () => {
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-  return connection;
-};
+const { getDataBaseConnection } = require('./connection/dbConnection')
 
 /**
  * @description Get the article's comments
