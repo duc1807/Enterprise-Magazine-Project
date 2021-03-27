@@ -96,6 +96,20 @@ app.get("/google", (req, res) => {
 
 // Create new schedule for the system to auto create new year folder on drive
 // The schedule will run on 1/1 each year (1:00 am)
+
+// Import db update faculty FolderId service after create new year folder
+const { } = require('./utils/dbService/index')
+
+// Create new folder on drive each year
+
+// After create new folder year => create faculty folder on drive
+
+// STEP 1: Get all faculty in database ????
+// Step 2: Loop all db faculty name and create folder on Drive ?????
+// After Object faculties has all faculty with folderId  => Call the db update faculty folderId ?????
+
+const currentYear = new Date().getFullYear()
+
 schedule.scheduleJob('0 0 1 1 1 *', () => {
   console.log('The world is going to end today.');
 });
@@ -103,6 +117,8 @@ schedule.scheduleJob('0 0 1 1 1 *', () => {
 app.listen(5000, () => {
 	console.log("App started on port 5000");
 });
+
+
 
 // ============================================ OLD CODE
 
