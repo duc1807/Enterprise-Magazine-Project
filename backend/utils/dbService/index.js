@@ -62,11 +62,11 @@ const {
 const {
   getOverallStats,
   getContributionByFaculty,
-  getContributionByStatus,
   getAverageSelectedStats,
   getAverageCommentStats,
   getContributionEachMonthByYear,
 } = require("./statisticService");
+const { getGuestAccountByUsernameAndPassword } = require("./guestService");
 
 module.exports = {
   // ======================================================= Admin
@@ -189,4 +189,7 @@ module.exports = {
   getAverageCommentStats: getAverageCommentStats,
   // Count posted articles each months by year
   getContributionEachMonthByYear: getContributionEachMonthByYear,
+
+  //======================================================= GUEST
+  getGuestAccountByUsernameAndPassword: getGuestAccountByUsernameAndPassword,
 };
