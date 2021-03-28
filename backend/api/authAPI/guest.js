@@ -153,7 +153,7 @@ router.post("/logout", (req, res) => {
   // Clear token from cookie
   res.clearCookie("Token");
 
-  //if token is cleared successful
+  // If token is cleared successful
   res.status(200).json({
     status: res.statusCode,
     success: true,
