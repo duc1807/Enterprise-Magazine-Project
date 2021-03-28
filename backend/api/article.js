@@ -26,7 +26,7 @@ const {
   getFileDetailById,
 } = require("../utils/dbService/index");
 const {
-  insertFolderToOtherFolder,
+  moveFolderToOtherFolder,
   getAuthServiceJwt,
   deleteFileOnDrive,
 } = require("../utils/driveAPI");
@@ -617,7 +617,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
           console.log(articleAndEventInfo);
 
           // Asynchronous move article folder to selected article in Drive
-          insertFolderToOtherFolder(articleAndEventInfo);
+          moveFolderToOtherFolder(articleAndEventInfo);
 
           // Return the success status
           return res.status(204).json({

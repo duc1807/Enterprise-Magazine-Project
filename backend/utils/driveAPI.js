@@ -84,15 +84,14 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
 };
 
 /**
- * @description Asynchronous create permission for a specific drive folder
+ * @description move article submission folder of student to "Selected Article" folder on Drive
  * @params
  *      - Article info INNER JOIN Event info
  * @return null
- *
  * @notes
  *      - Using try catch to retry in case the drive API is down
  */
-const insertFolderToOtherFolder = async (articleAndEventInfo) => {
+const moveFolderToOtherFolder = async (articleAndEventInfo) => {
   const data = articleAndEventInfo;
   const jwToken = await getAuthServiceJwt();
 
@@ -142,6 +141,6 @@ const deleteFileOnDrive = async (fileDriveId) => {
 module.exports = {
   insertPermissionsToFolderId: insertPermissionsToFolderId,
   getAuthServiceJwt: getAuthServiceJwt,
-  insertFolderToOtherFolder: insertFolderToOtherFolder,
+  moveFolderToOtherFolder: moveFolderToOtherFolder,
   deleteFileOnDrive: deleteFileOnDrive,
 };
