@@ -21,7 +21,7 @@ const STUDENT_ROLE_ID = 1;
 
 /**
  * @method POST
- * @api api/upload
+ * @api api/upload/:eventId
  * @description API for upload article submissions for students
  * @params
  *      - eventId: Int
@@ -200,6 +200,7 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
                   // Create file info Object to INSERT into database
                   const fileInfo = {
                     mimeType: filedata.mimetype,
+                    fileName: filedata.originalname,
                     fileId: file.data.id,
                     FK_article_id: result.insertId,
                   };
@@ -273,8 +274,6 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
       }
     }
   );
-
-  // STEP 7: Upload files into student's folder above
 });
 
 module.exports = router;

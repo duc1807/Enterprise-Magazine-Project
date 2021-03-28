@@ -1,6 +1,7 @@
 const { getDataBaseConnection } = require('./connection/dbConnection')
 
 const _ROLE = "Admin";
+const _GUEST_ROLE_ID = 4
 
 const getAllRolesInformation = () => {
 
@@ -65,15 +66,14 @@ const createNewAccount = (accountInfo) => {
   });
 };
 
-// =============================================== NOT IMPLEMENT
 const createNewGuestAccount = (guestAccountInfo) => {
   const { username, password, facultyId } = guestAccountInfo
 
   let db = getDataBaseConnection();
 
   // INSERT guest account into database
-  const sql = `INSERT INTO Guest(guest_name, password, FK_faculty_id)
-              VALUES ('${username}', '${password}', ${facultyId})`;
+  const sql = `INSERT INTO Guest(guest_name, password, FK_faculty_id, FK_role_id)
+              VALUES ('${username}', '${password}', ${facultyId}, ${_GUEST_ROLE_ID})`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -122,7 +122,7 @@ const updateAccount = (accountDetail, accountId) => {
   });
 };
 
-// =============================================== NOT IMPLEMENT
+
 const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
   const { username, password, facultyId } = guestAccountInfo
 

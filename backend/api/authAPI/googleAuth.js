@@ -11,7 +11,6 @@ const { getAuthClient } = require("../../utils/auth");
 
 // Middleware authentication
 const {
-  accessValidation,
   gwAccountValidation,
 } = require("../middleware/verification");
 

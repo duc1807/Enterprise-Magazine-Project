@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const { google } = require("googleapis");
 const router = express.Router();
@@ -24,12 +23,12 @@ const {
   setArticleCommentOntime,
   getArticleInformationById,
   getCommentByArticleId,
-  getFileDetailById
+  getFileDetailById,
 } = require("../utils/dbService/index");
 const {
-  insertFolderToOtherFolder,
+  moveFolderToOtherFolder,
   getAuthServiceJwt,
-  deleteFileOnDrive
+  deleteFileOnDrive,
 } = require("../utils/driveAPI");
 const {
   gwAccountValidation,
@@ -37,8 +36,8 @@ const {
 } = require("./middleware/verification");
 
 // Constants
-const _COORDINATOR_PERMISSION_ID = 2;
-const _STUDENT_PERMISSION_ID = 1;
+const _COORDINATOR_ROLE_ID = 2;
+const _STUDENT_ROLE_ID = 1;
 
 /**
  * @method GET
@@ -94,13 +93,15 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  * @API api/article/:articleId/
  * @permission
  *    - Student (exact articleId)
+ *    - Coordinator
  * @description API for getting article information (with files and comments)
  * @params
  * 		- articleId: Int
  * @return
  *    - article: Object
  * @notes
- *    - Not yet validation coordinator with exact faculty
+ *    - Not yet validation coordinator with exact faculty ??? Is coordinator need this API ??? Already have another API
+ *    - if needed, can get article JOIN account_submission => then check coordinator faculty with account_submission faculty
  */
 router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Get articleId from params
@@ -109,28 +110,37 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
-  // Check if user's role is student =? check if student has permission to get this article
-  if (data.userInfo.account_id != _COORDINATOR_PERMISSION_ID) {
+  // Promise to check user role is student or coordinator
+  const roleValidation = new Promise((resolve, reject) => {
+      // If role is "student", check if student has permission to get this article
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
+    // Get article by id and student_id to check if student has permission to access the article
     getArticleById(articleId, data.userInfo.account_id)
       .then((result) => {
-        if (!result.length) {
+        resolve()
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("Err: ", err);
+          return res.status(500).json({
+            status: res.statusCode,
+            success: false,
+            message: "Server error",
+          });
+        } else {
           return res.status(401).json({
             status: res.statusCode,
             success: false,
             messsage: "Permission required",
           });
         }
-      })
-      .catch((err) => {
-        console.log("Err: ", err);
-        return res.status(500).json({
-          status: res.statusCode,
-          success: false,
-          message: "Server error",
-        });
       });
+  } else {
+    resolve()
   }
+  });
 
+  roleValidation.then(async() => {
   // Get article information (with files & comments)
   const query = getArticleDetailById(articleId);
 
@@ -157,13 +167,14 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
 
           // Get position of the article in 'articlesResult[]'
           let articlePosition =
-          articlesPositionDetail[articleInfo.article_folderId];
+            articlesPositionDetail[articleInfo.article_folderId];
           console.log("position: ", articlePosition);
 
           // Create file Object to store file information
           let file = {
             file_id: articleInfo.file_id,
             file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
             file_fileId: articleInfo.file_fileId,
             FK_article_id: articleInfo.FK_article_id,
           };
@@ -192,6 +203,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
           let file = {
             file_id: articleInfo.file_id,
             file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
             file_fileId: articleInfo.file_fileId,
             FK_article_id: articleInfo.FK_article_id,
           };
@@ -252,6 +264,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
         });
       }
     });
+  })
 });
 
 /**
@@ -394,43 +407,44 @@ router.delete(
     // Check if user is student or not
 
     // Get file information
-    const query = getFileDetailById(fileId)
+    const query = getFileDetailById(fileId);
 
-    query.then(async (result) => {
-    // Get files and comments by fileId and articleId
-    const query1 = deleteFileByFileId(fileId, data.userInfo.account_id);
+    query
+      .then(async (result) => {
+        // Get files and comments by fileId and articleId
+        const query1 = deleteFileByFileId(fileId, data.userInfo.account_id);
 
-    await query1
-      .then(async (result1) => {
-        // Delete file on Google Drive
-        deleteFileOnDrive(result[0].file_fileId)
-        return res.status(200).json({
-          status: res.statusCode,
-          success: true,
-          message: "File removed",
-        });
+        await query1
+          .then(async (result1) => {
+            // Delete file on Google Drive
+            deleteFileOnDrive(result[0].file_fileId);
+            return res.status(200).json({
+              status: res.statusCode,
+              success: true,
+              message: "File removed",
+            });
+          })
+          .catch((err) => {
+            if (err) {
+              console.log("Err: ", err);
+              return res.status(501).json({
+                status: res.statusCode,
+                success: false,
+                message: "Bad request",
+              });
+            } else {
+              // If err == false => Event not found
+              return res.status(404).json({
+                status: res.statusCode,
+                success: false,
+                message: "Not found",
+              });
+            }
+          });
       })
       .catch((err) => {
-        if (err) {
-          console.log("Err: ", err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request",
-          });
-        } else {
-          // If err == false => Event not found
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Not found",
-          });
-        }
-      })
-    }).catch(err => {
-      console.log("Err: ", err);
-    })
-
+        console.log("Err: ", err);
+      });
   }
 );
 
@@ -454,7 +468,7 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -581,7 +595,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -603,7 +617,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
           console.log(articleAndEventInfo);
 
           // Asynchronous move article folder to selected article in Drive
-          insertFolderToOtherFolder(articleAndEventInfo);
+          moveFolderToOtherFolder(articleAndEventInfo);
 
           // Return the success status
           return res.status(204).json({
@@ -660,7 +674,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
   console.log("DATA USERINFO: ", data);
 
   // Check if user has permisson to this api or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -710,17 +724,19 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  * 		- author: String (email)
  * @return null
  * @notes
- *    - Database not implement !!!!!!!!!!!
+ *    - Not yet implement upload images
  */
-router.post("/post-article", gwAccountValidation, async (req, res) => {
+router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
   // Get information from param
-  const { title, content, author } = req.params;
+  const { eventId } = req.params
+  // Get data from req.body
+  const { title, content, author } = req.body;
 
   // Get userInfo passed from middleware
   const data = res.locals.data;
 
   // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_PERMISSION_ID) {
+  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
     return res.status(401).json({
       status: res.statusCode,
       success: false,
@@ -736,13 +752,22 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
     content: content,
     author: author,
     postedDate: currentTime.getTime(),
+    eventId: eventId
   };
 
   // INSERT article into 'Posted_Article' table
-  const query = createPostedArticle(article);
+  const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
 
   await query
     .then((result) => {
+      // Get posted_article id
+      const postedArticleId = result.insertId
+      
+      // Upload images to drive public "Images storage" folder
+      // Upload into new folder: ${postedDate} | Event ${event_id} - Article ${article_id} - ${author}
+      // Then INSERT uploaded images information to PA_Image
+
+
       return res.status(201).json({
         status: res.statusCode,
         success: true,
@@ -776,7 +801,7 @@ router.post("/post-article", gwAccountValidation, async (req, res) => {
  * 		- articleId: Int
  * @note
  */
-router.post(
+router.put(
   "/:articleId/update-submission",
   gwAccountValidation,
   async (req, res) => {
@@ -793,7 +818,7 @@ router.post(
     let filesArray = [];
 
     // Check if user has permisson to the article or not
-    if (data.userInfo.FK_role_id != _STUDENT_PERMISSION_ID) {
+    if (data.userInfo.FK_role_id != _STUDENT_ROLE_ID) {
       return res.status(401).json({
         status: res.statusCode,
         success: false,
@@ -880,6 +905,7 @@ router.post(
             // STEP 8: Get the file id and create fileInfo Object
             const fileInfo = {
               mimeType: filedata.mimetype,
+              fileName: filedata.originalname,
               fileId: file.data.id,
               FK_article_id: articleResult.article_id, // ??? Using articleFolderId or unique id??
             };
@@ -936,6 +962,7 @@ router.post(
                             let file = {
                               file_id: articleInfo.file_id,
                               file_mimeType: articleInfo.file_mimeType,
+                              file_name: articleInfo.file_name,
                               file_fileId: articleInfo.file_fileId,
                               FK_article_id: articleInfo.FK_article_id,
                             };
@@ -965,6 +992,7 @@ router.post(
                             let file = {
                               file_id: articleInfo.file_id,
                               file_mimeType: articleInfo.file_mimeType,
+                              file_name: articleInfo.file_name,
                               file_fileId: articleInfo.file_fileId,
                               FK_article_id: articleInfo.FK_article_id,
                             };

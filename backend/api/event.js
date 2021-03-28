@@ -59,6 +59,7 @@ const eventFolderConstants = {
   acceptedArticlesFolderName: "Selected Articles",
   allArticlesFolderName: "All Articles",
 };
+const _MANAGER_ROLE_ID = 3
 
 // ================================================= DEVELOPMENT CODE
 
@@ -77,9 +78,23 @@ const eventFolderConstants = {
  *      - Should put this API before /api/events/:eventId -> the request will run into that API
  *      - Permission for all ??? If true, all account and specially guest account should have faculty_id field inside userInfo
  */
-router.get("/published", async (req, res) => {
+router.get("/published", gwAccountValidation, async (req, res) => {
   // Get facultyId from req.query
   const facultyId = req.query.faculty;
+
+  // Get user data from middleware
+  const data = res.locals.data
+
+  // Check if user has permission to access API
+  if(data.userInfo.FK_role_id 
+    && data.userInfo.FK_role_id != _MANAGER_ROLE_ID
+    && data.userInfo.FK_faculty_id != facultyId) {
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        messages: "Permission required",
+      });
+  }
 
   //  Get event info and its posted articles by eventId and facultyId
   const query = getPublishedEventOfFacultyId(facultyId);
@@ -164,7 +179,7 @@ router.get("/:eventId", gwAccountValidation, async (req, res) => {
  * @method GET
  * @api /api/events/:eventId/all
  * @permissions
- *      - Anyone
+ *      - Anyone with Greenwich Account
  * @description API for getting event information and its posted articles (news)
  * @params
  *      - eventId: Int (req.params)
@@ -177,7 +192,7 @@ router.get("/:eventId", gwAccountValidation, async (req, res) => {
  *      - Should check role Guest? Manager? Student? before query ????
  * 		- Get data in db table 'Posted_Article'
  */
-router.get("/:eventId/all", async (req, res) => {
+router.get("/:eventId/all", gwAccountValidation, async (req, res) => {
   const eventId = req.params.eventId;
 
   // Get event info and its posted articles by eventId and facultyId
@@ -287,6 +302,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -314,6 +330,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -413,6 +430,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -440,6 +458,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -540,6 +559,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };
@@ -567,6 +587,7 @@ router.get(
             let file = {
               file_id: articleInfo.file_id,
               file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
               file_fileId: articleInfo.file_fileId,
               FK_article_id: articleInfo.FK_article_id,
             };

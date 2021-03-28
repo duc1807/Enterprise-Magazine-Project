@@ -1,6 +1,9 @@
 require("dotenv").config();
 
 const express = require("express");
+const router = express.Router();
+
+// Import database services
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -8,10 +11,9 @@ const {
   getAverageCommentStats,
   getContributionEachMonthByYear,
 } = require("../utils/dbService");
-const { managerValidation } = require("./middleware/verification");
-const router = express.Router();
 
-// API STATISTICS
+// Import middleware validation
+const { managerValidation } = require("./middleware/verification");
 
 /**
  * @method GET
@@ -152,6 +154,7 @@ router.get("/overall", managerValidation, async (req, res) => {
  *      - events: Array[]
  *          + .................................. ???
  * @notes
+ *      - create Object queryResult is high complexity, using loop ???
  */
 router.get("/:facultyId", managerValidation, async (req, res) => {
   const { facultyId } = req.params;
@@ -161,7 +164,7 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
     .then(async (results) => {
       console.log("results uncomment list: ", results[6]);
       let uncommentArr = [];
-      // loop for the query result to get all uncomment info by each articles
+      // loop for the query result to get all uncomment info by each articles at position[6]  ???? Or result.length - 1 ?????
       results[6].map((uncomment) => {
         console.log("uncomment: ", uncomment);
         // append each UncommentInfo object to the uncommentArr
