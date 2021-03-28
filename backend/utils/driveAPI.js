@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const express = require("express");
 const async = require("async");
 const { google } = require("googleapis");
 
@@ -127,7 +126,7 @@ const deleteFileOnDrive = async (fileDriveId) => {
 
   drive.files.delete(
     {
-      fileId: `${fileDriveId}`
+      fileId: `${fileDriveId}`,
     },
     async (err, file) => {
       if (err) {
@@ -138,9 +137,151 @@ const deleteFileOnDrive = async (fileDriveId) => {
   );
 };
 
+/**
+ * @description Create new folder on Drive
+ * @params
+ *      - folderMetadata: Object
+ *          {
+ *             name: String,
+ *             mimeType: String,
+ *             parents: [String]
+ *          }
+ * @return 
+ *      - folderId: String
+ * @notes
+ */
+const createFolder = async (folderMetadata) => {
+  return new Promise(async (resolve, reject) => {
+    // Get jwt auth service
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
+    });
+
+    await drive.files.create(
+      {
+        resource: folderMetadata,
+        fields: "id",
+      },
+      function (err, file) {
+        if (err) {
+          // Handle error
+          reject(err);
+        } else {
+          console.log("Event folder Id: ", file.data.id);
+          resolve(file.data.id);
+        }
+      }
+    );
+  });
+};
+
+/**
+ * @description Create new sub-folders inside a drive folder
+ * @params
+ *      - subFoldersName: Array[Object]
+ *          [
+ *            { 
+ *              name: String 
+ *            },
+ *            ...
+ *          ]
+ *      - subFolderConstants: Object
+ *          {
+ *            acceptedArticlesFolderName: String,
+ *            allArticlesFolderName: String
+ *          }
+ *      - parentsFolderId: String
+ * @return 
+ *      - subFolderId: Object
+ *          {
+ *            acceptedArticlesId: String
+ *            allArticlesId: String
+ *          }
+ * @notes
+ */
+const createSubFolders = (subFoldersName, subFolderConstants, parentsFolderId) => {
+  return new Promise(async (resolve, reject) => {
+    // Get authService
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
+    });
+
+    // Generate Object for storing subfolderId
+    let _subFolderId = {
+      acceptedArticlesId: "",
+      allArticlesId: "",
+    };
+
+    subFoldersName.map((folder) => {
+      const subFolderMetadata = {
+        name: folder.name,
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [parentsFolderId],
+      };
+
+      drive.files.create(
+        {
+          resource: subFolderMetadata,
+          fields: "id",
+        },
+        function (err, file) {
+          if (err) {
+            // Handle error
+            reject(err);
+            console.error(err);
+          } else {
+            console.log(`${subFolderMetadata.name} Id: `, file.data.id);
+
+            // If folder is all articles, insert the permission for student
+            if (
+              subFolderMetadata.name ==
+              subFolderConstants.allArticlesFolderName
+            ) {
+              // insertPermissionsToFolderId(studentPermissions, file.data.id);
+            }
+
+            /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
+            // If the folder is selected articles, assign the folderId to '_subFolderId' Object
+            if (
+              folder.name ==
+              subFolderConstants.acceptedArticlesFolderName
+            ) {
+              _subFolderId.acceptedArticlesId = file.data.id;
+              // If the id of all fields in '_subFolderId' are set, resolve promise and return value
+              if (
+                _subFolderId.acceptedArticlesId != "" &&
+                _subFolderId.allArticlesId != ""
+              ) {
+                resolve(_subFolderId);
+              }
+            }
+            // Else if the folder is all articles, asssign folderId to '_subFolderId' Object
+            else {
+              _subFolderId.allArticlesId = file.data.id;
+              // If the id of all fields in '_subFolderId' are set, resolve promise and return value
+              if (
+                _subFolderId.acceptedArticlesId != "" &&
+                _subFolderId.allArticlesId != ""
+              ) {
+                resolve(_subFolderId);
+              }
+            }
+          }
+        }
+      );
+    });
+  })
+};
+
 module.exports = {
   insertPermissionsToFolderId: insertPermissionsToFolderId,
   getAuthServiceJwt: getAuthServiceJwt,
   moveFolderToOtherFolder: moveFolderToOtherFolder,
   deleteFileOnDrive: deleteFileOnDrive,
+  createFolder: createFolder,
+  createSubFolders: createSubFolders
 };

@@ -45,6 +45,8 @@ const {
 const {
   insertPermissionsToFolderId,
   getAuthServiceJwt,
+  createFolder,
+  createSubFolders,
 } = require("../utils/driveAPI");
 const { upload } = require("../utils/multerStorage");
 
@@ -55,11 +57,11 @@ const { upload } = require("../utils/multerStorage");
 
 // Constants
 const eventImageFolderId = "1GiaqwUdxaL5kNFS7HhEArmduStkRwamT";
-const eventFolderConstants = {
+const eventSubFoldersConstant = {
   acceptedArticlesFolderName: "Selected Articles",
   allArticlesFolderName: "All Articles",
 };
-const _MANAGER_ROLE_ID = 3
+const _MANAGER_ROLE_ID = 3;
 
 // ================================================= DEVELOPMENT CODE
 
@@ -83,17 +85,19 @@ router.get("/published", gwAccountValidation, async (req, res) => {
   const facultyId = req.query.faculty;
 
   // Get user data from middleware
-  const data = res.locals.data
+  const data = res.locals.data;
 
   // Check if user has permission to access API
-  if(data.userInfo.FK_role_id 
-    && data.userInfo.FK_role_id != _MANAGER_ROLE_ID
-    && data.userInfo.FK_faculty_id != facultyId) {
-      return res.status(401).json({
-        status: res.statusCode,
-        success: false,
-        messages: "Permission required",
-      });
+  if (
+    data.userInfo.FK_role_id &&
+    data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
+    data.userInfo.FK_faculty_id != facultyId
+  ) {
+    return res.status(401).json({
+      status: res.statusCode,
+      success: false,
+      messages: "Permission required",
+    });
   }
 
   //  Get event info and its posted articles by eventId and facultyId
@@ -739,8 +743,8 @@ router.post("/", managerValidation, async (req, res) => {
     lastUpdate: currentTime.getTime(),
     // folderId, selectedArticles and allArticles temporarily has default value and will be changed after create folders
     folderId: "",
-    selectedArticles: eventFolderConstants.acceptedArticles,
-    allArticles: eventFolderConstants.allArticles,
+    selectedArticles: eventSubFoldersConstant.acceptedArticles,
+    allArticles: eventSubFoldersConstant.allArticles,
     FK_faculty_id: facultyId,
   };
 
@@ -767,10 +771,10 @@ router.post("/", managerValidation, async (req, res) => {
   // Default subfolder of Event folder (selected articles and all articles folders)
   const eventSubFolders = [
     {
-      name: eventFolderConstants.acceptedArticlesFolderName,
+      name: eventSubFoldersConstant.acceptedArticlesFolderName,
     },
     {
-      name: eventFolderConstants.allArticlesFolderName,
+      name: eventSubFoldersConstant.allArticlesFolderName,
     },
   ];
 
@@ -801,10 +805,10 @@ router.post("/", managerValidation, async (req, res) => {
   // ];
 
   // Create coordinators permission data
-  let coordinatorPermissions = [];
+  let coordinatorPermissionsList = [];
 
   coordinatorAccounts.map((coordinator) => {
-    coordinatorPermissions.push({
+    coordinatorPermissionsList.push({
       kind: "drive#permission",
       type: "user",
       role: "writer",
@@ -859,207 +863,123 @@ router.post("/", managerValidation, async (req, res) => {
   // };
 
   // Create event folder
-  await drive.files.create(
-    {
-      resource: eventFolderMetadata,
-      fields: "id",
-    },
-    function (err, file) {
-      if (err) {
-        // Handle error
-        console.error(err);
-      } else {
-        console.log("Event folder Id: ", file.data.id);
+  createFolder(eventFolderMetadata)
+    .then((eventFolderId) => {
+      // Insert coordinator permission to event folder by id
+      insertPermissionsToFolderId(coordinatorPermissionsList, eventFolderId);
 
-        // drive.coordinatorPermissions.list(
-        //   {
-        //     fileId: "1pUXw72L0MO4I3390Gq4t3-7S4s_DSR1S",
-        //   },
-        //   function (err, res) {
-        //     if (err) {
-        //       console.error(err);
-        //     } else {
-        //       console.log("Permission: ", res.data.coordinatorPermissions);
-        //     }
-        //   }
-        // );
+      // Assign event folderId to eventData
+      eventData.folderId = eventFolderId;
 
-        // Insert coordinator permission to event folder by id
-        insertPermissionsToFolderId(coordinatorPermissions, file.data.id);
+      // Create event sub-folders
+      createSubFolders(eventSubFolders, eventSubFoldersConstant, eventFolderId)
+        .then((subFoldersData) => {
+          // Assign the subfolder's folderId returned from 1 to event Object
+          eventData.selectedArticles = subFoldersData.acceptedArticlesId;
+          eventData.allArticles = subFoldersData.allArticlesId;
 
-        // Assign event folderId to eventData
-        eventData.folderId = file.data.id;
+          console.log("event data: ", eventData);
 
-        // Create the subfolder of event folder (allArticles & selectedArticles)
-        const createEventSubfolder = new Promise((resolve, reject) => {
-          // Generate Object for storing subfolderId
-          let _subFolderId = {
-            acceptedArticlesId: "",
-            allArticlesId: "",
-          };
+          const uploadMultiple = upload.any("file");
 
-          // Create the subfolder in Event folder
-          eventSubFolders.map((folder) => {
-            const _eventSubFolder = {
-              name: folder.name,
-              mimeType: "application/vnd.google-apps.folder",
-              parents: [file.data.id],
-            };
+          // Insert event image into drive
+          uploadMultiple(req, res, function (err) {
+            if (err) throw err;
+            console.log("files: ", req.files);
 
-            drive.files.create(
-              {
-                resource: _eventSubFolder,
-                fields: "id",
-              },
-              function (err, file) {
-                if (err) {
-                  // Handle error
-                  reject(err);
-                  console.error(err);
-                } else {
-                  console.log(`${_eventSubFolder.name} Id: `, file.data.id);
+            // Get files[] from request
+            const files = req.files;
 
-                  // If folder is all articles, insert the permission for student
-                  if (
-                    _eventSubFolder.name ==
-                    eventFolderConstants.allArticlesFolderName
-                  ) {
-                    // insertPermissionsToFolderId(studentPermissions, file.data.id);
+            // Map all elements in files
+            files.map((filedata) => {
+              // Create metadata for file
+              const filemetadata = {
+                name: `${currentTime.getTime()} | ${eventData.title}`,
+                parents: [eventImageFolderId],
+              };
+
+              // Create media type for file
+              const media = {
+                mimeType: filedata.mimetype,
+                body: fs.createReadStream(filedata.path),
+              };
+
+              // Upload file to google drive
+              drive.files.create(
+                {
+                  resource: filemetadata,
+                  media: media,
+                  fields: "id",
+                },
+                async (err, file) => {
+                  if (err) {
+                    res.json({
+                      status: 501,
+                      success: false,
+                      message: "Upload files to drive failed!",
+                    });
+                    fs.unlinkSync(filedata.path);
+                    return;
                   }
 
-                  /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
-                  // If the folder is selected articles, assign the folderId to '_subFolderId' Object
-                  if (
-                    folder.name ==
-                    eventFolderConstants.acceptedArticlesFolderName
-                  ) {
-                    _subFolderId.acceptedArticlesId = file.data.id;
-                    // If the id of all fields in '_subFolderId' are set, resolve promise and return value
-                    if (
-                      _subFolderId.acceptedArticlesId != "" &&
-                      _subFolderId.allArticlesId != ""
-                    ) {
-                      resolve(_subFolderId);
-                    }
-                  }
-                  // Else if the folder is all articles, asssign folderId to '_subFolderId' Object
-                  else {
-                    _subFolderId.allArticlesId = file.data.id;
-                    // If the id of all fields in '_subFolderId' are set, resolve promise and return value
-                    if (
-                      _subFolderId.acceptedArticlesId != "" &&
-                      _subFolderId.allArticlesId != ""
-                    ) {
-                      resolve(_subFolderId);
-                    }
-                  }
+                  // STEP 8: Get the file id after uploaded successful
+                  console.log("File id: ", file.data.id);
+
+                  fs.unlinkSync(filedata.path);
+
+                  eventData.imageData = file.data.id;
+
+                  // Insert eventData into database
+                  console.log("event: ", eventData);
+
+                  createNewEvent(eventData)
+                    .then((result) => {
+                      console.log("Result: ", result);
+                      return res.status(201).json({
+                        status: res.statusCode,
+                        success: true,
+                        eventInfo: eventData,
+                      });
+                    })
+                    .catch((err) => {
+                      if (!!err) {
+                        console.log(err);
+                        return res.status(500).json({
+                          status: res.statusCode,
+                          success: false,
+                          message: "Server error!",
+                        });
+                      } else {
+                        // If err = false, return faculty not found error
+                        return res.status(404).json({
+                          status: res.statusCode,
+                          success: false,
+                          message: "Faculty not found!",
+                        });
+                      }
+                    });
                 }
-              }
-            );
+              );
+            });
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          return res.status(500).json({
+            status: res.statusCode,
+            success: false,
+            message: "Server error!",
           });
         });
-
-        // Handle createSubfolder promise return
-        createEventSubfolder
-          .then((result) => {
-            // Assign the subfolder's folderId returned from result to event Object
-            eventData.selectedArticles = result.acceptedArticlesId;
-            eventData.allArticles = result.allArticlesId;
-
-            const uploadMultiple = upload.any("file");
-
-            // Insert event image into drive
-            uploadMultiple(req, res, function (err) {
-              if (err) throw err;
-              console.log("files: ", req.files);
-
-              // Get files[] from request
-              const files = req.files;
-
-              // Map all elements in files
-              files.map((filedata) => {
-                // Create metadata for file
-                const filemetadata = {
-                  name: `${currentTime.getTime()} | ${eventData.title}`,
-                  parents: [eventImageFolderId],
-                };
-
-                // Create media type for file
-                const media = {
-                  mimeType: filedata.mimetype,
-                  body: fs.createReadStream(filedata.path),
-                };
-
-                // Upload file to google drive
-                drive.files.create(
-                  {
-                    resource: filemetadata,
-                    media: media,
-                    fields: "id",
-                  },
-                  async (err, file) => {
-                    if (err) {
-                      res.json({
-                        status: 501,
-                        success: false,
-                        message: "Upload files to drive failed!",
-                      });
-                      fs.unlinkSync(filedata.path);
-                      return;
-                    }
-
-                    // STEP 8: Get the file id after uploaded successful
-                    console.log("File id: ", file.data.id);
-
-                    fs.unlinkSync(filedata.path);
-
-                    eventData.imageData = file.data.id;
-
-                    // Insert eventData into database
-                    console.log("event: ", eventData);
-
-                    createNewEvent(eventData)
-                      .then((result) => {
-                        console.log("Result: ", result);
-                        return res.status(201).json({
-                          status: res.statusCode,
-                          success: true,
-                          eventInfo: eventData,
-                        });
-                      })
-                      .catch((err) => {
-                        if (!!err) {
-                          console.log(err);
-                          return res.status(500).json({
-                            status: res.statusCode,
-                            success: false,
-                            message: "Server error!",
-                          });
-                        } else {
-                          // If err = false, return faculty not found error
-                          return res.status(404).json({
-                            status: res.statusCode,
-                            success: false,
-                            message: "Faculty not found!",
-                          });
-                        }
-                      });
-                  }
-                );
-              });
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(500).json({
-              status: res.statusCode,
-              success: false,
-              message: "Server error!",
-            });
-          });
-      }
-    }
-  );
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({
+        status: res.statusCode,
+        success: false,
+        message: "Server error",
+      });
+    });
 });
 
 /**
@@ -1084,91 +1004,96 @@ router.post("/", managerValidation, async (req, res) => {
  *      - Image data not implemented
  *      - Startdate needed?
  */
-router.put("/:eventId", managerValidation, upload.single("file"), (req, res) => {
-  const {
-    title,
-    content,
-    // imageData,
-    startDate,
-    endDate,
-    folderId,
-    FK_faculty_id,
-  } = req.body;
+router.put(
+  "/:eventId",
+  managerValidation,
+  upload.single("file"),
+  (req, res) => {
+    const {
+      title,
+      content,
+      // imageData,
+      startDate,
+      endDate,
+      folderId,
+      FK_faculty_id,
+    } = req.body;
 
-  const { eventId } = req.params
+    const { eventId } = req.params;
 
-  /// Image base64 encoded upload
+    /// Image base64 encoded upload
 
-  /* Check which fields is need to be updated !!!!!!!!!!!!!!! */
+    /* Check which fields is need to be updated !!!!!!!!!!!!!!! */
 
-  // var img = fs.readFileSync(req.file.path);
-  // console.log("path: ", req.file);
-  // var encode_image = img.toString("base64");
+    // var img = fs.readFileSync(req.file.path);
+    // console.log("path: ", req.file);
+    // var encode_image = img.toString("base64");
 
-  // var finalImg = {
-  //     contentType: req.file.mimetype,
-  //     image: new Buffer.from(encode_image, "base64"),
-  // };
+    // var finalImg = {
+    //     contentType: req.file.mimetype,
+    //     image: new Buffer.from(encode_image, "base64"),
+    // };
 
-  // console.log("finalll: ", finalImg);
+    // console.log("finalll: ", finalImg);
 
-  // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
-  let splittedStartDate = startDate.split("-");
-  const newStartDate = new Date(
-    splittedStartDate[0],
-    splittedStartDate[1] - 1,
-    splittedStartDate[2]
-  ).getTime();
-  console.log(newStartDate);
+    // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
+    let splittedStartDate = startDate.split("-");
+    const newStartDate = new Date(
+      splittedStartDate[0],
+      splittedStartDate[1] - 1,
+      splittedStartDate[2]
+    ).getTime();
+    console.log(newStartDate);
 
-  let splittedEndDate = endDate.split("-");
-  const newEndDate = new Date(
-    splittedEndDate[0],
-    splittedEndDate[1] - 1,
-    splittedEndDate[2]
-  ).getTime();
-  console.log(newEndDate);
+    let splittedEndDate = endDate.split("-");
+    const newEndDate = new Date(
+      splittedEndDate[0],
+      splittedEndDate[1] - 1,
+      splittedEndDate[2]
+    ).getTime();
+    console.log(newEndDate);
 
-  // Get current time constants and create data Object
-  const currentTime = new Date();
-  const data = {
-    eventId: eventId,
-    title: title,
-    content: content,
-    // imageData: imageData,
-    startDate: newStartDate,
-    endDate: newEndDate,
-    lastUpdate: currentTime.getTime(),
-    // folderId,
-    FK_faculty_id: FK_faculty_id,
-  };
+    // Get current time constants and create data Object
+    const currentTime = new Date();
+    const data = {
+      eventId: eventId,
+      title: title,
+      content: content,
+      // imageData: imageData,
+      startDate: newStartDate,
+      endDate: newEndDate,
+      lastUpdate: currentTime.getTime(),
+      // folderId,
+      FK_faculty_id: FK_faculty_id,
+    };
 
-  console.log(data);
+    console.log(data);
 
-  // Update event by passing data Object
-  updateEvent(data)
-    .then((result) => {
-      return res.status(200).json({
-        success: true,
-        message: `Event ${title} updated successfully.`,
+    // Update event by passing data Object
+    updateEvent(data)
+      .then((result) => {
+        return res.status(200).json({
+          success: true,
+          message: `Event ${title} updated successfully.`,
+        });
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log(err);
+          return res.status(500).json({
+            success: false,
+            message: "Server error!",
+          });
+        } else {
+          // If err = false return eventId not found
+          return res.status(404).json({
+            success: false,
+            message: "Not found!",
+          });
+        }
       });
-    })
-    .catch((err) => {
-      if (!!err) {
-        console.log(err);
-        return res.status(500).json({
-          success: false,
-          message: "Server error!",
-        });
-      } else {
-        // If err = false return eventId not found
-        return res.status(404).json({
-          success: false,
-          message: "Not found!",
-        });
-      }
-    });
-});
+  }
+);
 
 /**
  * @method PATCH
