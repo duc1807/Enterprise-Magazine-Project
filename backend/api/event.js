@@ -636,6 +636,7 @@ router.get(
  *      - imageData: file
  * 		  - startDate: Date (yyyy-mm-dd)
  *      - endDate: Date (yyyy-mm-dd)
+ *      - lastUpdateDate (yyyy-mm-dd)
  *      - facultyId: Int
  * @return
  *
@@ -644,7 +645,7 @@ router.get(
  */
 router.post("/", managerValidation, async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
-  const { title, content, startDate, endDate, facultyId } = req.body;
+  const { title, content, startDate, endDate, lastUpdateDate, facultyId } = req.body;
 
   // Get all coordinator accounts of a faculty
   const query = getCoordinatorAccountsByFaculty(facultyId);
@@ -740,7 +741,7 @@ router.post("/", managerValidation, async (req, res) => {
     startDate: newStartDate,
     endDate: newEndDate,
     createdAt: currentTime.getTime(),
-    lastUpdate: currentTime.getTime(),
+    lastUpdate: lastUpdateDate,
     // folderId, selectedArticles and allArticles temporarily has default value and will be changed after create folders
     folderId: "",
     selectedArticles: eventSubFoldersConstant.acceptedArticles,
