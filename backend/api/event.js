@@ -645,7 +645,14 @@ router.get(
  */
 router.post("/", managerValidation, upload.any("file"), async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
-  const { title, content, startDate, endDate, lastUpdateDate, facultyId } = JSON.parse(req.body.newEvent)
+  const {
+    title,
+    content,
+    startDate,
+    endDate,
+    lastUpdateDate,
+    facultyId,
+  } = JSON.parse(req.body.newEvent);
 
   // Get all coordinator accounts of a faculty
   const query = getCoordinatorAccountsByFaculty(facultyId);
@@ -881,87 +888,82 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
 
           console.log("event data: ", eventData);
 
-          const uploadMultiple = upload.any("file");
-
           // Insert event image into drive
-          uploadMultiple(req, res, function (err) {
-            if (err) throw err;
-            console.log("files: ", req.files);
+          console.log("files: ", req.files);
 
-            // Get files[] from request
-            const files = req.files;
+          // Get files[] from request
+          const files = req.files;
 
-            // Map all elements in files
-            files.map((filedata) => {
-              // Create metadata for file
-              const filemetadata = {
-                name: `${currentTime.getTime()} | ${eventData.title}`,
-                parents: [eventImageFolderId],
-              };
+          // Map all elements in files
+          files.map((filedata) => {
+            // Create metadata for file
+            const filemetadata = {
+              name: `${currentTime.getTime()} | ${eventData.title}`,
+              parents: [eventImageFolderId],
+            };
 
-              // Create media type for file
-              const media = {
-                mimeType: filedata.mimetype,
-                body: fs.createReadStream(filedata.path),
-              };
+            // Create media type for file
+            const media = {
+              mimeType: filedata.mimetype,
+              body: fs.createReadStream(filedata.path),
+            };
 
-              // Upload file to google drive
-              drive.files.create(
-                {
-                  resource: filemetadata,
-                  media: media,
-                  fields: "id",
-                },
-                async (err, file) => {
-                  if (err) {
-                    res.json({
-                      status: 501,
-                      success: false,
-                      message: "Upload files to drive failed!",
-                    });
-                    fs.unlinkSync(filedata.path);
-                    return;
-                  }
-
-                  // STEP 8: Get the file id after uploaded successful
-                  console.log("File id: ", file.data.id);
-
+            // Upload file to google drive
+            drive.files.create(
+              {
+                resource: filemetadata,
+                media: media,
+                fields: "id",
+              },
+              async (err, file) => {
+                if (err) {
+                  res.json({
+                    status: 501,
+                    success: false,
+                    message: "Upload files to drive failed!",
+                  });
                   fs.unlinkSync(filedata.path);
-
-                  eventData.imageData = file.data.id;
-
-                  // Insert eventData into database
-                  console.log("event: ", eventData);
-
-                  createNewEvent(eventData)
-                    .then((result) => {
-                      console.log("Result: ", result);
-                      return res.status(201).json({
-                        status: res.statusCode,
-                        success: true,
-                        eventInfo: eventData,
-                      });
-                    })
-                    .catch((err) => {
-                      if (!!err) {
-                        console.log(err);
-                        return res.status(500).json({
-                          status: res.statusCode,
-                          success: false,
-                          message: "Server error!",
-                        });
-                      } else {
-                        // If err = false, return faculty not found error
-                        return res.status(404).json({
-                          status: res.statusCode,
-                          success: false,
-                          message: "Faculty not found!",
-                        });
-                      }
-                    });
+                  return;
                 }
-              );
-            });
+
+                // STEP 8: Get the file id after uploaded successful
+                console.log("File id: ", file.data.id);
+
+                fs.unlinkSync(filedata.path);
+
+                eventData.imageData = file.data.id;
+
+                // Insert eventData into database
+                console.log("event: ", eventData);
+
+                createNewEvent(eventData)
+                  .then((result) => {
+                    console.log("Result: ", result);
+                    return res.status(201).json({
+                      status: res.statusCode,
+                      success: true,
+                      eventInfo: eventData,
+                    });
+                  })
+                  .catch((err) => {
+                    if (!!err) {
+                      console.log(err);
+                      return res.status(500).json({
+                        status: res.statusCode,
+                        success: false,
+                        message: "Server error!",
+                      });
+                    } else {
+                      // If err = false, return faculty not found error
+                      return res.status(404).json({
+                        status: res.statusCode,
+                        success: false,
+                        message: "Faculty not found!",
+                      });
+                    }
+                  });
+              }
+            );
           });
         })
         .catch((err) => {
