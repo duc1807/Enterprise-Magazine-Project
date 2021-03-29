@@ -103,7 +103,7 @@ const createAccountInformation = (accountDetail, accountId) => {
 
 
 const updateAccount = (accountDetail, accountId) => {
-  const { email, roleId, facultyId } = accountDetail
+  const { email, roleId, enabled, facultyId } = accountDetail
 
   let db = getDataBaseConnection();
 
@@ -124,7 +124,7 @@ const updateAccount = (accountDetail, accountId) => {
 
 
 const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
-  const { username, password, facultyId } = guestAccountInfo
+  const { username, password, enabled, facultyId } = guestAccountInfo
 
   let db = getDataBaseConnection();
 

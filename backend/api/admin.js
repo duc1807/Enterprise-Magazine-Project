@@ -194,7 +194,7 @@ router.post("/guest-accounts", async (req, res) => {
  *    - email: String
  *    - firstName: String
  *    - surName: String
- *    - roleId: Int
+ *    - accountStatus: Int
  *    - facultyId: Int
  * @return
  * @notes
@@ -207,12 +207,12 @@ router.put("/accounts/:accountId", async (req, res) => {
   const { accountId } = req.params;
 
   // Get data from req.body
-  const { email, firstName, surName, roleId, facultyId } = req.body;
+  const { email, firstName, surName, enabled, facultyId } = req.body;
 
   // Create account info Object
   const accountInfo = {
     email: email,
-    roleId: roleId,
+    enabled: enabled,
     facultyId: facultyId,
   };
 
@@ -267,6 +267,7 @@ router.put("/accounts/:accountId", async (req, res) => {
  * @params
  *    - username: String
  *    - password: String
+ *    - accountStatus: Int
  *    - facultyId: Int
  * @return
  */
@@ -275,12 +276,13 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
   const { accountId } = req.params;
 
   // Get data from req.body
-  const { username, password, facultyId } = req.body;
+  const { username, password, facultyId, enabled, accountStatus } = req.body;
 
   // Create Object to store guest account information
   const guestAccountInfo = {
     username: username,
     password: password,
+    enabled: enabled,
     facultyId: facultyId,
   };
 
