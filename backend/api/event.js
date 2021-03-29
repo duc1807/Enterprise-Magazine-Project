@@ -645,7 +645,7 @@ router.get(
  */
 router.post("/", managerValidation, async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
-  const { title, content, startDate, endDate, lastUpdateDate, facultyId } = req.body;
+  const { title, content, startDate, endDate, lastUpdateDate, facultyId } = JSON.parse(req.body.newEvent)
 
   // Get all coordinator accounts of a faculty
   const query = getCoordinatorAccountsByFaculty(facultyId);
