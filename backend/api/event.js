@@ -643,7 +643,7 @@ router.get(
  * @notes
  *      - event image upload not implemented
  */
-router.post("/", managerValidation, async (req, res) => {
+router.post("/", managerValidation, upload.any("file"), async (req, res) => {
   // Not sure if file is retrieved by req.files or req.body
   const { title, content, startDate, endDate, lastUpdateDate, facultyId } = JSON.parse(req.body.newEvent)
 
