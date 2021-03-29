@@ -146,7 +146,7 @@ const deleteFileOnDrive = async (fileDriveId) => {
  *             mimeType: String,
  *             parents: [String]
  *          }
- * @return 
+ * @return
  *      - folderId: String
  * @notes
  */
@@ -182,8 +182,8 @@ const createFolder = async (folderMetadata) => {
  * @params
  *      - subFoldersName: Array[Object]
  *          [
- *            { 
- *              name: String 
+ *            {
+ *              name: String
  *            },
  *            ...
  *          ]
@@ -193,7 +193,7 @@ const createFolder = async (folderMetadata) => {
  *            allArticlesFolderName: String
  *          }
  *      - parentsFolderId: String
- * @return 
+ * @return
  *      - subFolderId: Object
  *          {
  *            acceptedArticlesId: String
@@ -201,7 +201,11 @@ const createFolder = async (folderMetadata) => {
  *          }
  * @notes
  */
-const createSubFolders = (subFoldersName, subFolderConstants, parentsFolderId) => {
+const createSubFolders = (
+  subFoldersName,
+  subFolderConstants,
+  parentsFolderId
+) => {
   return new Promise(async (resolve, reject) => {
     // Get authService
     const jwToken = await getAuthServiceJwt();
@@ -238,18 +242,14 @@ const createSubFolders = (subFoldersName, subFolderConstants, parentsFolderId) =
 
             // If folder is all articles, insert the permission for student
             if (
-              subFolderMetadata.name ==
-              subFolderConstants.allArticlesFolderName
+              subFolderMetadata.name == subFolderConstants.allArticlesFolderName
             ) {
               // insertPermissionsToFolderId(studentPermissions, file.data.id);
             }
 
             /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
             // If the folder is selected articles, assign the folderId to '_subFolderId' Object
-            if (
-              folder.name ==
-              subFolderConstants.acceptedArticlesFolderName
-            ) {
+            if (folder.name == subFolderConstants.acceptedArticlesFolderName) {
               _subFolderId.acceptedArticlesId = file.data.id;
               // If the id of all fields in '_subFolderId' are set, resolve promise and return value
               if (
@@ -274,7 +274,109 @@ const createSubFolders = (subFoldersName, subFolderConstants, parentsFolderId) =
         }
       );
     });
-  })
+  });
+};
+
+/**
+ * @description Create new faculties folders inside GW root drive folder
+ * @params
+ *      - facultiesFoldersName: Array[Object]
+ *          [
+ *            {
+ *              name: String
+ *            },
+ *            ...
+ *          ]
+ *      - facultiesFolderConstants: Object
+ *          {
+ *            facultyIt: String,
+ *            facultyBusiness: String,
+ *            facultyMarketing: String
+ *          }
+ *      - parentsFolderId: String
+ * @return
+ *      - facultiesFolderId: Object
+ *          {
+ *            facultyIt: String,
+ *            facultyBusiness: String,
+ *            facultyMarketing: String
+ *          }
+ * @notes
+ */
+const createFacultiesFolders = (
+  facultiesFoldersName,
+  facultiesFolderConstants,
+  parentsFolderId
+) => {
+  return new Promise(async (resolve, reject) => {
+    // Get authService
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
+    });
+
+    // Generate Object for storing subfolderId\
+    let _facultiesFoldersId = {};
+    let arrayFacultyName = [];
+
+    for (const facultyName in facultiesFolderConstants) {
+      _facultiesFoldersId[facultyName] = facultiesFolderConstants[facultyName];
+      arrayFacultyName.push(facultiesFolderConstants[facultyName]);
+    }
+
+    facultiesFoldersName.map((folder) => {
+      const facultyFolderMetadata = {
+        name: folder.name,
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [parentsFolderId],
+      };
+
+      drive.files.create(
+        {
+          resource: facultyFolderMetadata,
+          fields: "id",
+        },
+        function (err, file) {
+          if (err) {
+            // Handle error
+            reject(err);
+            console.error(err);
+          } else {
+            console.log(`${facultyFolderMetadata.name} Id: `, file.data.id);
+
+            // Check to set the folderId to its correct faculty
+            for (const facultyFolderId in _facultiesFoldersId) {
+              if (
+                _facultiesFoldersId[facultyFolderId] ==
+                facultyFolderMetadata.name
+              ) {
+                _facultiesFoldersId[facultyFolderId] = file.data.id;
+              }
+              // Check if all properties of "_facultiesFoldersId" have value
+              let isFulfilled = true;
+              for (const facultyFolderId in _facultiesFoldersId) {
+                // If a property of "_facultiesFoldersId" does not have value
+                // set isFulfilled = false 
+                if (
+                  arrayFacultyName.includes(
+                    _facultiesFoldersId[facultyFolderId]
+                  )
+                ) {
+                  isFulfilled = false;
+                }
+              }
+              // If all properties of "_facultiesFoldersId" have value
+              // Resolve result
+              if (isFulfilled) {
+                resolve(_facultiesFoldersId);
+              }
+            }
+          }
+        }
+      );
+    });
+  });
 };
 
 module.exports = {
@@ -283,5 +385,6 @@ module.exports = {
   moveFolderToOtherFolder: moveFolderToOtherFolder,
   deleteFileOnDrive: deleteFileOnDrive,
   createFolder: createFolder,
-  createSubFolders: createSubFolders
+  createSubFolders: createSubFolders,
+  createFacultiesFolders: createFacultiesFolders,
 };

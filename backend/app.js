@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const path = require("path");
 var cors = require("cors");
 const async = require("async");
-const schedule = require('node-schedule');
+const schedule = require("node-schedule");
 
 const app = express();
 
@@ -21,60 +21,61 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Parse application/x-www-form-urlencoded
-app.use(
-	bodyParser.urlencoded({
-		extended: true,
-	})
-)
-	// Allow cookie
-	.use(cookieParser());
+app
+  .use(
+    bodyParser.urlencoded({
+      extended: true,
+    })
+  )
+  // Allow cookie
+  .use(cookieParser());
 
 // Parse application/json
 app.use(bodyParser.json());
 
 // =================================== TEST
 app.get("/testUpload", (req, res) => {
-	res.render("success", { name: "test", pic: "hi", success: true });
+  res.render("success", { name: "test", pic: "hi", success: true });
 });
 
 // API controllers
 app
-	// Login validation API for student and staff (Google Auth)
-	.use("/api/authentication", require("./api/authAPI/googleAuth"))
+  // Login validation API for student and staff (Google Auth)
+  .use("/api/authentication", require("./api/authAPI/googleAuth"))
 
-	// Authentication API for admin
-	.use("/api/authentication/admin", require("./api/authAPI/admin"))
+  // Authentication API for admin
+  .use("/api/authentication/admin", require("./api/authAPI/admin"))
 
   // Authentication API for guest
-	.use("/api/authentication/guest", require("./api/authAPI/guest"))
+  .use("/api/authentication/guest", require("./api/authAPI/guest"))
 
-	// Faculty API
-	.use("/api/faculties", require("./api/faculty"))
+  // Faculty API
+  .use("/api/faculties", require("./api/faculty"))
 
-	// Event API (Event: Drive folder inside Faculty)
-	.use("/api/events", require("./api/event"))
+  // Event API (Event: Drive folder inside Faculty)
+  .use("/api/events", require("./api/event"))
 
   // API for articles manipulating
-	.use("/api/article", require("./api/article"))
+  .use("/api/article", require("./api/article"))
 
-	// Download API to get articles
-	.use("/api/download", require("./api/download"))
+  // Download API to get articles
+  .use("/api/download", require("./api/download"))
 
-	// Image display API
-	.use("/api/image", require("./api/image"))
+  // Image display API
+  .use("/api/image", require("./api/image"))
 
-	// API for student to upload articles
-	.use("/api/upload", require("./api/upload"))
+  // API for student to upload articles
+  .use("/api/upload", require("./api/upload"))
 
   // API for manager to view the statistics
-	.use("/api/statistic", require("./api/statistic"))
+  .use("/api/statistic", require("./api/statistic"))
 
   // API for admin role
-	.use("/api/admin/", require("./api/admin"))
+  .use("/api/admin/", require("./api/admin"))
 
   // ============================================================== In development
-	.use("/api/user", require("./api/user"))
-	.use("/api/notification", require("./api/mailnotification"))
+  .use("/api/user", require("./api/user"))
+  .use("/api/notification", require("./api/mailnotification"));
 
 // .use("/api/student", require("./api/Authentication/student"));
 
@@ -88,37 +89,90 @@ app
 
 // ====================================================== Test
 app.get("/google", (req, res) => {
-	res.render("index", {
-		clientID:
-			"701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com",
-	});
+  res.render("index", {
+    clientID:
+      "701728448437-q5cultsjtf3hj42dbehh6dvfg15e9k3e.apps.googleusercontent.com",
+  });
 });
 
 // Create new schedule for the system to auto create new year folder on drive
 // The schedule will run on 1/1 each year (1:00 am)
 
 // Import db update faculty FolderId service after create new year folder
-const { } = require('./utils/dbService/index')
+const { createFolder, createFacultiesFolders } = require("./utils/driveAPI");
+const { getAllFaculty } = require("./utils/dbService/index");
+const GW_DRIVE_STORAGE_ID = "1QcjMbbouMx857IWLYYP23N6Iih_ezXIs";
 
-// Create new folder on drive each year
-
-// After create new folder year => create faculty folder on drive
-
-// STEP 1: Get all faculty in database ????
-// Step 2: Loop all db faculty name and create folder on Drive ?????
 // After Object faculties has all faculty with folderId  => Call the db update faculty folderId ?????
 
-const currentYear = new Date().getFullYear()
+const currentYear = new Date().getFullYear();
 
-schedule.scheduleJob('0 0 1 1 1 *', () => {
-  console.log('The world is going to end today.');
+// 59 56 1 30 3 *
+schedule.scheduleJob("0 0 1 1 1 *", async () => {
+  // Get all faculty in database
+  const faculties = await getAllFaculty().catch((err) => console.log(err));
+
+  // Initialize Object and Array of faculties
+  const facultiesFolderConstants = {};
+  const facultiesFoldersName = [];
+
+  // Insert value from db result to Object and Array faculties
+  faculties.map((faculty) => {
+    facultiesFolderConstants[`faculty${faculty.faculty_name}`] =
+      faculty.faculty_name;
+    facultiesFoldersName.push({
+      name: faculty.faculty_name,
+    });
+  });
+  // Create new year folder metadata
+  const folderMetadata = {
+    name: `${currentYear}`,
+    mimeType: "application/vnd.google-apps.folder",
+    parents: [GW_DRIVE_STORAGE_ID],
+  };
+
+  console.log(facultiesFolderConstants);
+  console.log(facultiesFoldersName);
+
+  // Create new year folder on Drive
+  createFolder(folderMetadata)
+    .then((parentFolderId) => {
+      // Create new faculties folder on Drive
+      createFacultiesFolders(
+        facultiesFoldersName,
+        facultiesFolderConstants,
+        parentFolderId
+      )
+        .then((facultiesFolderId) => {
+          console.log("Create faculties: ", facultiesFolderId);
+          // Create array to store faculties information to update into database
+          let facultiesInfo = []
+
+          // Check to push correct folderId to its correct faculty 
+          for (const facultyName in facultiesFolderConstants) {
+            facultiesInfo.push({
+              facultyName: facultiesFolderConstants[facultyName],
+              folderId: facultiesFolderId[facultyName]
+            })
+          }
+
+          console.log("Final data: ", facultiesInfo);
+
+          // Update folderId in database
+
+        })
+        .catch((err) => {
+          console.log("Faculties folder creating error: ", err);
+        });
+    })
+    .catch((err) => {
+      console.log("Event folder creating error: ", err);
+    });
 });
 
 app.listen(5000, () => {
-	console.log("App started on port 5000");
+  console.log("App started on port 5000");
 });
-
-
 
 // ============================================ OLD CODE
 
