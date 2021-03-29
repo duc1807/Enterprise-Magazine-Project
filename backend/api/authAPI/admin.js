@@ -96,13 +96,11 @@ router.post("/login", async (req, res) => {
 
     await query
       .then(async (result) => {
-
         // Check if the username is found and the password is correct
         if (
           result.length &&
           (await bcrypt.compare(password, result[0].password))
         ) {
-
           // If success, create userInfo Object to pass to payload
           let userInfo = {};
           userInfo.username = result[0].username;
@@ -124,7 +122,7 @@ router.post("/login", async (req, res) => {
 
           // Storing Token in cookie, with httpOnly and secure set to true
           // (only allow token on secure website)
-          res.cookie("Token", token, { httpOnly: true, /*secure: true*/ });
+          res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
           res.status(200).json({
             status: res.statusCode,
@@ -163,7 +161,7 @@ router.post("/login", async (req, res) => {
  *      - message: String
  * @notes
  */
- router.post("/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   const token = req.cookies["Token"];
   // If the token is not existed, throw 401 error
   if (!token) {
@@ -180,6 +178,33 @@ router.post("/login", async (req, res) => {
     status: res.statusCode,
     success: true,
     message: "Signed out",
+  });
+});
+
+// ========================================= API FOR TESTING
+const {
+  getDataBaseConnection,
+} = require("../../utils/dbService/connection/dbConnection");
+
+router.get("/all-accounts", (req, res) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Account`;
+
+  db.query(sql, (err, result) => {
+    if (!!err) {
+      return res.status(500).json({
+        status: res.statusCode,
+        success: false,
+        message: "Server error",
+      });
+    }
+    db.end();
+    return res.status(200).json({
+      status: res.statusCode,
+      success: true,
+      accounts: result,
+    });
   });
 });
 

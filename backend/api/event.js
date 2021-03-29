@@ -736,6 +736,15 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
   ).getTime();
   console.log(newEndDate);
 
+  // Input endDate processing (from date format to timestamps)
+  let splittedLastUpdateDate = lastUpdateDate.split("-");
+  const newLastUpdateDate = new Date(
+    splittedLastUpdateDate[0],
+    splittedLastUpdateDate[1] - 1,
+    splittedLastUpdateDate[2]
+  ).getTime();
+  console.log(newLastUpdateDate);
+
   // Get the current time
   const currentTime = new Date();
 
@@ -748,7 +757,7 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     startDate: newStartDate,
     endDate: newEndDate,
     createdAt: currentTime.getTime(),
-    lastUpdate: lastUpdateDate,
+    lastUpdate: newLastUpdateDate,
     // folderId, selectedArticles and allArticles temporarily has default value and will be changed after create folders
     folderId: "",
     selectedArticles: eventSubFoldersConstant.acceptedArticles,
