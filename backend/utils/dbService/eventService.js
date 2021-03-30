@@ -133,11 +133,10 @@ const updateEvent = async (eventInfo) => {
     eventId,
     title,
     content,
-    startDate,
+    imageData,
     endDate,
     lastUpdate,
-    folderId,
-    FK_faculty_id,
+    facultyId,
   } = eventInfo;
 
   let db = getDataBaseConnection();
@@ -145,13 +144,13 @@ const updateEvent = async (eventInfo) => {
   const sql = `SELECT *, Faculty.faculty_name, Faculty.faculty_id
                 FROM Event
                 INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
-                WHERE event_id = ${eventId} AND Faculty.faculty_id = '${FK_faculty_id}'`;
+                WHERE event_id = ${eventId} AND Faculty.faculty_id = '${facultyId}'`;
 
   const sql1 = `UPDATE Event 
                   SET
                   event_title = '${title}', 
                   event_content = '${content}', 
-                  event_startDate = '${startDate}', 
+                  event_image = '${imageData},
                   event_endDate = '${endDate}', 
                   event_lastUpdate = '${lastUpdate}'
                   WHERE 

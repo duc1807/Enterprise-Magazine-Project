@@ -1009,6 +1009,7 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
  *      - content: String
  *      - imageData: file
  *      - endDate: Date (yyyy-mm-dd)
+ *      - lastUpdateDate: Date (yyyy-mm-dd)
  *      - folderId: String (???? needed?)
  *      - facultyId: Int
  * @return
@@ -1022,96 +1023,146 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
  *      - Image data not implemented
  *      - Startdate needed?
  */
-router.put(
-  "/:eventId",
-  managerValidation,
-  upload.single("file"),
-  (req, res) => {
-    const {
-      title,
-      content,
-      // imageData,
-      startDate,
-      endDate,
-      folderId,
-      FK_faculty_id,
-    } = req.body;
+router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
+  const {
+    title,
+    content,
+    endDate,
+    lastUpdateDate,
+    folderId,
+    facultyId,
+  } = req.body;
 
-    const { eventId } = req.params;
+  const { eventId } = req.params;
 
-    /// Image base64 encoded upload
+  /// Image base64 encoded upload
 
-    /* Check which fields is need to be updated !!!!!!!!!!!!!!! */
+  /* Check which fields is need to be updated !!!!!!!!!!!!!!! */
 
-    // var img = fs.readFileSync(req.file.path);
-    // console.log("path: ", req.file);
-    // var encode_image = img.toString("base64");
+  // var img = fs.readFileSync(req.file.path);
+  // console.log("path: ", req.file);
+  // var encode_image = img.toString("base64");
 
-    // var finalImg = {
-    //     contentType: req.file.mimetype,
-    //     image: new Buffer.from(encode_image, "base64"),
-    // };
+  // var finalImg = {
+  //     contentType: req.file.mimetype,
+  //     image: new Buffer.from(encode_image, "base64"),
+  // };
 
-    // console.log("finalll: ", finalImg);
+  // console.log("finalll: ", finalImg);
 
-    // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
-    let splittedStartDate = startDate.split("-");
-    const newStartDate = new Date(
-      splittedStartDate[0],
-      splittedStartDate[1] - 1,
-      splittedStartDate[2]
-    ).getTime();
-    console.log(newStartDate);
+  // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
+  let splittedStartDate = startDate.split("-");
+  const newStartDate = new Date(
+    splittedStartDate[0],
+    splittedStartDate[1] - 1,
+    splittedStartDate[2]
+  ).getTime();
+  console.log(newStartDate);
 
-    let splittedEndDate = endDate.split("-");
-    const newEndDate = new Date(
-      splittedEndDate[0],
-      splittedEndDate[1] - 1,
-      splittedEndDate[2]
-    ).getTime();
-    console.log(newEndDate);
+  let splittedEndDate = endDate.split("-");
+  const newEndDate = new Date(
+    splittedEndDate[0],
+    splittedEndDate[1] - 1,
+    splittedEndDate[2]
+  ).getTime();
+  console.log(newEndDate);
 
-    // Get current time constants and create data Object
-    const currentTime = new Date();
-    const data = {
-      eventId: eventId,
-      title: title,
-      content: content,
-      // imageData: imageData,
-      startDate: newStartDate,
-      endDate: newEndDate,
-      lastUpdate: currentTime.getTime(),
-      // folderId,
-      FK_faculty_id: FK_faculty_id,
+  // Input endDate processing (from date format to timestamps)
+  let splittedLastUpdateDate = lastUpdateDate.split("-");
+  const newLastUpdateDate = new Date(
+    splittedLastUpdateDate[0],
+    splittedLastUpdateDate[1] - 1,
+    splittedLastUpdateDate[2]
+  ).getTime();
+  console.log(newLastUpdateDate);
+
+  // Get current time constants and create data Object
+  const currentTime = new Date();
+  const eventData = {
+    eventId: eventId,
+    title: title,
+    content: content,
+    imageData: "",
+    endDate: newEndDate,
+    lastUpdate: newLastUpdateDate,
+    // folderId,
+    facultyId: facultyId,
+  };
+
+  console.log(eventData);
+
+  // Insert event image into drive
+  console.log("files: ", req.files);
+
+  // Get files[] from request
+  const files = req.files;
+
+  // Map all elements in files
+  files.map((filedata) => {
+    // Create metadata for file
+    const filemetadata = {
+      name: `${currentTime.getTime()} | ${eventData.title}`,
+      parents: [eventImageFolderId],
     };
 
-    console.log(data);
+    // Create media type for file
+    const media = {
+      mimeType: filedata.mimetype,
+      body: fs.createReadStream(filedata.path),
+    };
 
-    // Update event by passing data Object
-    updateEvent(data)
-      .then((result) => {
-        return res.status(200).json({
-          success: true,
-          message: `Event ${title} updated successfully.`,
-        });
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log(err);
-          return res.status(500).json({
+    // Upload file to google drive
+    drive.files.create(
+      {
+        resource: filemetadata,
+        media: media,
+        fields: "id",
+      },
+      async (err, file) => {
+        if (err) {
+          res.json({
+            status: 501,
             success: false,
-            message: "Server error!",
+            message: "Upload files to drive failed!",
           });
-        } else {
-          // If err = false return eventId not found
-          return res.status(404).json({
-            success: false,
-            message: "Not found!",
-          });
+          fs.unlinkSync(filedata.path);
+          return;
         }
-      });
-  }
-);
+
+        // STEP 8: Get the file id after uploaded successful
+        console.log("File id: ", file.data.id);
+
+        fs.unlinkSync(filedata.path);
+
+        eventData.imageData = file.data.id;
+
+        // Update eventData into database
+        updateEvent(eventData)
+          .then((result) => {
+            return res.status(200).json({
+              success: true,
+              message: `Event ${title} updated successfully.`,
+            });
+          })
+          .catch((err) => {
+            if (!!err) {
+              console.log(err);
+              return res.status(500).json({
+                success: false,
+                message: "Server error!",
+              });
+            } else {
+              // If err = false return eventId not found
+              return res.status(404).json({
+                success: false,
+                message: "Not found!",
+              });
+            }
+          });
+      }
+    );
+  });
+});
 
 /**
  * @method PATCH
