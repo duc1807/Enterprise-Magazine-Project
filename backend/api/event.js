@@ -1050,15 +1050,6 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
 
   // console.log("finalll: ", finalImg);
 
-  // Input startDate and endDate processing (from yyyy-mm-dd to timestamps)
-  let splittedStartDate = startDate.split("-");
-  const newStartDate = new Date(
-    splittedStartDate[0],
-    splittedStartDate[1] - 1,
-    splittedStartDate[2]
-  ).getTime();
-  console.log(newStartDate);
-
   let splittedEndDate = endDate.split("-");
   const newEndDate = new Date(
     splittedEndDate[0],
