@@ -100,17 +100,43 @@ app.get("/google", (req, res) => {
 
 // Import db update faculty FolderId service after create new year folder
 const { createFolder, createFacultiesFolders } = require("./utils/driveAPI");
-const { getAllFaculty } = require("./utils/dbService/index");
+const { sendWarningMailToMultipleAccounts } = require("./utils/mailer");
+const {
+  getDataBaseConnection,
+} = require("./utils/dbService/connection/dbConnection");
+const {
+  getAllFaculty,
+  updateFacultyFolderId,
+  getAccountsByRole,
+} = require("./utils/dbService/index");
 const GW_DRIVE_STORAGE_ID = "1QcjMbbouMx857IWLYYP23N6Iih_ezXIs";
+const MANAGER_ROLE_ID = 3;
 
-// After Object faculties has all faculty with folderId  => Call the db update faculty folderId ?????
+// Function to notice all managers if new semester folder is error when creating
+const noticeErrorToManager = () => {
+  const db = getDataBaseConnection();
 
+  const sql = `SELECT * FROM Account
+              WHERE FK_role_id = ${MANAGER_ROLE_ID}`;
+
+  db.query(sql, (err, result) => {
+    if (!!err) reject(err);
+    // After getting all manager accounts, sendMail to all
+    sendWarningMailToMultipleAccounts(result, currentYear, GW_DRIVE_STORAGE_ID);
+  });
+};
+
+// Get current year
 const currentYear = new Date().getFullYear();
 
-// 59 56 1 30 3 *
+// 50 15 13 30 3 *
+// Create schedule for the system to run on first day of each year
 schedule.scheduleJob("0 0 1 1 1 *", async () => {
   // Get all faculty in database
-  const faculties = await getAllFaculty().catch((err) => console.log(err));
+  const faculties = await getAllFaculty().catch((err) => {
+    console.log(err);
+    noticeErrorToManager();
+  });
 
   // Initialize Object and Array of faculties
   const facultiesFolderConstants = {};
@@ -124,6 +150,7 @@ schedule.scheduleJob("0 0 1 1 1 *", async () => {
       name: faculty.faculty_name,
     });
   });
+
   // Create new year folder metadata
   const folderMetadata = {
     name: `${currentYear}`,
@@ -146,28 +173,38 @@ schedule.scheduleJob("0 0 1 1 1 *", async () => {
         .then((facultiesFolderId) => {
           console.log("Create faculties: ", facultiesFolderId);
           // Create array to store faculties information to update into database
-          let facultiesInfo = []
+          let facultiesInfo = [];
 
-          // Check to push correct folderId to its correct faculty 
+          // Check to push correct folderId to its correct faculty
           for (const facultyName in facultiesFolderConstants) {
             facultiesInfo.push({
               facultyName: facultiesFolderConstants[facultyName],
-              folderId: facultiesFolderId[facultyName]
-            })
+              folderId: facultiesFolderId[facultyName],
+            });
           }
-
           console.log("Final data: ", facultiesInfo);
-
           // Update folderId in database
 
+          // Update folderId of faculties in database
+          updateFacultyFolderId(facultiesInfo)
+            .then((result) => {
+              console.log(`New ${currentYear} semester started!`);
+            })
+            .catch((err) => {
+              console.log("Err");
+              noticeErrorToManager();
+            });
         })
         .catch((err) => {
           console.log("Faculties folder creating error: ", err);
+          noticeErrorToManager();
         });
     })
     .catch((err) => {
       console.log("Event folder creating error: ", err);
+      noticeErrorToManager();
     });
+  // ============================================ New ways to create folders
 });
 
 app.listen(5000, () => {

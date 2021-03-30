@@ -7,11 +7,11 @@ const {
   deleteEventById,
   getEventByArticleId,
   getPublishedEventOfFacultyId,
-} = require("../../utils/dbService/eventService");
+} = require("./eventService");
 const {
   getAllFaculty,
   getFacultyById,
-} = require("../../utils/dbService/facultyService");
+} = require("./facultyService");
 const {
   getArticleById,
   getPostedArticlesOfEvent,
@@ -31,15 +31,15 @@ const {
   createPostedArticle,
   setNewArticleSubmissionFolderId,
   getArticleInformationById,
-} = require("../../utils/dbService/articleService");
+} = require("./articleService");
 const {
   getCoordinatorAccountsByFaculty,
-} = require("../../utils/dbService/coordinatorService");
+} = require("./coordinatorService");
 const {
   getStudentAccountByFaculty,
-} = require("../../utils/dbService/studentService");
-const { getAccountByEmail } = require("../../utils/dbService/accountService");
-const { getImageById } = require("../../utils/dbService/imageService");
+} = require("./studentService");
+const { getAccountByEmail } = require("./accountService");
+const { getImageById } = require("./imageService");
 const {
   getAdminAccountByUsername,
   createNewAccount,
@@ -50,15 +50,15 @@ const {
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
-} = require("../../utils/dbService/adminService");
+} = require("./adminService");
 const {
   getFileDetailById,
   uploadFile,
   deleteFileByFileId,
-} = require("../../utils/dbService/fileService");
+} = require("./fileService");
 const {
   getCommentByArticleId,
-} = require("../../utils/dbService/commentService");
+} = require("./commentService");
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -67,6 +67,7 @@ const {
   getContributionEachMonthByYear,
 } = require("./statisticService");
 const { getGuestAccountByUsernameAndPassword } = require("./guestService");
+const { updateFacultyFolderId } = require("./appService")
 
 module.exports = {
   // ======================================================= Admin
@@ -189,7 +190,13 @@ module.exports = {
   getAverageCommentStats: getAverageCommentStats,
   // Count posted articles each months by year
   getContributionEachMonthByYear: getContributionEachMonthByYear,
+  // ================================================================
 
-  //======================================================= GUEST
+  // =========================================================== GUEST
   getGuestAccountByUsernameAndPassword: getGuestAccountByUsernameAndPassword,
+  // ================================================================
+  
+  // ============================================================ APP
+  updateFacultyFolderId: updateFacultyFolderId
+  // ================================================================
 };
