@@ -1089,7 +1089,7 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
   const files = req.files;
 
   // Check if image is updated or not
-  if (files.length) {
+  if (files && files.length) {
     // Map all elements in files
     files.map((filedata) => {
       // Create metadata for file
