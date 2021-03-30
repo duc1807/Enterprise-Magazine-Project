@@ -13,6 +13,8 @@ const {
   getAccountsByRole,
   createNewGuestAccount,
   updateGuestAccount,
+  updateGuestAccountStatus,
+  updateAccountStatus
 } = require("../utils/dbService/index");
 
 /**
@@ -187,6 +189,42 @@ router.post("/guest-accounts", async (req, res) => {
 });
 
 /**
+ * @method PATCH
+ * @API /api/admin/accounts/:accountId
+ * @description API route to update account status
+ * @params
+ *    - status: Int
+ * @return
+ */
+ router.patch("/accounts/:accountId", async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  // Get status from req.body
+  const { status } = req.body;
+
+  // Update guest account
+  const query = updateAccountStatus(status, accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: `Account ${status ? "unactivated" : "activated"} successfully`,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
  * @method PUT
  * @API /api/admin/accounts/:accountId
  * @description API route to update account
@@ -201,6 +239,7 @@ router.post("/guest-accounts", async (req, res) => {
  *    - Wait for frontend solution (not implemented)
  *    - Check which fields will be updated ???????
  *    - where account_id will be passed ? req.body or req.params?
+ *    - Temporaly unused !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111
  */
 router.put("/accounts/:accountId", async (req, res) => {
   // Get accountId from params
@@ -261,14 +300,48 @@ router.put("/accounts/:accountId", async (req, res) => {
 });
 
 /**
+ * @method PATCH
+ * @API /api/admin/guest-accounts/:accountId
+ * @description API route to update guest account status
+ * @params
+ *    - status: Int
+ * @return
+ */
+ router.patch("/guest-accounts/:accountId", async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  // Get status from req.body
+  const { status } = req.body;
+
+  // Update guest account
+  const query = updateGuestAccountStatus(status, accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: `Guest account ${status ? "unactivated" : "activated"} successfully`,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      return res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
  * @method PUT
  * @API /api/admin/guest-accounts/:accountId
  * @description API route to update guest account
  * @params
  *    - username: String
  *    - password: String
- *    - accountStatus: Int
- *    - facultyId: Int
  * @return
  */
 router.put("/guest-accounts/:accountId", async (req, res) => {
@@ -276,14 +349,12 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
   const { accountId } = req.params;
 
   // Get data from req.body
-  const { username, password, facultyId, enabled, accountStatus } = req.body;
+  const { username, password } = req.body;
 
   // Create Object to store guest account information
   const guestAccountInfo = {
     username: username,
     password: password,
-    enabled: enabled,
-    facultyId: facultyId,
   };
 
   // Update guest account

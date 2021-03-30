@@ -101,7 +101,27 @@ const createAccountInformation = (accountDetail, accountId) => {
   });
 };
 
+const updateAccountStatus = (currentStatus, accountId) => {
+  // If currentStatus = 1 => newStatus = 0 and opposite
+  const newStatus = currentStatus ? 0 : 1
 
+  let db = getDataBaseConnection();
+
+  // UPDATE guest account in database
+  const sql = `UPDATE Account
+              SET 
+              enabled = ${newStatus},
+              WHERE account_id = ${accountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+// =============================================== Temporarily ignore
 const updateAccount = (accountDetail, accountId) => {
   const { email, roleId, enabled, facultyId } = accountDetail
 
@@ -123,9 +143,28 @@ const updateAccount = (accountDetail, accountId) => {
   });
 };
 
+const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
+  // If currentStatus = 1 => newStatus = 0 and opposite
+  const newStatus = currentStatus ? 0 : 1
+
+  let db = getDataBaseConnection();
+
+  // UPDATE guest account in database
+  const sql = `UPDATE Guest
+              SET 
+              enabled = ${newStatus},
+              WHERE guest_id = ${guestAccountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
 
 const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
-  const { username, password, enabled, facultyId } = guestAccountInfo
+  const { username, password } = guestAccountInfo
 
   let db = getDataBaseConnection();
 
@@ -133,9 +172,7 @@ const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
   const sql = `UPDATE Guest
               SET 
               guest_name = '${username}', 
-              password = '${password}', 
-              FK_faculty_id= ${facultyId},
-              enabled = ${enabled}
+              password = '${password}',
               WHERE guest_id = ${guestAccountId}`;
 
   return new Promise((resolve, reject) => {
@@ -172,7 +209,9 @@ module.exports = {
   createNewGuestAccount: createNewGuestAccount,
   createAccountInformation: createAccountInformation,
   updateAccount: updateAccount,
+  updateAccountStatus: updateAccountStatus,
   updateGuestAccount: updateGuestAccount,
+  updateGuestAccountStatus: updateGuestAccountStatus,
   updateAccountInformation: updateAccountInformation,
   getAllRolesInformation: getAllRolesInformation,
   getAccountsByRole: getAccountsByRole,

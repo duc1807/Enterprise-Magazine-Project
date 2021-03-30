@@ -46,7 +46,9 @@ const {
   createNewGuestAccount,
   createAccountInformation,
   updateAccount,
+  updateAccountStatus,
   updateGuestAccount,
+  updateGuestAccountStatus,
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
@@ -79,6 +81,8 @@ module.exports = {
   // Update an account information
   updateAccount: updateAccount,
   updateAccountInformation: updateAccountInformation,
+  // Update account status
+  updateAccountStatus: updateAccountStatus,
   // Get all roles from database
   getAllRolesInformation: getAllRolesInformation,
   // Get all accounts by role
@@ -87,6 +91,8 @@ module.exports = {
   createNewGuestAccount: createNewGuestAccount,
   // Update guest account
   updateGuestAccount: updateGuestAccount,
+  // Update guest account status
+  updateGuestAccountStatus: updateGuestAccountStatus,
   // ================================================================
 
   // ======================================================= Coordinator
