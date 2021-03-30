@@ -149,10 +149,11 @@ const updateEvent = async (eventInfo) => {
   const sql1 = `UPDATE Event 
                   SET
                   event_title = '${title}', 
-                  event_content = '${content}', 
-                  event_image = '${imageData},
-                  event_endDate = '${endDate}', 
-                  event_lastUpdate = '${lastUpdate}'
+                  event_content = '${content}',` +
+                  // Check if imageData is null or not
+                  `${imageData ? `event_image = '${imageData}',` : ""}`
+                  + `event_endDate = ${endDate}, 
+                  event_lastUpdate = ${lastUpdate}
                   WHERE 
                   event_id = ${eventId}`;
 

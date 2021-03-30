@@ -1097,71 +1097,99 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
   // Get files[] from request
   const files = req.files;
 
-  // Map all elements in files
-  files.map((filedata) => {
-    // Create metadata for file
-    const filemetadata = {
-      name: `${currentTime.getTime()} | ${eventData.title}`,
-      parents: [eventImageFolderId],
-    };
+  // Check if image is updated or not
+  if (files.length) {
+    // Map all elements in files
+    files.map((filedata) => {
+      // Create metadata for file
+      const filemetadata = {
+        name: `${currentTime.getTime()} | ${eventData.title}`,
+        parents: [eventImageFolderId],
+      };
 
-    // Create media type for file
-    const media = {
-      mimeType: filedata.mimetype,
-      body: fs.createReadStream(filedata.path),
-    };
+      // Create media type for file
+      const media = {
+        mimeType: filedata.mimetype,
+        body: fs.createReadStream(filedata.path),
+      };
 
-    // Upload file to google drive
-    drive.files.create(
-      {
-        resource: filemetadata,
-        media: media,
-        fields: "id",
-      },
-      async (err, file) => {
-        if (err) {
-          res.json({
-            status: 501,
-            success: false,
-            message: "Upload files to drive failed!",
-          });
-          fs.unlinkSync(filedata.path);
-          return;
-        }
-
-        // STEP 8: Get the file id after uploaded successful
-        console.log("File id: ", file.data.id);
-
-        fs.unlinkSync(filedata.path);
-
-        eventData.imageData = file.data.id;
-
-        // Update eventData into database
-        updateEvent(eventData)
-          .then((result) => {
-            return res.status(200).json({
-              success: true,
-              message: `Event ${title} updated successfully.`,
+      // Upload file to google drive
+      drive.files.create(
+        {
+          resource: filemetadata,
+          media: media,
+          fields: "id",
+        },
+        async (err, file) => {
+          if (err) {
+            res.json({
+              status: 501,
+              success: false,
+              message: "Upload files to drive failed!",
             });
-          })
-          .catch((err) => {
-            if (!!err) {
-              console.log(err);
-              return res.status(500).json({
-                success: false,
-                message: "Server error!",
+            fs.unlinkSync(filedata.path);
+            return;
+          }
+
+          // STEP 8: Get the file id after uploaded successful
+          console.log("File id: ", file.data.id);
+
+          fs.unlinkSync(filedata.path);
+
+          eventData.imageData = file.data.id;
+
+          // Update eventData into database
+          updateEvent(eventData)
+            .then((result) => {
+              return res.status(200).json({
+                success: true,
+                message: `Event ${title} updated successfully.`,
               });
-            } else {
-              // If err = false return eventId not found
-              return res.status(404).json({
-                success: false,
-                message: "Not found!",
-              });
-            }
+            })
+            .catch((err) => {
+              if (!!err) {
+                console.log(err);
+                return res.status(500).json({
+                  success: false,
+                  message: "Server error!",
+                });
+              } else {
+                // If err = false return eventId not found
+                return res.status(404).json({
+                  success: false,
+                  message: "Not found!",
+                });
+              }
+            });
+        }
+      );
+    });
+  } else {
+    // If no image uploaded 
+    // Update eventData into database with imageData = ""
+    updateEvent(eventData)
+      .then((result) => {
+        return res.status(200).json({
+          success: true,
+          message: `Event ${title} updated successfully.`,
+        });
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log(err);
+          return res.status(500).json({
+            success: false,
+            message: "Server error!",
           });
-      }
-    );
-  });
+        } else {
+          // If err = false return eventId not found
+          return res.status(404).json({
+            success: false,
+            message: "Not found!",
+          });
+        }
+      });
+  }
 });
 
 /**
