@@ -79,35 +79,44 @@ router.post("/login", async (req, res) => {
       .then(async (result) => {
         // Check if the username is found and the password is correct
         if (result.length) {
-          // If success, create userInfo Object to pass to payload
-          let userInfo = {};
-          userInfo.username = result[0].guest_name;
-          userInfo.role_name = _ROUTER_ROLE;
-          userInfo.faculty_id = result[0].FK_faculty_id;
-          // Pass userInfo to payload
-          const payload = {
-            userInfo: userInfo,
-          };
+          // Check if account is enabled or not
+          if (result[0].enabled) {
+            // If success, create userInfo Object to pass to payload
+            let userInfo = {};
+            userInfo.username = result[0].guest_name;
+            userInfo.role_name = _ROUTER_ROLE;
+            userInfo.faculty_id = result[0].FK_faculty_id;
+            // Pass userInfo to payload
+            const payload = {
+              userInfo: userInfo,
+            };
 
-          // Generate token with userInfo payload (expired in 30mins)
-          const token = webToken.sign(
-            payload,
-            process.env.ACCESS_TOKEN_SECRET,
-            {
-              expiresIn: "1800s",
-            }
-          );
+            // Generate token with userInfo payload (expired in 30mins)
+            const token = webToken.sign(
+              payload,
+              process.env.ACCESS_TOKEN_SECRET,
+              {
+                expiresIn: "1800s",
+              }
+            );
 
-          // Storing Token in cookie, with httpOnly and secure set to true
-          // (only allow token on secure website)
-          res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+            // Storing Token in cookie, with httpOnly and secure set to true
+            // (only allow token on secure website)
+            res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
-          res.status(200).json({
-            status: res.statusCode,
-            success: true,
-            message: "Logged In successfully",
-            user: userInfo,
-          });
+            res.status(200).json({
+              status: res.statusCode,
+              success: true,
+              message: "Logged In successfully",
+              user: userInfo,
+            });
+          } else {
+            res.status(401).json({
+              status: res.statusCode,
+              success: false,
+              message: "Contact the manager to activate your account",
+            });
+          }
         } else {
           console.log("Signin failed");
           res.status(401).json({

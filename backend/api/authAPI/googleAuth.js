@@ -10,9 +10,7 @@ const { OAuth2Client } = require("google-auth-library");
 const { getAuthClient } = require("../../utils/auth");
 
 // Middleware authentication
-const {
-  gwAccountValidation,
-} = require("../middleware/verification");
+const { gwAccountValidation } = require("../middleware/verification");
 
 // Import database service
 const { getAccountByEmail } = require("../../utils/dbService/accountService");
@@ -114,7 +112,7 @@ router.post("/login", async (req, res) => {
     // Get userInfo from payload if id_token is valid
     const payload = ticket.getPayload();
 
-    // Get oauthUser information from payload 
+    // Get oauthUser information from payload
     oauthUser = payload;
 
     console.log("User: ", payload);
@@ -195,28 +193,37 @@ router.post("/login", async (req, res) => {
 
       // STEP 3: If user is valid, assign the data to payload and signing token
       if (queryResult.length) {
-        let _data = {};
-        _data.userInfo = result[0];
-        _data.oAuthInfo = oauthUser;
+        // Check if account is enabled or not
+        if (queryResult[0].enabled) {
+          let _data = {};
+          _data.userInfo = result[0];
+          _data.oAuthInfo = oauthUser;
 
-        const token = webToken.sign(_data, process.env.ACCESS_TOKEN_SECRET, {
-          // Token will expire in 30mins
-          expiresIn: "1800s",
-        });
+          const token = webToken.sign(_data, process.env.ACCESS_TOKEN_SECRET, {
+            // Token will expire in 30mins
+            expiresIn: "1800s",
+          });
 
-        // STEP 4: Send token to client cookie
-        res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
+          // STEP 4: Send token to client cookie
+          res.cookie("Token", token, { httpOnly: true /*secure: true*/ });
 
-        // STEP 5: Return userInfo if login successful
-        res.status(200).json({
-          status: res.statusCode,
-          success: true,
-          message: "Signed in successfully",
-          user: {
-            userInfo: _data.userInfo,
-            oAuthInfo: _data.oAuthInfo,
-          },
-        });
+          // STEP 5: Return userInfo if login successful
+          res.status(200).json({
+            status: res.statusCode,
+            success: true,
+            message: "Signed in successfully",
+            user: {
+              userInfo: _data.userInfo,
+              oAuthInfo: _data.oAuthInfo,
+            },
+          });
+        } else {
+          res.status(401).json({
+            status: res.statusCode,
+            success: false,
+            message: "Contact the manager to activate your account",
+          });
+        }
       } else {
         // If the user not found in database -> throw permission required notification
         res.status(401).json({
