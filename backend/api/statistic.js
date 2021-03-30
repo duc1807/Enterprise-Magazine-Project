@@ -17,18 +17,19 @@ const { managerValidation } = require("./middleware/verification");
 
 /**
  * @method GET
- * @api /api/statistic/overall
+ * @api /api/statistic/overall/:year
  * @permissions
  *      - Manager
  * @description API for getting overall stats
  * @params
+ *      - year: Int
  * @return
  *      - stats: Objects
  *          + .................................. ???
  * @notes
  */
-router.get("/overall", managerValidation, async (req, res) => {
-  const { year } = req.body;
+router.get("/overall/:year", managerValidation, async (req, res) => {
+  const { year } = req.params;
 
   // Get overall stats include total Received and Publish (Posted) Article
   const query = getOverallStats();
