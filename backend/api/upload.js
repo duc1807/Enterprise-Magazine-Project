@@ -8,7 +8,10 @@ const { google, Auth } = require("googleapis");
 
 // Import modules from other files
 const { gwAccountValidation } = require("./middleware/verification");
-const { getAuthServiceJwt } = require("../utils/driveAPI");
+const {
+  getAuthServiceJwt,
+  insertPermissionsToFolderId,
+} = require("../utils/driveAPI");
 const {
   getEventById,
   uploadFile,
@@ -55,7 +58,7 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
     FK_event_id: undefined,
   };
 
-  // STEP 1: Get user info passed from middleware
+  // STEP 1: Get student info passed from middleware
   const data = res.locals.data;
 
   // STEP 2: Check if user role is Student or not
@@ -140,6 +143,21 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
       } else {
         console.log("Student folder Id: ", file.data.id);
 
+        // Create permission information for current student
+        const studentPermissionList = [
+          {
+            kind: "drive#permission",
+            type: "user",
+            role: "writer",
+            emailAddress: studentInfo.userInfo.email,
+          },
+        ];
+
+        // Insert student permission to student's article folder
+        insertPermissionsToFolderId(studentPermissionList, file.data.id).catch(err => {
+          console.log("Error when addding student permission to submitted article folder");
+        });
+
         // Insert data to articleInfo Object and INSERT into database
         articleInfo.articleSubmissionDate = new Date().getTime();
         articleInfo.articleFolderId = file.data.id;
@@ -223,10 +241,8 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
                         // Check if the last file is INSERT into database or not
                         // If all file inserted, return article's files list
                         if (index == files.length - 1) {
-
                           // Get all files and comments of current article
-                          // ?????????????? Should return 
-                          
+                          // ?????????????? Should return
                         }
                       })
                       .catch((err) => {
