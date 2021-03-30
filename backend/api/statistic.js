@@ -88,7 +88,7 @@ router.get("/overall", managerValidation, async (req, res) => {
                       result3[11][0].PostedArticleInMonth12,
                   };
                   // Store object to Data object
-                  data.contributionStatsByYear = contributionStats;
+                  data[`contributionStatsOf${year}`] = contributionStats;
                   return res.status(200).json({
                     status: res.statusCode,
                     success: true,

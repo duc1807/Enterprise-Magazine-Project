@@ -1,4 +1,4 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const TABLE = "Event";
 
@@ -8,7 +8,7 @@ const getEventsByFacultyId = async (facultyId) => {
   const sql = ` SELECT * FROM Faculty
                 WHERE faculty_id = '${facultyId}';  
                 SELECT * FROM ${TABLE}
-                WHERE FK_faculty_id = ${facultyId}`
+                WHERE FK_faculty_id = ${facultyId}`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -41,8 +41,7 @@ const getPublishedEventOfFacultyId = (facultyId) => {
       db.end();
     });
   });
-}
-
+};
 
 // const getEventById = (eventId) => {
 //   let db = getDataBaseConnection();
@@ -84,7 +83,6 @@ const getEventById = (eventId, facultyId) => {
   });
 };
 // ===============================================================
-
 
 const createNewEvent = async (eventInfo) => {
   const {
@@ -146,13 +144,14 @@ const updateEvent = async (eventInfo) => {
                 INNER JOIN Faculty ON Event.FK_faculty_id = Faculty.faculty_id
                 WHERE event_id = ${eventId} AND Faculty.faculty_id = '${facultyId}'`;
 
-  const sql1 = `UPDATE Event 
+  const sql1 =
+    `UPDATE Event 
                   SET
                   event_title = '${title}', 
                   event_content = '${content}',` +
-                  // Check if imageData is null or not
-                  `${imageData ? `event_image = '${imageData}',` : ""}`
-                  + `event_endDate = ${endDate}, 
+    // Check if imageData is null or not
+    `${imageData ? `event_image = '${imageData}',` : ""}` +
+    `event_endDate = ${endDate}, 
                   event_lastUpdate = ${lastUpdate}
                   WHERE 
                   event_id = ${eventId}`;
@@ -182,7 +181,7 @@ const publishEventById = (eventId) => {
   const sql = `SELECT * FROM ${TABLE}
                 WHERE event_id = ${eventId};`;
   const sql1 = `UPDATE ${TABLE}
-                SET event_publish = "TRUE"
+                SET event_published = 1
                 WHERE event_id = ${eventId};`;
 
   return new Promise((resolve, reject) => {

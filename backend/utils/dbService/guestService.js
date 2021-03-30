@@ -2,7 +2,7 @@ const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const getGuestAccountByUsernameAndPassword = (username, password) => {
   let db = getDataBaseConnection();
-
+  // Get guest account following username and password
   const sql = `SELECT * FROM Guest WHERE guest_name = '${username}' AND password = '${password}';`;
 
   return new Promise((resolve, reject) => {
