@@ -69,6 +69,7 @@ const {
   getContributionEachMonthByYear,
 } = require("./statisticService");
 const { getGuestAccountByUsernameAndPassword } = require("./guestService");
+const { getAccountInfoById } = require('./accountInfoService')
 const { updateFacultyFolderId } = require("./appService")
 
 module.exports = {
@@ -101,6 +102,11 @@ module.exports = {
 
   // ======================================================= Account
   getAccountByEmail: getAccountByEmail,
+  // ================================================================
+
+  // ======================================================= Account Info
+  // Get personal information by accountId
+  getAccountInfoById: getAccountInfoById,
   // ================================================================
 
   // ======================================================= Faculty

@@ -73,6 +73,9 @@ app
   // API for admin role
   .use("/api/admin/", require("./api/admin"))
 
+  // API for get self-information
+  .use("/api/account/", require("./api/account"))
+
   // ============================================================== In development
   .use("/api/user", require("./api/user"))
   .use("/api/notification", require("./api/mailnotification"));
