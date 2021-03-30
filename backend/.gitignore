@@ -2,7 +2,7 @@
 /node_modules
 /package-lock.json
 /ZIP
-/download_temp
+download_temp/*
 temp/*
 
 # secret files
