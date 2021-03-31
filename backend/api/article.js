@@ -112,159 +112,159 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
 
   // Promise to check user role is student or coordinator
   const roleValidation = new Promise((resolve, reject) => {
-      // If role is "student", check if student has permission to get this article
-  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
-    // Get article by id and student_id to check if student has permission to access the article
-    getArticleById(articleId, data.userInfo.account_id)
-      .then((result) => {
-        resolve()
-      })
-      .catch((err) => {
-        if (!!err) {
-          console.log("Err: ", err);
-          return res.status(500).json({
-            status: res.statusCode,
-            success: false,
-            message: "Server error",
-          });
-        } else {
-          return res.status(401).json({
-            status: res.statusCode,
-            success: false,
-            messsage: "Permission required",
-          });
-        }
-      });
-  } else {
-    resolve()
-  }
+    // If role is "student", check if student has permission to get this article
+    if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
+      // Get article by id and student_id to check if student has permission to access the article
+      getArticleById(articleId, data.userInfo.account_id)
+        .then((result) => {
+          resolve();
+        })
+        .catch((err) => {
+          if (!!err) {
+            console.log("Err: ", err);
+            return res.status(500).json({
+              status: res.statusCode,
+              success: false,
+              message: "Server error",
+            });
+          } else {
+            return res.status(401).json({
+              status: res.statusCode,
+              success: false,
+              messsage: "Permission required",
+            });
+          }
+        });
+    } else {
+      resolve();
+    }
   });
 
-  roleValidation.then(async() => {
-  // Get article information (with files & comments)
-  const query = getArticleDetailById(articleId);
+  roleValidation.then(async () => {
+    // Get article information (with files & comments)
+    const query = getArticleDetailById(articleId);
 
-  await query
-    .then((result) => {
-      // result[0] : article and its files
-      // result[1] : article and its comments
-      console.log("result: ", result);
+    await query
+      .then((result) => {
+        // result[0] : article and its files
+        // result[1] : article and its comments
+        console.log("result: ", result);
 
-      // Create array to store final data to return to frontend
-      let articlesResult = [];
+        // Create array to store final data to return to frontend
+        let articlesResult = [];
 
-      // Create array for storing distinc iterated article_id
-      let passedArticlesId = [];
+        // Create array for storing distinc iterated article_id
+        let passedArticlesId = [];
 
-      // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
-      let articlesPositionDetail = {};
+        // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
+        let articlesPositionDetail = {};
 
-      // Itarate each data in result[0]
-      result[0].map((articleInfo) => {
-        // Check if this article is exist in 'articlesResult' array or not
-        if (passedArticlesId.includes(articleInfo.article_id)) {
-          // If this article existed in 'articlesResult' array, push its file into 'article.files'
+        // Itarate each data in result[0]
+        result[0].map((articleInfo) => {
+          // Check if this article is exist in 'articlesResult' array or not
+          if (passedArticlesId.includes(articleInfo.article_id)) {
+            // If this article existed in 'articlesResult' array, push its file into 'article.files'
 
+            // Get position of the article in 'articlesResult[]'
+            let articlePosition =
+              articlesPositionDetail[articleInfo.article_folderId];
+            console.log("position: ", articlePosition);
+
+            // Create file Object to store file information
+            let file = {
+              file_id: articleInfo.file_id,
+              file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
+              file_fileId: articleInfo.file_fileId,
+              FK_article_id: articleInfo.FK_article_id,
+            };
+
+            // Insert file Object to its article in 'articlesResult[]'
+            articlesResult[articlePosition].files.push(file);
+          } else {
+            // If this article not exist, push the article_id into 'passedArticlesId'
+            passedArticlesId.push(articleInfo.article_id);
+
+            // Create article Object to store information from result
+            let article = {
+              article_id: articleInfo.article_id,
+              article_submission_date: articleInfo.article_submission_date,
+              article_status: articleInfo.article_status,
+              article_folderId: articleInfo.article_folderId,
+              email: articleInfo.email,
+              FK_faculty_id: articleInfo.FK_faculty_id,
+              FK_account_id: articleInfo.FK_account_id,
+              FK_event_id: articleInfo.FK_event_id,
+              files: [],
+              comments: [],
+            };
+
+            // Create file Object to store file information
+            let file = {
+              file_id: articleInfo.file_id,
+              file_mimeType: articleInfo.file_mimeType,
+              file_name: articleInfo.file_name,
+              file_fileId: articleInfo.file_fileId,
+              FK_article_id: articleInfo.FK_article_id,
+            };
+
+            // Push file Object into 'article.files' (only in first-time run)
+            article.files.push(file);
+
+            // Finally, push article information into 'articlesResult[]'
+            articlesResult.push(article);
+
+            // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
+            articlesPositionDetail[articleInfo.article_folderId] =
+              articlesResult.length - 1;
+          }
+        });
+
+        // Itarate each data in result[1]
+        result[1].map((articleInfo) => {
           // Get position of the article in 'articlesResult[]'
           let articlePosition =
             articlesPositionDetail[articleInfo.article_folderId];
           console.log("position: ", articlePosition);
 
           // Create file Object to store file information
-          let file = {
-            file_id: articleInfo.file_id,
-            file_mimeType: articleInfo.file_mimeType,
-            file_name: articleInfo.file_name,
-            file_fileId: articleInfo.file_fileId,
+          let comment = {
+            comment_id: articleInfo.comment_id,
+            comment_time: articleInfo.comment_time,
+            comment_content: articleInfo.comment_content,
             FK_article_id: articleInfo.FK_article_id,
+            FK_account_id: articleInfo.FK_account_id,
           };
 
           // Insert file Object to its article in 'articlesResult[]'
-          articlesResult[articlePosition].files.push(file);
+          articlesResult[articlePosition].comments.push(comment);
+        });
+
+        // Finally, response the selectedArticles[]
+        res.status(200).json({
+          status: res.statusCode,
+          success: true,
+          article: articlesResult,
+        });
+      })
+      .catch((err) => {
+        if (err) {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
         } else {
-          // If this article not exist, push the article_id into 'passedArticlesId'
-          passedArticlesId.push(articleInfo.article_id);
-
-          // Create article Object to store information from result
-          let article = {
-            article_id: articleInfo.article_id,
-            article_submission_date: articleInfo.article_submission_date,
-            article_status: articleInfo.article_status,
-            article_folderId: articleInfo.article_folderId,
-            email: articleInfo.email,
-            FK_faculty_id: articleInfo.FK_faculty_id,
-            FK_account_id: articleInfo.FK_account_id,
-            FK_event_id: articleInfo.FK_event_id,
-            files: [],
-            comments: [],
-          };
-
-          // Create file Object to store file information
-          let file = {
-            file_id: articleInfo.file_id,
-            file_mimeType: articleInfo.file_mimeType,
-            file_name: articleInfo.file_name,
-            file_fileId: articleInfo.file_fileId,
-            FK_article_id: articleInfo.FK_article_id,
-          };
-
-          // Push file Object into 'article.files' (only in first-time run)
-          article.files.push(file);
-
-          // Finally, push article information into 'articlesResult[]'
-          articlesResult.push(article);
-
-          // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
-          articlesPositionDetail[articleInfo.article_folderId] =
-            articlesResult.length - 1;
+          // If err == false => Event not found
+          return res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Event not found",
+          });
         }
       });
-
-      // Itarate each data in result[1]
-      result[1].map((articleInfo) => {
-        // Get position of the article in 'articlesResult[]'
-        let articlePosition =
-          articlesPositionDetail[articleInfo.article_folderId];
-        console.log("position: ", articlePosition);
-
-        // Create file Object to store file information
-        let comment = {
-          comment_id: articleInfo.comment_id,
-          comment_time: articleInfo.comment_time,
-          comment_content: articleInfo.comment_content,
-          FK_article_id: articleInfo.FK_article_id,
-          FK_account_id: articleInfo.FK_account_id,
-        };
-
-        // Insert file Object to its article in 'articlesResult[]'
-        articlesResult[articlePosition].comments.push(comment);
-      });
-
-      // Finally, response the selectedArticles[]
-      res.status(200).json({
-        status: res.statusCode,
-        success: true,
-        article: articlesResult,
-      });
-    })
-    .catch((err) => {
-      if (err) {
-        console.log("Err: ", err);
-        return res.status(501).json({
-          status: res.statusCode,
-          success: false,
-          message: "Bad request",
-        });
-      } else {
-        // If err == false => Event not found
-        return res.status(404).json({
-          status: res.statusCode,
-          success: false,
-          message: "Event not found",
-        });
-      }
-    });
-  })
+  });
 });
 
 /**
@@ -714,7 +714,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
 
 /**
  * @method POST
- * @API /api/article/post-article
+ * @API /api/article/post-article/:eventId
  * @permission
  *    - Coordinator (Exact faculty)
  * @description API for post article to event homepage
@@ -728,7 +728,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  */
 router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
   // Get information from param
-  const { eventId } = req.params
+  const { eventId } = req.params;
   // Get data from req.body
   const { title, content, author } = req.body;
 
@@ -752,7 +752,7 @@ router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
     content: content,
     author: author,
     postedDate: currentTime.getTime(),
-    eventId: eventId
+    eventId: eventId,
   };
 
   // INSERT article into 'Posted_Article' table
@@ -761,12 +761,11 @@ router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
   await query
     .then((result) => {
       // Get posted_article id
-      const postedArticleId = result.insertId
-      
+      const postedArticleId = result.insertId;
+
       // Upload images to drive public "Images storage" folder
       // Upload into new folder: ${postedDate} | Event ${event_id} - Article ${article_id} - ${author}
       // Then INSERT uploaded images information to PA_Image
-
 
       return res.status(201).json({
         status: res.statusCode,

@@ -68,7 +68,7 @@ app
   .use("/api/upload", require("./api/upload"))
 
   // API for manager to view the statistics
-  .use("/api/statistic", require("./api/statistic"))
+  .use("/api/statistics", require("./api/statistic"))
 
   // API for admin role
   .use("/api/admin/", require("./api/admin"))
