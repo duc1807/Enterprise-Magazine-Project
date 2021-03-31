@@ -29,10 +29,10 @@ router.get("/personal-information", gwAccountValidation, async (req, res) => {
   await query
     .then((account) => {
       const userInfo = {
-        AccountInfo_id: account[0].AccountInfo_id || undefined,
-        first_name: account[0].first_name || "",
-        sur_name: account[0].sur_name || "",
-        FK_account_id: account[0].FK_account_id,
+        AccountInfo_id: (account[0] && account[0].AccountInfo_id) || null,
+        first_name: (account[0] && account[0].first_name) || "",
+        sur_name: (account[0] && account[0].sur_name) || "",
+        FK_account_id: data.userInfo.account_id,
       };
 
       res.status(200).json({

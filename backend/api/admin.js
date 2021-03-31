@@ -14,7 +14,7 @@ const {
   createNewGuestAccount,
   updateGuestAccount,
   updateGuestAccountStatus,
-  updateAccountStatus
+  updateAccountStatus,
 } = require("../utils/dbService/index");
 
 /**
@@ -206,7 +206,7 @@ router.post("/guest-accounts", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
- router.patch("/accounts/:accountId", async (req, res) => {
+router.patch("/accounts/:accountId", async (req, res) => {
   // Get accountId from params
   const { accountId } = req.params;
 
@@ -321,7 +321,7 @@ router.put("/accounts/:accountId", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
- router.patch("/guest-accounts/:accountId", async (req, res) => {
+router.patch("/guest-accounts/:accountId", async (req, res) => {
   // Get accountId from params
   const { accountId } = req.params;
 
@@ -336,7 +336,9 @@ router.put("/accounts/:accountId", async (req, res) => {
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        message: `Guest account ${status ? "unactivated" : "activated"} successfully`,
+        message: `Guest account ${
+          status ? "unactivated" : "activated"
+        } successfully`,
       });
     })
     .catch((err) => {
