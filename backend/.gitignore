@@ -4,6 +4,8 @@
 /ZIP
 download_temp/*
 temp/*
+/dist
+*.zip
 
 # secret files
 credentials.json
