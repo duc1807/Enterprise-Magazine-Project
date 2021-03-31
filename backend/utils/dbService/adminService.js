@@ -1,13 +1,12 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const _ROLE = "Admin";
-const _GUEST_ROLE_ID = 4
+const _GUEST_ROLE_ID = 4;
 
 const getAllRolesInformation = () => {
-
   let db = getDataBaseConnection();
 
-  const sql = `SELECT * FROM Role`
+  const sql = `SELECT * FROM Role`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -17,13 +16,11 @@ const getAllRolesInformation = () => {
   });
 };
 
-
 const getAccountsByRole = (roleId) => {
-
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Account
-              WHERE FK_role_id = ${roleId}`
+              WHERE FK_role_id = ${roleId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -32,7 +29,6 @@ const getAccountsByRole = (roleId) => {
     });
   });
 };
-
 
 const getAdminAccountByUsername = async (username) => {
   let db = getDataBaseConnection();
@@ -47,13 +43,12 @@ const getAdminAccountByUsername = async (username) => {
   });
 };
 
-
 const createNewAccount = (accountInfo) => {
-  const { email, roleId, facultyId } = accountInfo
+  const { email, roleId, facultyId } = accountInfo;
 
   let db = getDataBaseConnection();
 
-  // INSERT account into database, with enabled = 1 (TRUE) 
+  // INSERT account into database, with enabled = 1 (TRUE)
   const sql = `INSERT INTO Account (email, FK_role_id, FK_faculty_id)
                 VALUES ('${email}', ${roleId}, ${facultyId})`;
 
@@ -67,7 +62,7 @@ const createNewAccount = (accountInfo) => {
 };
 
 const createNewGuestAccount = (guestAccountInfo) => {
-  const { username, password, facultyId } = guestAccountInfo
+  const { username, password, facultyId } = guestAccountInfo;
 
   let db = getDataBaseConnection();
 
@@ -84,9 +79,8 @@ const createNewGuestAccount = (guestAccountInfo) => {
   });
 };
 
-
 const createAccountInformation = (accountDetail, accountId) => {
-  const { firstName, surName } = accountDetail
+  const { firstName, surName } = accountDetail;
 
   let db = getDataBaseConnection();
 
@@ -103,7 +97,7 @@ const createAccountInformation = (accountDetail, accountId) => {
 
 const updateAccountStatus = (currentStatus, accountId) => {
   // If currentStatus = 1 => newStatus = 0 and opposite
-  const newStatus = currentStatus ? 0 : 1
+  const newStatus = currentStatus ? 0 : 1;
 
   let db = getDataBaseConnection();
 
@@ -123,7 +117,7 @@ const updateAccountStatus = (currentStatus, accountId) => {
 
 // =============================================== Temporarily ignore
 const updateAccount = (accountDetail, accountId) => {
-  const { email, roleId, enabled, facultyId } = accountDetail
+  const { email, roleId, enabled, facultyId } = accountDetail;
 
   let db = getDataBaseConnection();
 
@@ -145,7 +139,7 @@ const updateAccount = (accountDetail, accountId) => {
 
 const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
   // If currentStatus = 1 => newStatus = 0 and opposite
-  const newStatus = currentStatus ? 0 : 1
+  const newStatus = currentStatus ? 0 : 1;
 
   let db = getDataBaseConnection();
 
@@ -164,7 +158,7 @@ const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
 };
 
 const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
-  const { username, password } = guestAccountInfo
+  const { username, password } = guestAccountInfo;
 
   let db = getDataBaseConnection();
 
@@ -184,7 +178,7 @@ const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
 };
 
 const updateAccountInformation = (accountDetail, accountId) => {
-  const { firstName, surName } = accountDetail
+  const { firstName, surName } = accountDetail;
 
   let db = getDataBaseConnection();
 
@@ -192,7 +186,7 @@ const updateAccountInformation = (accountDetail, accountId) => {
                 SET 
                 first_name = '${firstName}', 
                 sur_name = '${surName}'
-                WHERE FK_account_id = ${accountId}`
+                WHERE FK_account_id = ${accountId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -201,7 +195,6 @@ const updateAccountInformation = (accountDetail, accountId) => {
     });
   });
 };
-
 
 module.exports = {
   getAdminAccountByUsername: getAdminAccountByUsername,

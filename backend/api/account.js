@@ -18,13 +18,14 @@ const { getAccountInfoById } = require("../utils/dbService/index");
  */
 router.get("/personal-information", gwAccountValidation, async (req, res) => {
   // Get current user information from middleware
-  const data = res.locals.data
-  
+  const data = res.locals.data;
+
   // Get all roles information from database
-  const query = getAccountInfoById(data.userInfo.account_id)
-  
+  const query = getAccountInfoById(data.userInfo.account_id);
+
   await query
     .then((result) => {
+      console.log("account info: ", result);
       return res.status(200).json({
         status: res.statusCode,
         success: true,
