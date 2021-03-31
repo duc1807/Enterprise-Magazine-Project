@@ -831,17 +831,13 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
   // ];
 
   // Create coordinators permission data
-  let coordinatorPermissionsList = [];
-
-  coordinatorAccounts.map((coordinator) => {
-    coordinatorPermissionsList.push({
+  const coordinatorPermissions = coordinatorAccounts.map((coordinator) => ({
       kind: "drive#permission",
       type: "user",
       role: "writer",
       emailAddress: coordinator.email,
-    });
-  });
-
+  }));
+  
   // Create student permission data (???? needed or not?)
   // letstudentPermissions = [];
 
@@ -892,7 +888,7 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
   createFolder(eventFolderMetadata)
     .then((eventFolderId) => {
       // Insert coordinator permission to event folder by id
-      insertPermissionsToFolderId(coordinatorPermissionsList, eventFolderId);
+      insertPermissionsToFolderId(coordinatorPermissions, eventFolderId);
 
       // Assign event folderId to eventData
       eventData.folderId = eventFolderId;
