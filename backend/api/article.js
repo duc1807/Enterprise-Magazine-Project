@@ -41,15 +41,17 @@ const _STUDENT_ROLE_ID = 1;
 
 /**
  * @method GET
- * @API /api/article/my-articles
+ * @API /api/article/my-articles/
  * @permission
  *    - Student
  * @description API for getting student's articles information
  * @params
  * @return
+ *    - status: Int
+ *    - success: Boolean
  *    - myArticles: Array[Object]
  * @notes
- *    - Need endDate2, Event.event_published
+ *    - Need endDate2
  */
 router.get("/my-articles", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
@@ -94,10 +96,12 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  * @permission
  *    - Student (exact articleId)
  *    - Coordinator
- * @description API for getting article information (with files and comments)
+ * @description API for getting an article information (with files and comments)
  * @params
  * 		- articleId: Int
  * @return
+*    - status: Int
+ *    - success: Boolean
  *    - article: Object
  * @notes
  *    - Not yet validation coordinator with exact faculty ??? Is coordinator need this API ??? Already have another API
@@ -277,11 +281,12 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
  *    - articleId: Int
  * 		- fileId: Int
  * @return
+ *    
  *    - file: Object
  *    - comments: Array[Object]
  * @notes
  *    - Not yet validate permission
- *    - Replace ??? Dont need
+ *    - Replace ??? Dont need !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 router.get(
   "/:articleId/file/:fileId",
@@ -341,13 +346,15 @@ router.get(
 
 /**
  * @method GET
- * @API /api/article/:articleId/comments
+ * @API /api/article/:articleId/comments/
  * @permission
  *    - Manager coordinator of exact faculty
- * @description API for getting article's comments
+ * @description API for getting an article's comments
  * @params
  * 		- articleId: Int
  * @return
+ *    - status: Int
+ *    - success: Boolean
  *    - comments: Array[Object]
  * @notes
  */
@@ -382,17 +389,19 @@ router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
 
 /**
  * @method DELETE
- * @API /api/article/:articleId/file/:fileId/        ?????????????
+ * @API /api/article/:articleId/file/:fileId/    
  * @permission
  *    - Student with exact articleId
  * @description API for deleting a file of an article
  * @params
  *    - articleId: Int
  * 		- fileId: Int
- * @return null
+ * @return 
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
  *    - Dont need articleId ?????
- *    - Delete on drive also
  */
 router.delete(
   "/:articleId/file/:fileId",
@@ -450,13 +459,14 @@ router.delete(
 
 /**
  * @method POST
- * @API api/article/:articleId/comments
+ * @API api/article/:articleId/comments/
  * @description API for adding new comment to the article
  * @params
+ *    - articleId: Int
  * 		- content: String (comment)
  * @return null
  * @notes
- *      - (!!! CORS problems)
+ *    - (!!! CORS problems)
  */
 router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get comment content
@@ -578,14 +588,15 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
 
 /**
  * @method PATCH
- * @API /api/article/:articleId/select
+ * @API /api/article/:articleId/select/
  * @description API for select an article
  * @params
  * 		- articleId: Int
- * @return null
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
- * 		- Should use method PUT ???
- * 		- Should pass articleId in req.params ??? Or body ???
  *    - Still not validate permission
  */
 router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
@@ -657,10 +668,13 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
  * @method PATCH
  * @API /api/article/:articleId/reject
  * @description API for reject an article
- * @param
+ * @params
  * 		- articleId: Int
- * @note
- * 		- Should pass articleId in req.params ??? Or body ???
+ * @return 
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ * @notes
  */
 router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
   // Get articleId from req.params
@@ -714,7 +728,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
 
 /**
  * @method POST
- * @API /api/article/post-article/:eventId
+ * @API /api/article/post-article/:eventId/
  * @permission
  *    - Coordinator (Exact faculty)
  * @description API for post article to event homepage
@@ -722,9 +736,12 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  * 		- title: String
  * 		- content: String
  * 		- author: String (email)
- * @return null
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
- *    - Not yet implement upload images
+ *    - Not yet implement upload images !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Similar with create event????
  */
 router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
   // Get information from param
@@ -794,11 +811,15 @@ router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
 
 /**
  * @method PUT
- * @API /api/article/:articleId/update-submission
- * @description API for student to update submitted articles and then return articleInfo
- * @param
+ * @API /api/article/:articleId/update-submission/
+ * @description API for student to update submitted articles and then return articleInfo (with files and comments)    ????????
+ * @params
  * 		- articleId: Int
- * @note
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - article: Object
+ * @notes
  */
 router.put(
   "/:articleId/update-submission",

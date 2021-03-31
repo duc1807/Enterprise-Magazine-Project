@@ -7,14 +7,14 @@ const { getAccountInfoById } = require("../utils/dbService/index");
 
 /**
  * @method GET
- * @api /api/account/personal-information
+ * @api /api/account/personal-information/
  * @description API route to get personal information
- * @params
+ * @params null
  * @return
- *      - AccountInfo_id: Int
- *      - first_name: String
- *      - sur_name: String
- *      - FK_account_id: Int
+ *    - AccountInfo_id: Int
+ *    - first_name: String
+ *    - sur_name: String
+ *    - FK_account_id: Int
  */
 router.get("/personal-information", gwAccountValidation, async (req, res) => {
   // Get current user information from middleware
@@ -25,7 +25,7 @@ router.get("/personal-information", gwAccountValidation, async (req, res) => {
   
   await query
     .then((result) => {
-      return res.status(200).json({
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         userInformation: result[0],
@@ -33,7 +33,7 @@ router.get("/personal-information", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",

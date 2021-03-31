@@ -19,11 +19,13 @@ const {
 
 /**
  * @method GET
- * @api /api/admin/roles
+ * @api /api/admin/roles/
  * @description API route to get all roles
  * @params null
  * @return
- *    - roles
+ *    - status: Int,
+ *    - success: Boolean
+ *    - roles: Array[]
  */
 router.get("/roles", async (req, res) => {
   // Get all roles information from database
@@ -31,7 +33,7 @@ router.get("/roles", async (req, res) => {
 
   await query
     .then((result) => {
-      return res.status(200).json({
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         roles: result,
@@ -39,7 +41,7 @@ router.get("/roles", async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",
@@ -49,24 +51,25 @@ router.get("/roles", async (req, res) => {
 
 /**
  * @method GET
- * @API /api/admin/accounts/:roleId
+ * @API /api/admin/accounts/:roleId/
  * @description API route to get all accounts by role
  * @params
  *    - roleId: Int
  * @return
- *    - Wait for frontend solution (not implemented)
- *    - Check which fields will be updated ???????
- *    - where account_id will be passed ?? req.body or req.params?
+ *    - status: Int
+ *    - success: Boolean
+ *    - accounts: Array[]
  */
 router.get("/accounts/:roleId", async (req, res) => {
   // Get accountId from params
   const { roleId } = req.params;
 
+  // Get all accounts of roleId
   const query = getAccountsByRole(roleId);
 
   await query
     .then((result) => {
-      return res.status(200).json({
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         accounts: result,
@@ -74,7 +77,7 @@ router.get("/accounts/:roleId", async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",
@@ -84,8 +87,8 @@ router.get("/accounts/:roleId", async (req, res) => {
 
 /**
  * @method POST
- * @API /api/admin/accounts
- * @description API route to create new account
+ * @API /api/admin/accounts/
+ * @description API route to create new internal account
  * @params
  *    - email: String
  *    - firstName: String
@@ -147,13 +150,16 @@ router.post("/accounts", async (req, res) => {
 
 /**
  * @method POST
- * @API /api/admin/guest-accounts
+ * @API /api/admin/guest-accounts/
  * @description API route to create new guest account
  * @params
  *    - username: String
  *    - password: String
  *    - facultyId: Int
  * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  */
 router.post("/guest-accounts", async (req, res) => {
   // Get data from req.body
@@ -170,9 +176,9 @@ router.post("/guest-accounts", async (req, res) => {
   const query = createNewGuestAccount(guestAccountInfo);
 
   await query
-    .then(async (result) => {
-      // If guest account inserted into database successful  ????
-      return res.status(200).json({
+    .then((result) => {
+      // If guest account inserted into database successful
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         message: "Guest acccount created successfully",
@@ -180,7 +186,7 @@ router.post("/guest-accounts", async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",
@@ -190,11 +196,15 @@ router.post("/guest-accounts", async (req, res) => {
 
 /**
  * @method PATCH
- * @API /api/admin/accounts/:accountId
- * @description API route to update account status
+ * @API /api/admin/accounts/:accountId/
+ * @description API route to update account status (enable/disable)
  * @params
+ *    - accountId: Int
  *    - status: Int
  * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  */
  router.patch("/accounts/:accountId", async (req, res) => {
   // Get accountId from params
@@ -208,7 +218,7 @@ router.post("/guest-accounts", async (req, res) => {
 
   await query
     .then((result) => {
-      return res.status(200).json({
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         message: `Account ${status ? "unactivated" : "activated"} successfully`,
@@ -216,7 +226,7 @@ router.post("/guest-accounts", async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",
@@ -226,8 +236,8 @@ router.post("/guest-accounts", async (req, res) => {
 
 /**
  * @method PUT
- * @API /api/admin/accounts/:accountId
- * @description API route to update account
+ * @API /api/admin/accounts/:accountId/
+ * @description API route to update internal account information
  * @params
  *    - email: String
  *    - firstName: String
@@ -239,7 +249,7 @@ router.post("/guest-accounts", async (req, res) => {
  *    - Wait for frontend solution (not implemented)
  *    - Check which fields will be updated ???????
  *    - where account_id will be passed ? req.body or req.params?
- *    - Temporaly unused !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!111
+ *    - Temporaly unused !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 router.put("/accounts/:accountId", async (req, res) => {
   // Get accountId from params
@@ -301,11 +311,15 @@ router.put("/accounts/:accountId", async (req, res) => {
 
 /**
  * @method PATCH
- * @API /api/admin/guest-accounts/:accountId
- * @description API route to update guest account status
+ * @API /api/admin/guest-accounts/:accountId/
+ * @description API route to update guest account status (enable/disable)
  * @params
+ *    - accountId: Int
  *    - status: Int
  * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  */
  router.patch("/guest-accounts/:accountId", async (req, res) => {
   // Get accountId from params
@@ -337,12 +351,15 @@ router.put("/accounts/:accountId", async (req, res) => {
 
 /**
  * @method PUT
- * @API /api/admin/guest-accounts/:accountId
- * @description API route to update guest account
+ * @API /api/admin/guest-accounts/:accountId/
+ * @description API route to update guest account information
  * @params
  *    - username: String
  *    - password: String
  * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  */
 router.put("/guest-accounts/:accountId", async (req, res) => {
   // Get accountId from params
@@ -362,7 +379,7 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
 
   await query
     .then((result) => {
-      return res.status(200).json({
+      res.status(200).json({
         status: res.statusCode,
         success: true,
         message: "Guest account updated successfully",
@@ -370,7 +387,7 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
     })
     .catch((err) => {
       console.log("Err: ", err);
-      return res.status(501).json({
+      res.status(501).json({
         status: res.statusCode,
         success: false,
         message: "Bad request",

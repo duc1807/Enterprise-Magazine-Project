@@ -8,23 +8,27 @@ const webToken = require("jsonwebtoken");
 const {
   getGuestAccountByUsernameAndPassword,
 } = require("../../utils/dbService/index");
+// Import middleware
 const { accessValidation } = require("../middleware/verification");
+// Constants
 const _ROUTER_ROLE = "guest";
 
 /**
  * @method GET
- * @API /api/authencation/guest
- * @description API for get guest account
+ * @API /api/authencation/guest/
+ * @description API for get guest account credentials
  * @params null
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
+ *    - status: Int
+ *    - success: Boolean
+ *    - user: String
  * @notes
  */
 router.get("/", accessValidation, (req, res) => {
+  // Get userInfo from middleware
   const data = res.locals.data;
   console.log("data: ", data);
+
   res.status(200).json({
     status: res.statusCode,
     success: true,
@@ -34,13 +38,16 @@ router.get("/", accessValidation, (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/guest/login
+ * @API /api/authentication/guest/login/
  *  * @description API for login guest account
- * @params null
+ * @params 
+ *    - username: String
+ *    - password: String
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ *    - user: Object
  * @notes
  */
 
@@ -139,13 +146,13 @@ router.post("/login", async (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/guest/logout
+ * @API /api/authentication/guest/logout/
  * @description API for logging out guest account
  * @params null
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
  */
 router.post("/logout", (req, res) => {

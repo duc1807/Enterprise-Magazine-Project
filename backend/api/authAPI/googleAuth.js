@@ -28,22 +28,22 @@ const { getAccountByEmail } = require("../../utils/dbService/accountService");
  * @description Get login credentials for manager, coordinator and student
  * @params null
  * @returns
- *      - status: Int
- *      - success: Boolean
- *      - data: Object
- *          - userInfo: Object
- *                + account_id: Int
- *                + email: String
- *                + FK_role_id: Int
- *                + FK_faculty_id: Int
- *                + role_id: Int
- *                + role_name: String
- *                + faculty_id: Int
- *                + faculty_name: String
- *                + faculty_folderId: String
- *          - goolgeAccountInfo: Object
- *          - iat: Int
- *          - exp: Int
+ *    - status: Int
+ *    - success: Boolean
+ *    - data: Object
+ *        - userInfo: Object
+ *              + account_id: Int
+ *              + email: String
+ *              + FK_role_id: Int
+ *              + FK_faculty_id: Int
+ *              + role_id: Int
+ *              + role_name: String
+ *              + faculty_id: Int
+ *              + faculty_name: String
+ *              + faculty_folderId: String
+ *        - goolgeAccountInfo: Object
+ *        - iat: Int
+ *        - exp: Int
  * @notes
  */
 router.get("/", gwAccountValidation, (req, res) => {
@@ -59,24 +59,24 @@ router.get("/", gwAccountValidation, (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/login
- * @description Login API for student and staff
+ * @API /api/authentication/login/
+ * @description Login API for student, staff and manager
  * @params
- *      - id_token: Token from client request cookies
+ *    - id_token: Token from client request cookies
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
- *      - user: Object
- *          - userInfo: Object
- *              + username: String
- *              + role_name: String
- *          - oAuthInfo: Object
- *              +
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ *    - user: Object
+ *        - userInfo: Object
+ *            + username: String
+ *            + role_name: String
+ *        - oAuthInfo: Object
+ *            +
  * @notes
- *      - (!!! CORS problems)
- *      - Function verify doesnt have resolve reject?
- *      - token expiration needed ??? Bcs using google token already
+ *    - (!!! CORS problems)
+ *    - Function verify doesnt have resolve reject?
+ *    - token expiration needed ??? Bcs using google token already
  */
 router.post("/login", async (req, res) => {
   const { id_token } = req.body;
@@ -184,19 +184,16 @@ router.post("/login", async (req, res) => {
   // STEP 2: Check if the account is in the database or not (info from token_id)
   const query = getAccountByEmail(oauthUser.email);
 
-  let queryResult = [];
-
   await query
-    .then((result) => {
-      console.log("result: ", result);
-      queryResult = result;
+    .then((account) => {
+      console.log("result: ", account);
 
       // STEP 3: If user is valid, assign the data to payload and signing token
-      if (queryResult.length) {
+      if (account.length) {
         // Check if account is enabled or not
-        if (queryResult[0].enabled) {
+        if (account[0].enabled) {
           let _data = {};
-          _data.userInfo = result[0];
+          _data.userInfo = account[0];
           _data.oAuthInfo = oauthUser;
 
           const token = webToken.sign(_data, process.env.ACCESS_TOKEN_SECRET, {
@@ -246,13 +243,13 @@ router.post("/login", async (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/logout
+ * @API /api/authentication/logout/
  * @description API for logging out user
  * @params null
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
  */
 router.post("/logout", (req, res) => {
