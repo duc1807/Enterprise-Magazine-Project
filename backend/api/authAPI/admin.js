@@ -19,17 +19,17 @@ const _ROUTER_ROLE = "admin";
  * @description API for admin to get login credentials
  * @params null
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
- *      - data: Object
- *          - userInfo: Object
- *              + username: String
- *              + role_name: String
- *          - iat: Int
- *          - exp: Int
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ *    - data: Object
+ *        - userInfo: Object
+ *            + username: String
+ *            + role_name: String
+ *        - iat: Int
+ *        - exp: Int
  * @note
- *      - (!!! CORS problems)
+ *    - (!!! CORS problems)
  */
 router.get("/", adminValidation, (req, res) => {
   console.log("data", res.locals.data);
@@ -53,7 +53,7 @@ router.get("/", adminValidation, (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/admin/login
+ * @API /api/authentication/admin/login/
  * @description API route to signin the user
  * @params
  *    - username: String
@@ -152,13 +152,13 @@ router.post("/login", async (req, res) => {
 
 /**
  * @method POST
- * @API /api/authentication/admin/logout
+ * @API /api/authentication/admin/logout/
  * @description API for logging out admin account
  * @params null
  * @return
- *      - status: Int
- *      - success: Boolean
- *      - message: String
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
  * @notes
  */
 router.post("/logout", (req, res) => {

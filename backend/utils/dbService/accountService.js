@@ -21,6 +21,27 @@ const getAccountByEmail = async (email) => {
   });
 };
 
+const updateAccountInfoById = async (accountInfo, accountId) => {
+  // Get data from accountInfo Object
+  const { firstName, surName } = accountInfo
+
+  let db = getDataBaseConnection();
+
+  // Get correct email with role and faculty information (INNER JOIN)
+  const sql = `UPDATE Account_Info
+              SET 
+              first_name = '${firstName}', 
+              sur_name = '${surName}'
+              WHERE FK_account_id = ${accountId}`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
 module.exports = {
     getAccountByEmail: getAccountByEmail,
+    updateAccountInfoById: updateAccountInfoById
 };

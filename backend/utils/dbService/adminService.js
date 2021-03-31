@@ -104,7 +104,7 @@ const updateAccountStatus = (currentStatus, accountId) => {
   // UPDATE guest account in database
   const sql = `UPDATE Account
               SET 
-              enabled = ${newStatus},
+              enabled = ${newStatus}
               WHERE account_id = ${accountId}`;
 
   return new Promise((resolve, reject) => {
@@ -146,7 +146,7 @@ const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
   // UPDATE guest account in database
   const sql = `UPDATE Guest
               SET 
-              enabled = ${newStatus},
+              enabled = ${newStatus}
               WHERE guest_id = ${guestAccountId}`;
 
   return new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ const updateGuestAccount = (guestAccountInfo, guestAccountId) => {
   const sql = `UPDATE Guest
               SET 
               guest_name = '${username}', 
-              password = '${password}',
+              password = '${password}'
               WHERE guest_id = ${guestAccountId}`;
 
   return new Promise((resolve, reject) => {
