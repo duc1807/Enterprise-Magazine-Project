@@ -39,6 +39,7 @@ const {
   managerValidation,
   gwAccountValidation,
   coordinatorValidation,
+  accessValidation
 } = require("./middleware/verification");
 
 // Import utils
@@ -86,12 +87,14 @@ router.get("/published", gwAccountValidation, async (req, res) => {
 
   // Get user data from middleware
   const data = res.locals.data;
+  
 
   // Check if user has permission to access API
   if (
     data.userInfo.FK_role_id &&
     data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
-    data.userInfo.FK_faculty_id != facultyId
+    data.userInfo.FK_faculty_id != facultyId ||
+    data.userInfo.faculty_id && data.userInfo.faculty_id != facultyId
   ) {
     return res.status(401).json({
       status: res.statusCode,

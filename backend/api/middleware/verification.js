@@ -150,7 +150,7 @@ const gwAccountValidation = (req, res, next) => {
       });
     // If the user is unrelated to Greenwich, throw the 401 error to prevent unauthorised access
     console.log("info: ", data);
-    if (!data.userInfo.FK_role_id && !_GW_GROUP_ROLE_ID.includes(data.userInfo.FK_role_id)) {
+    if (!data.userInfo.FK_role_id && !_GW_GROUP_ROLE_ID.includes(data.userInfo.FK_role_id || data.userInfo.faculty_id)) {
       return res.status(401).json({
         status: res.statusCode,
         success: false,
