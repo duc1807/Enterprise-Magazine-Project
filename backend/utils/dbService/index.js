@@ -38,7 +38,7 @@ const {
 const {
   getStudentAccountByFaculty,
 } = require("./studentService");
-const { getAccountByEmail } = require("./accountService");
+const { getAccountByEmail, updateAccountInfoById } = require("./accountService");
 const { getImageById } = require("./imageService");
 const {
   getAdminAccountByUsername,
@@ -102,6 +102,7 @@ module.exports = {
 
   // ======================================================= Account
   getAccountByEmail: getAccountByEmail,
+  updateAccountInfoById: updateAccountInfoById,
   // ================================================================
 
   // ======================================================= Account Info
