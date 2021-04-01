@@ -163,25 +163,41 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
   const query = getContributionByFaculty(facultyId);
   await query
     .then(async (results) => {
-      console.log("results uncomment list: ", results[6]);
+      console.log("results uncomment list: ", results[5]);
       let uncommentArr = [];
       // loop for the query result to get all uncomment info by each articles at position[6]  ???? Or result.length - 1 ?????
-      results[6].map((uncomment) => {
-        console.log("uncomment: ", uncomment);
+      results[5].map((uncomment) => {
         // append each UncommentInfo object to the uncommentArr
         uncommentArr.push(uncomment);
       });
 
+      // Create an array for storing total pending article following event title
+      let pendingArr = [];
+      results[0].map((pendingResult) => {
+        console.log("pendingResult: ", pendingResult);
+        pendingArr.push(pendingResult);
+      });
+
+      // Create an array for storing total selected article following event title
+      let selectedArr = [];
+      results[1].map((selectedResult) => {
+        selectedArr.push(selectedResult);
+      });
+      // Create an array for storing total rejected article following event title
+      let rejectedArr = [];
+      results[2].map((rejectedResult) => {
+        // console.log("rejectedResult: ", rejectedResult);
+        rejectedArr.push(rejectedResult);
+      });
       // Create object to store all stats of each faculty
       const queryResult = {
-        totalContributions: results[0][0].totalContributions,
-        totalPendingContributions: results[1][0].totalPendingContributions,
-        totalSelectedContributions: results[2][0].totalSelectedContributions,
-        totalRejectedContributions: results[3][0].totalRejectedContributions,
+        totalPendingContributions: pendingArr,
+        totalSelectedContributions: selectedArr,
+        totalRejectedContributions: rejectedArr,
         totalCommentedOnTimeContributions:
-          results[4][0].totalCommentedOnTimeContributions,
+          results[3][0].totalCommentedOnTimeContributions,
         totalUncommentedOnTimeContributions:
-          results[5][0].totalUncommentedOnTimeContributions,
+          results[4][0].totalUncommentedOnTimeContributions,
         uncommentList: uncommentArr,
       };
       return res.status(200).json({

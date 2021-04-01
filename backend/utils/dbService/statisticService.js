@@ -1,4 +1,4 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 // Query for get overall stats includes (Received article, Publish,..)
 const getOverallStats = async () => {
@@ -128,27 +128,24 @@ const getContributionEachMonthByYear = (year) => {
 const getContributionByFaculty = (facultyId) => {
   let db = getDataBaseConnection();
   const sql =
-    //Count total of contributions on each event by faculty
-    `SELECT COUNT(Article.article_id) AS totalContributions, Event.event_title AS Event_Title
-    FROM Article
-    INNER JOIN Event ON Article.FK_event_id = Event.event_id
-    WHERE Event.FK_faculty_id = ${facultyId}
-    GROUP BY Event.event_title;` +
+    // //Count total of contributions on each event by faculty
+    // `SELECT COUNT(Article.article_id) AS totalContributions, Event.event_title AS Event_Title
+    // FROM Article
+    // INNER JOIN Event ON Article.FK_event_id = Event.event_id
+    // WHERE Event.FK_faculty_id = ${facultyId}
+    // GROUP BY Event.event_title;` +
     // Count total pending contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS totalPendingContributions, Event.event_title AS Event_Title
-    FROM Article
+    `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'pending'
     GROUP BY Event.event_title;` +
     // Count total selected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS totalSelectedContributions, Event.event_title AS Event_Title
-    FROM Article
+    `SELECT COUNT(Article.article_id) AS selectedContributions, Event.event_title AS eventTitle FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'accepted'
     GROUP BY Event.event_title;` +
     // Count total rejected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS totalRejectedContributions, Event.event_title AS Event_Title
-    FROM Article
+    `SELECT COUNT(Article.article_id) AS rejectedContributions, Event.event_title AS eventTitle FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'rejected'
     GROUP BY Event.event_title;` +
