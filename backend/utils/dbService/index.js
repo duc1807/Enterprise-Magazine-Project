@@ -31,6 +31,8 @@ const {
   createPostedArticle,
   setNewArticleSubmissionFolderId,
   getArticleInformationById,
+  createPostedArticleImages,
+  getPostedArticleById
 } = require("./articleService");
 const {
   getCoordinatorAccountsByFaculty,
@@ -171,6 +173,10 @@ module.exports = {
   setArticleCommentOntime: setArticleCommentOntime,
   // Get article information by article_id
   getArticleInformationById: getArticleInformationById,
+  // Insert images of posted article into database
+  createPostedArticleImages: createPostedArticleImages,
+  // Get posted article information by id
+  getPostedArticleById: getPostedArticleById,
   // ================================================================
 
   // ======================================================= File

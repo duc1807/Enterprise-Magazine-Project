@@ -24,6 +24,8 @@ const {
   getArticleInformationById,
   getCommentByArticleId,
   getFileDetailById,
+  createPostedArticleImages,
+  getPostedArticleById,
 } = require("../utils/dbService/index");
 const {
   moveFolderToOtherFolder,
@@ -38,6 +40,7 @@ const {
 // Constants
 const _COORDINATOR_ROLE_ID = 2;
 const _STUDENT_ROLE_ID = 1;
+const POSTED_ARTICLE_IMAGE_STORAGE = "1Fy9FIpJKDenMEp7n5nI01eeRhXZgtcK_";
 
 /**
  * @method GET
@@ -100,7 +103,7 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  * @params
  * 		- articleId: Int
  * @return
-*    - status: Int
+ *    - status: Int
  *    - success: Boolean
  *    - article: Object
  * @notes
@@ -281,7 +284,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
  *    - articleId: Int
  * 		- fileId: Int
  * @return
- *    
+ *
  *    - file: Object
  *    - comments: Array[Object]
  * @notes
@@ -389,14 +392,14 @@ router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
 
 /**
  * @method DELETE
- * @API /api/article/:articleId/file/:fileId/    
+ * @API /api/article/:articleId/file/:fileId/
  * @permission
  *    - Student with exact articleId
  * @description API for deleting a file of an article
  * @params
  *    - articleId: Int
  * 		- fileId: Int
- * @return 
+ * @return
  *    - status: Int
  *    - success: Boolean
  *    - message: String
@@ -670,7 +673,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
  * @description API for reject an article
  * @params
  * 		- articleId: Int
- * @return 
+ * @return
  *    - status: Int
  *    - success: Boolean
  *    - message: String
@@ -743,51 +746,200 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  * @notes
  *    - Not yet implement upload images !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Similar with create event????
  */
-router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
-  // Get information from param
-  const { eventId } = req.params;
-  // Get data from req.body
-  const { title, content, author } = req.body;
+router.post(
+  "/post-article/:eventId",
+  gwAccountValidation,
+  upload.any("file"),
+  async (req, res) => {
+    // Get information from param
+    const { eventId } = req.params;
+    // Get data from req.body
+    const { title, content, author } = req.body;
 
-  // Get userInfo passed from middleware
-  const data = res.locals.data;
+    // Get userInfo passed from middleware
+    const data = res.locals.data;
 
-  // Check permission is coordinator or not
-  if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
-    return res.status(401).json({
-      status: res.statusCode,
-      success: false,
-      message: "Permission required!",
-    });
+    // Check permission is coordinator or not
+    if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
+      return res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Permission required!",
+      });
+    }
+
+    // Get current time
+    const currentTime = new Date();
+    // Create article Object to INSERT INTO database
+    const article = {
+      title: title,
+      content: content,
+      author: author,
+      postedDate: currentTime.getTime(),
+      eventId: eventId,
+    };
+
+    // INSERT article into 'Posted_Article' table
+    const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
+
+    await query
+      .then((result) => {
+        // Get posted_article id
+        const postedArticleId = result.insertId;
+
+        // Upload images to drive public "Posted Article Image" folder
+        // Upload into new folder: ${currentTime} | ${article.title} ${index + 1}
+        // Then INSERT uploaded images information to PA_Image
+
+        // Get files[] from request
+        const files = req.files;
+
+        let filesId = [];
+
+        // Map all elements in files
+        files.map((filedata, index) => {
+          // Create metadata for file
+          const filemetadata = {
+            name: `${currentTime.getTime()} | ${article.title} ${index + 1}`,
+            parents: [POSTED_ARTICLE_IMAGE_STORAGE],
+          };
+
+          // Create media type for file
+          const media = {
+            mimeType: filedata.mimetype,
+            body: fs.createReadStream(filedata.path),
+          };
+
+          // Upload file to google drive
+          drive.files.create(
+            {
+              resource: filemetadata,
+              media: media,
+              fields: "id",
+            },
+            async (err, file) => {
+              if (err) {
+                res.json({
+                  status: 501,
+                  success: false,
+                  message: "Upload files to drive failed!",
+                });
+                fs.unlinkSync(filedata.path);
+                return;
+              }
+
+              // STEP 8: Get the file id after uploaded successful
+              console.log("File id: ", file.data.id);
+              filesId.push(file.data.id);
+
+              fs.unlinkSync(filedata.path);
+
+              // INSERT files list id into database PA_Image
+              // Check if all files uploaded
+              if (filesId.length == files.length) {
+                createPostedArticleImages(filesId, postedArticleId)
+                  .then((result) => {
+                    return res.status(201).json({
+                      status: res.statusCode,
+                      success: true,
+                      message: "New article posted successfully",
+                    });
+                  })
+                  .catch((err) => {
+                    console.log("Err", err);
+                    return res.status(501).json({
+                      status: res.statusCode,
+                      success: false,
+                      message:
+                        "Server error when upload posted-article's images",
+                    });
+                  });
+              }
+            }
+          );
+        });
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
+        } else {
+          // If event not exist || permission to event is invalid
+          return res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Invalid request!",
+          });
+        }
+      });
   }
+);
 
-  // Get current time
-  const currentTime = new Date();
-  // Create article Object to INSERT INTO database
-  const article = {
-    title: title,
-    content: content,
-    author: author,
-    postedDate: currentTime.getTime(),
-    eventId: eventId,
-  };
+/**
+ * @method GET
+ * @API /api/article/posted/:postedArticleId/
+ * @permission
+ *    - Anyone
+ * @description API for getting posted article
+ * @params
+ * 		- postedArticleId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - article: Object
+ * @notes
+ */
+router.get("/posted/:postedArticleId", async (req, res) => {
+  // Get articleId from params
+  const { postedArticleId } = req.params;
 
-  // INSERT article into 'Posted_Article' table
-  const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
+  // Get files and comments by fileId and articleId
+  const query = getPostedArticleById(postedArticleId);
 
   await query
-    .then((result) => {
-      // Get posted_article id
-      const postedArticleId = result.insertId;
+    .then((postedArticles) => {
+      let article = undefined
+      postedArticles.forEach(postedArticle => {
+        if (!article) {
+          // Create image info Object
+          const imageInfo = {
+            Image_id: postedArticle.Image_id,
+            Image_image: postedArticle.Image_image,
+            FK_PA_id: postedArticle.FK_PA_id,
+          }
 
-      // Upload images to drive public "Images storage" folder
-      // Upload into new folder: ${postedDate} | Event ${event_id} - Article ${article_id} - ${author}
-      // Then INSERT uploaded images information to PA_Image
+          // Initialize data for article
+          article = {
+            PA_id: postedArticle.PA_id,
+            PA_title: postedArticle.PA_title,
+            PA_content:postedArticle.PA_content,
+            PA_author: postedArticle.PA_author,
+            PA_posted_date: postedArticle.PA_posted_date,
+            FK_event_id: postedArticle.FK_event_id,
+            images: [imageInfo]
+          }     
+        } else {
+          // Create image info Object
+          const imageInfo = {
+            Image_id: postedArticle.Image_id,
+            Image_image: postedArticle.Image_image,
+            FK_PA_id: postedArticle.FK_PA_id,
+          }
 
-      return res.status(201).json({
+          // Push image to article
+          article.images.push(imageInfo)
+        }
+      })
+
+      // Finally, response the comments[]
+      return res.status(200).json({
         status: res.statusCode,
         success: true,
-        message: "New article posted successfully",
+        article: article,
       });
     })
     .catch((err) => {
@@ -799,11 +951,10 @@ router.post("/post-article/:eventId", gwAccountValidation, async (req, res) => {
           message: "Bad request",
         });
       } else {
-        // If event not exist || permission to event is invalid
         return res.status(404).json({
           status: res.statusCode,
           success: false,
-          message: "Invalid request!",
+          message: "Not found",
         });
       }
     });

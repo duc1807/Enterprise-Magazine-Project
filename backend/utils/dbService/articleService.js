@@ -694,6 +694,45 @@ const setRejectedArticle = (articleId) => {
   });
 };
 
+const createPostedArticleImages = async (imageIdArr, postedArticleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `INSERT INTO PA_Image (Image_image, FK_PA_id)
+              VALUES ` +
+              `${imageIdArr.map(
+              (imageId) => `('${imageId}', ${postedArticleId})`
+              )}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+      db.end();
+    });
+  });
+};
+
+const getPostedArticleById = async (postedArticleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Posted_Article
+              INNER JOIN PA_Image
+              ON PA_Image.FK_PA_id = Posted_Article.PA_id
+              WHERE Posted_Article.PA_id = ${postedArticleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (err) reject(err);
+      if(!result.length) {
+        reject(false)
+      } else {
+        resolve(result);
+      }
+      db.end();
+    });
+  });
+};
+
 module.exports = {
   getArticleById: getArticleByIdAndUserId,
   getArticleDetailById: getArticleDetailById,
@@ -713,4 +752,6 @@ module.exports = {
   setRejectedArticle: setRejectedArticle,
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
   getArticleInformationById: getArticleInformationById,
+  createPostedArticleImages: createPostedArticleImages,
+  getPostedArticleById: getPostedArticleById
 };
