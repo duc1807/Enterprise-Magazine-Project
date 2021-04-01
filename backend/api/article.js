@@ -744,7 +744,6 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  *    - success: Boolean
  *    - message: String
  * @notes
- *    - Not yet implement upload images !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Similar with create event????
  */
 router.post(
   "/post-article/:eventId",
@@ -783,13 +782,19 @@ router.post(
     const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
 
     await query
-      .then((result) => {
+      .then(async(result) => {
         // Get posted_article id
         const postedArticleId = result.insertId;
 
         // Upload images to drive public "Posted Article Image" folder
         // Upload into new folder: ${currentTime} | ${article.title} ${index + 1}
         // Then INSERT uploaded images information to PA_Image
+
+        const jwToken = await getAuthServiceJwt();
+        const drive = google.drive({
+          version: "v3",
+          auth: jwToken,
+        });
 
         // Get files[] from request
         const files = req.files;
