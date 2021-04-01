@@ -101,8 +101,12 @@ const updateAccountStatus = (currentStatus, accountId) => {
 
   let db = getDataBaseConnection();
 
-  // UPDATE guest account in database
-  const sql = `UPDATE Account
+  // Check if account exist
+  const sql = `SELECT * FROM Account
+              WHERE account_id = ${accountId}`;
+
+  // UPDATE account in database
+  const sql1 = `UPDATE Account
               SET 
               enabled = ${newStatus}
               WHERE account_id = ${accountId}`;
@@ -110,7 +114,15 @@ const updateAccountStatus = (currentStatus, accountId) => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      resolve(result);
+      if (!result.length) {
+        reject(false)
+      } else {
+        db.query(sql1, (err, result) => {
+          if (!!err) reject(err);
+          resolve(result);
+        })
+      }
+      db.end()
     });
   });
 };
@@ -143,8 +155,12 @@ const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
 
   let db = getDataBaseConnection();
 
+  // Check if account exist
+  const sql = `SELECT * FROM Guest
+              WHERE guest_id = ${accountId}`;
+
   // UPDATE guest account in database
-  const sql = `UPDATE Guest
+  const sql1 = `UPDATE Guest
               SET 
               enabled = ${newStatus}
               WHERE guest_id = ${guestAccountId}`;
@@ -152,7 +168,15 @@ const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      resolve(result);
+      if (!result.length) {
+        reject(false)
+      } else {
+        db.query(sql1, (err, result) => {
+          if (!!err) reject(err);
+          resolve(result);
+        })
+      }
+      db.end()
     });
   });
 };

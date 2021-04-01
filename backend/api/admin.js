@@ -225,12 +225,20 @@ router.patch("/accounts/:accountId", async (req, res) => {
       });
     })
     .catch((err) => {
-      console.log("Err: ", err);
-      res.status(501).json({
-        status: res.statusCode,
-        success: false,
-        message: "Bad request",
-      });
+      if (!!err) {
+        console.log("Err: ", err);
+        res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
     });
 });
 
@@ -342,12 +350,20 @@ router.patch("/guest-accounts/:accountId", async (req, res) => {
       });
     })
     .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        status: res.statusCode,
-        success: false,
-        message: "Bad request",
-      });
+      if (!!err) {
+        console.log("Err: ", err);
+        res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
     });
 });
 
