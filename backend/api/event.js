@@ -57,7 +57,7 @@ const { upload } = require("../utils/multerStorage");
 //   "https://www.googleapis.com/auth/drive.metadata ";
 
 // Constants
-const eventImageFolderId = "1GiaqwUdxaL5kNFS7HhEArmduStkRwamT";
+const EVENT_IMAGE_STORAGE = "1kTKaOhoyN172JorgjZ7rf6RC5deWNNhL";
 const eventSubFoldersConstant = {
   acceptedArticlesFolderName: "Selected Articles",
   allArticlesFolderName: "All Articles",
@@ -68,7 +68,7 @@ const _MANAGER_ROLE_ID = 3;
 
 /**
  * @method GET
- * @api /api/events/published?faculty=(facultyId)
+ * @api /api/events/published?facultyId=(facultyId)
  * @permissions
  *      - Anyone (with account)
  * @description API for getting published event information
@@ -83,7 +83,7 @@ const _MANAGER_ROLE_ID = 3;
  */
 router.get("/published", gwAccountValidation, async (req, res) => {
   // Get facultyId from req.query
-  const facultyId = req.query.faculty;
+  const facultyId = req.query.facultyId;
 
   // Get user data from middleware
   const data = res.locals.data;
@@ -913,7 +913,7 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
             // Create metadata for file
             const filemetadata = {
               name: `${currentTime.getTime()} | ${eventData.title}`,
-              parents: [eventImageFolderId],
+              parents: [EVENT_IMAGE_STORAGE],
             };
 
             // Create media type for file
@@ -1094,7 +1094,7 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
       // Create metadata for file
       const filemetadata = {
         name: `${currentTime.getTime()} | ${eventData.title}`,
-        parents: [eventImageFolderId],
+        parents: [EVENT_IMAGE_STORAGE],
       };
 
       // Create media type for file
