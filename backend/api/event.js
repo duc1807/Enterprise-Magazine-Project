@@ -39,7 +39,7 @@ const {
   managerValidation,
   gwAccountValidation,
   coordinatorValidation,
-  accessValidation
+  accessValidation,
 } = require("./middleware/verification");
 
 // Import utils
@@ -63,6 +63,7 @@ const eventSubFoldersConstant = {
   allArticlesFolderName: "All Articles",
 };
 const _MANAGER_ROLE_ID = 3;
+const _GUEST_ROLE_NAME = "guest";
 
 // ================================================= DEVELOPMENT CODE
 
@@ -87,14 +88,16 @@ router.get("/published", gwAccountValidation, async (req, res) => {
 
   // Get user data from middleware
   const data = res.locals.data;
-  
+
+  console.log(res.locals.data);
 
   // Check if user has permission to access API
   if (
-    data.userInfo.FK_role_id &&
-    data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
-    data.userInfo.FK_faculty_id != facultyId ||
-    data.userInfo.faculty_id && data.userInfo.faculty_id != facultyId
+    (data.userInfo.FK_role_id &&
+      data.userInfo.FK_role_id != _MANAGER_ROLE_ID &&
+      data.userInfo.FK_faculty_id != facultyId) ||
+    (data.userInfo.role_name == _GUEST_ROLE_NAME &&
+      data.userInfo.faculty_id != facultyId)
   ) {
     return res.status(401).json({
       status: res.statusCode,
@@ -832,12 +835,12 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
 
   // Create coordinators permission data
   const coordinatorPermissions = coordinatorAccounts.map((coordinator) => ({
-      kind: "drive#permission",
-      type: "user",
-      role: "writer",
-      emailAddress: coordinator.email,
+    kind: "drive#permission",
+    type: "user",
+    role: "writer",
+    emailAddress: coordinator.email,
   }));
-  
+
   // Create student permission data (???? needed or not?)
   // letstudentPermissions = [];
 
@@ -1155,7 +1158,7 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
       );
     });
   } else {
-    // If no image uploaded 
+    // If no image uploaded
     // Update eventData into database with imageData = ""
     updateEvent(eventData)
       .then((result) => {
