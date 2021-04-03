@@ -1,0 +1,57 @@
+<nav
+  class="navbar navbar-expand-lg navbar-light"
+  style="background-color: #e3f2fd"
+>
+  <div class="container-fluid">
+    <!-- <a class="navbar-brand" href="#">University of Greenwich</a> -->
+    <img src="../assets/image/logo.png" alt="" />
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse nav-option" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/account">Account</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active text-danger" routerLink="/mlogin"
+            >Log out</a
+          >
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<h2 class="faculty-card text-center text-dark">Faculty options</h2>
+
+<div class="row faculty-card">
+  <div *ngFor="let fal of faculties; let i = index" class="col-sm-4">
+    <a
+      routerLink="/manager"
+      style="text-decoration: none"
+      (click)="setFaculty(fal.faculty_id)"
+    >
+      <div
+        class="card border-info mb-5 mx-auto text-center"
+        style="max-width: 20rem"
+      >
+        <div class="card-header text-dark">Falcuty {{ i + 1 }}</div>
+        <div class="card-body text-info">
+          <h3 class="card-title">{{ fal.faculty_name }}</h3>
+          <p class="card-text text-dark">
+            Click here to go to the management page of {{ fal.faculty_name }}
+          </p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>

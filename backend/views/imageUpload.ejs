@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Node Authentication</title>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <!-- load bootstrap css -->
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <!-- load fontawesome -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <style>
+        body {
+            padding-top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe src="https://drive.google.com/file/d/1kkN_pRbpZbH2ZnSI-FaUgPFPn2UfcHO_/preview?usp=drivesdk" width="100%" height="600px"></iframe>
+    <div class="container">
+        <a target="_blank" href="https://drive.google.com/file/d/1gCXCCIElpnoQaCOHELJgTFqtxs33lOEN/view?usp=drivesdk">Download</a>
+        <div class="jumbotron text-center">
+
+            <img src="/api/image/26">
+
+            <form action="/api/folder/uploadimage" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" id="input-files" />
+                <button type="submit">Submit</button>
+            </form>
+
+
+        </div>
+
+    </div>
+
+    <script>
+        function download() {
+            console.log("downloaded")
+        }
+    </script>
+
+</body>
+
+</html>
