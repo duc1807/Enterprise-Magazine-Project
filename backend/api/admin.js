@@ -15,6 +15,7 @@ const {
   updateGuestAccount,
   updateGuestAccountStatus,
   updateAccountStatus,
+  getAllGuestAccounts,
 } = require("../utils/dbService/index");
 
 /**
@@ -73,6 +74,39 @@ router.get("/accounts/:roleId", async (req, res) => {
         status: res.statusCode,
         success: true,
         accounts: result,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
+ * @method GET
+ * @API /api/admin/guest-accounts/
+ * @description API route to get all guest accounts
+ * @params
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - guestAccounts: Array[]
+ */
+ router.get("/guest-accounts", async (req, res) => {
+
+  // Get all accounts of roleId
+  const query = getAllGuestAccounts();
+
+  await query
+    .then((result) => {
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        guestAccounts: result,
       });
     })
     .catch((err) => {
