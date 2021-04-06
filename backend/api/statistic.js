@@ -172,22 +172,51 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
       });
 
       // Create an array for storing total pending article following event title
+
       let pendingArr = [];
+      const extension = "...";
       results[0].map((pendingResult) => {
-        console.log("pendingResult: ", pendingResult);
-        pendingArr.push(pendingResult);
+        // console.log("pendingResult: ", pendingResult);
+        let pendingObj = {
+          pendingContributions: pendingResult.pendingContributions,
+        };
+        if (pendingResult.eventTitle.length >= 10) {
+          pendingObj.eventTitle =
+            pendingResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          pendingObj.eventTitle = pendingResult.eventTitle;
+        }
+        pendingArr.push(pendingObj);
       });
 
       // Create an array for storing total selected article following event title
       let selectedArr = [];
       results[1].map((selectedResult) => {
-        selectedArr.push(selectedResult);
+        let selectedObj = {
+          selectedContributions: selectedResult.selectedContributions,
+        };
+        if (selectedResult.eventTitle.length >= 10) {
+          selectedObj.eventTitle =
+            selectedResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          selectedObj.eventTitle = selectedResult.eventTitle;
+        }
+        selectedArr.push(selectedObj);
       });
       // Create an array for storing total rejected article following event title
       let rejectedArr = [];
       results[2].map((rejectedResult) => {
         // console.log("rejectedResult: ", rejectedResult);
-        rejectedArr.push(rejectedResult);
+        let rejectedObj = {
+          rejectedContributions: rejectedResult.rejectedContributions,
+        };
+        if (rejectedResult.eventTitle.length >= 10) {
+          rejectedObj.eventTitle =
+            rejectedResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          rejectedObj.eventTitle = rejectedResult.eventTitle;
+        }
+        rejectedArr.push(rejectedObj);
       });
       // Create object to store all stats of each faculty
       const queryResult = {
