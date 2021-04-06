@@ -67,8 +67,8 @@ const createNewGuestAccount = (guestAccountInfo) => {
   let db = getDataBaseConnection();
 
   // INSERT guest account into database
-  const sql = `INSERT INTO Guest(guest_name, password, FK_faculty_id, FK_role_id)
-              VALUES ('${username}', '${password}', ${facultyId}, ${_GUEST_ROLE_ID})`;
+  const sql = `INSERT INTO Guest(guest_name, password, FK_faculty_id)
+              VALUES ('${username}', '${password}', ${facultyId})`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {

@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const csrf = require("csurf");
 var cors = require("cors");
 const async = require("async");
 const schedule = require("node-schedule");
@@ -30,6 +31,8 @@ app
   // Allow cookie
   .use(cookieParser());
 
+// app.use(csrf({ cookie: true }));
+
 // Parse application/json
 app.use(bodyParser.json());
 
@@ -48,6 +51,8 @@ app
 
   // Authentication API for guest
   .use("/api/authentication/guest", require("./api/authAPI/guest"))
+
+  // .use(csrf({ cookie: true }))
 
   // Faculty API
   .use("/api/faculties", require("./api/faculty"))
@@ -87,6 +92,7 @@ app
 // app.use(express.static("dist/project"))
 
 // app.get("*", (req, res) => {
+//   res.cookie('XSRF-TOKEN', req.csrfToken())
 //   res.sendFile(path.join(__dirname, "dist/project/index.html"));
 // });
 

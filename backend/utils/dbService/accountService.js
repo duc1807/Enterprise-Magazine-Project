@@ -41,7 +41,21 @@ const updateAccountInfoById = async (accountInfo, accountId) => {
   });
 };
 
+const getAllGuestAccounts = async (username) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Guest`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
 module.exports = {
     getAccountByEmail: getAccountByEmail,
-    updateAccountInfoById: updateAccountInfoById
+    updateAccountInfoById: updateAccountInfoById,
+    getAllGuestAccounts: getAllGuestAccounts,
 };
