@@ -216,8 +216,8 @@ router.get("/:eventId/all", gwAccountValidation, async (req, res) => {
         status: res.statusCode,
         success: true,
         // Because event is only 1, so dont need to pass array to Frontend
-        event: result[0][0],
-        articles: result[1],
+        event: result.eventInfo,
+        articles: result.postedArticles,
       });
     })
     .catch((err) => {
