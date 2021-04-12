@@ -753,7 +753,7 @@ router.post(
     // Get information from param
     const { eventId } = req.params;
     // Get data from req.body
-    const { title, content, author } = req.body;
+    const { title, content, author } = JSON.parse(req.body.newPost);
 
     // Get userInfo passed from middleware
     const data = res.locals.data;
@@ -907,44 +907,11 @@ router.get("/posted/:postedArticleId", async (req, res) => {
 
   await query
     .then((postedArticles) => {
-      let article = undefined
-      postedArticles.forEach(postedArticle => {
-        if (!article) {
-          // Create image info Object
-          const imageInfo = {
-            Image_id: postedArticle.Image_id,
-            Image_image: postedArticle.Image_image,
-            FK_PA_id: postedArticle.FK_PA_id,
-          }
-
-          // Initialize data for article
-          article = {
-            PA_id: postedArticle.PA_id,
-            PA_title: postedArticle.PA_title,
-            PA_content:postedArticle.PA_content,
-            PA_author: postedArticle.PA_author,
-            PA_posted_date: postedArticle.PA_posted_date,
-            FK_event_id: postedArticle.FK_event_id,
-            images: [imageInfo]
-          }     
-        } else {
-          // Create image info Object
-          const imageInfo = {
-            Image_id: postedArticle.Image_id,
-            Image_image: postedArticle.Image_image,
-            FK_PA_id: postedArticle.FK_PA_id,
-          }
-
-          // Push image to article
-          article.images.push(imageInfo)
-        }
-      })
-
-      // Finally, response the comments[]
+      // Finally, response the posted article information
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        article: article,
+        article: postedArticles[0],
       });
     })
     .catch((err) => {

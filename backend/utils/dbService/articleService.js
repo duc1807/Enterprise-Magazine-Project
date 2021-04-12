@@ -1,4 +1,4 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const DB_TABLE = "Article";
 
@@ -182,9 +182,11 @@ const getPostedArticlesOfEvent = async (eventId) => {
   const sql =
     // Get event information
     `SELECT * FROM Event
-              WHERE event_id = ${eventId};` +
-    // Get articles (nullable)
-    `SELECT * FROM Posted_Article 
+              WHERE event_id = ${eventId};`;
+  // Get articles (nullable) INNER JOIN PA_Image
+  const sql1 = `SELECT * FROM Posted_Article 
+              LEFT JOIN PA_Image
+              ON Posted_Article.PA_id = PA_Image.FK_PA_id
               WHERE FK_event_id = ${eventId}`;
   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
   // `;
@@ -194,12 +196,19 @@ const getPostedArticlesOfEvent = async (eventId) => {
       if (!!err) reject(err);
 
       // Check if event is existed or not
-      if (!result[0].length) {
+      if (!result.length) {
         reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          // Return eventInfo and its posted articles
+          const data = {
+            eventInfo: result[0],
+            postedArticles: result1
+          }
+          resolve(data);
+        });
       }
-      console.log("event res: ", result);
-      // Return result at the last position (Event info & Posted articles)
-      resolve([result[0], result[1]]);
       db.end();
     });
   });
@@ -574,7 +583,7 @@ const createPostedArticle = (articleInfo, coordinatorId) => {
               AND Event.event_id = ${eventId}`;
   // Create new posted article
   const sql1 = `INSERT INTO Posted_Article(PA_title, PA_content, PA_author, PA_posted_date, FK_event_id)
-                VALUES ('${title}', '${content}', '${author}', ${postedDate}, ${eventId})`
+                VALUES ('${title}', '${content}', '${author}', ${postedDate}, ${eventId})`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -583,11 +592,10 @@ const createPostedArticle = (articleInfo, coordinatorId) => {
         reject(false);
       } else {
         // If valid, create posted article
-        db.query(sql1, (err, result1) => 
-        {
+        db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
           resolve(result1);
-        })
+        });
       }
       db.end();
     });
@@ -697,11 +705,10 @@ const setRejectedArticle = (articleId) => {
 const createPostedArticleImages = async (imageIdArr, postedArticleId) => {
   let db = getDataBaseConnection();
 
-  const sql = `INSERT INTO PA_Image (Image_image, FK_PA_id)
+  const sql =
+    `INSERT INTO PA_Image (Image_image, FK_PA_id)
               VALUES ` +
-              `${imageIdArr.map(
-              (imageId) => `('${imageId}', ${postedArticleId})`
-              )}`;
+    `${imageIdArr.map((imageId) => `('${imageId}', ${postedArticleId})`)}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -716,15 +723,15 @@ const getPostedArticleById = async (postedArticleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Posted_Article
-              INNER JOIN PA_Image
+              LEFT JOIN PA_Image
               ON PA_Image.FK_PA_id = Posted_Article.PA_id
               WHERE Posted_Article.PA_id = ${postedArticleId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (err) reject(err);
-      if(!result.length) {
-        reject(false)
+      if (!result.length) {
+        reject(false);
       } else {
         resolve(result);
       }
@@ -753,5 +760,5 @@ module.exports = {
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
   getArticleInformationById: getArticleInformationById,
   createPostedArticleImages: createPostedArticleImages,
-  getPostedArticleById: getPostedArticleById
+  getPostedArticleById: getPostedArticleById,
 };

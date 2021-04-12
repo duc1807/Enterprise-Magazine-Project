@@ -243,6 +243,11 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
                         if (index == files.length - 1) {
                           // Get all files and comments of current article
                           // ?????????????? Should return
+                          return res.status(201).json({
+                            status: res.statusCode,
+                            success: true,
+                            message: "Upload successful",
+                          });
                         }
                       })
                       .catch((err) => {
