@@ -795,6 +795,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  *    - success: Boolean
  *    - message: String
  * @notes
+ *    - Dont need for coordinator ========================================== ???????????
  */
 router.post(
   "/post-article/:eventId",
