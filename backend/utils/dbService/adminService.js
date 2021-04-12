@@ -20,6 +20,8 @@ const getAccountsByRole = (roleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Account
+              LEFT JOIN Account_Info
+              ON Account.account_id = Account_Info.FK_account_id 
               WHERE FK_role_id = ${roleId}`;
 
   return new Promise((resolve, reject) => {
