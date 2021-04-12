@@ -122,7 +122,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Promise to check user role is student or coordinator
   const roleValidation = new Promise((resolve, reject) => {
     // If role is "student", check if student has permission to get this article
-    if (!!STAFF_ROLE_ID.includes(data.userInfo.FK_role_id)) {
+    if (!STAFF_ROLE_ID.includes(data.userInfo.FK_role_id)) {
       // Get article by id and student_id to check if student has permission to access the article
       getArticleById(articleId, data.userInfo.account_id)
         .then((result) => {
