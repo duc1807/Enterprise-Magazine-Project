@@ -41,146 +41,151 @@ const STUDENT_ROLE_ID = 1;
  *      - Startdate needed?
  *      - Complexity on uploadMultiple function
  */
-router.post("/:eventId", gwAccountValidation, async (req, res) => {
-  // Get eventId from request body
-  const { eventId } = req.params;
+router.post(
+  "/:eventId",
+  gwAccountValidation,
+  upload.any("uploadedImages"),
+  async (req, res) => {
+    // Get eventId from request body
+    const { eventId } = req.params;
 
-  // Get article information from req.body
-  const { title, content, author } = JSON.parse(req.body.newArticle)
+    // Get article information from req.body
+    const { title, content, author } = JSON.parse(req.body.newArticle);
 
-  // Create eventInfo variable
-  let eventInfo = undefined;
-  // Create filesArray[] to store files information
-  let filesArray = [];
+    // Create eventInfo variable
+    let eventInfo = undefined;
+    // Create filesArray[] to store files information
+    let filesArray = [];
 
-  // Create articleInfo Object to store article information
-  const articleInfo = {
-    articleSubmissionDate: undefined,
-    articleFolderId: "",
-    FK_account_id: undefined,
-    FK_event_id: undefined,
-    title: title,
-    content: content,
-    author: author
-  };
+    // Create articleInfo Object to store article information
+    const articleInfo = {
+      articleSubmissionDate: undefined,
+      articleFolderId: "",
+      FK_account_id: undefined,
+      FK_event_id: undefined,
+      title: title,
+      content: content,
+      author: author,
+    };
 
-  // STEP 1: Get student info passed from middleware
-  const data = res.locals.data;
+    // STEP 1: Get student info passed from middleware
+    const data = res.locals.data;
 
-  // STEP 2: Check if user role is Student or not
-  if (data.userInfo.FK_role_id != STUDENT_ROLE_ID) {
-    res.status(401).json({
-      status: res.statusCode,
-      success: false,
-      message: "Student permission required.",
+    // STEP 2: Check if user role is Student or not
+    if (data.userInfo.FK_role_id != STUDENT_ROLE_ID) {
+      res.status(401).json({
+        status: res.statusCode,
+        success: false,
+        message: "Student permission required.",
+      });
+    }
+
+    // Check if student faculty is correct or not   ?????????????????
+
+    // STEP 3: If student and event are correct, assign data to studentInfo
+    const studentInfo = data;
+
+    // Get facultyId from userInfo
+    const facultyId = studentInfo.userInfo.FK_faculty_id;
+
+    // STEP 4: Get the event information and check if the student faculty is correct or not
+    const query = getEventById(eventId, facultyId);
+
+    await query
+      .then((result) => {
+        // Assign query result to eventInfo
+        eventInfo = result[0];
+
+        // Check if student have permission to submit to the event
+        if (eventInfo.FK_faculty_id != studentInfo.userInfo.FK_faculty_id) {
+          res.status(401).json({
+            success: false,
+            message: "You don't have submit permission to this event's faculty",
+          });
+        }
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("Err: ", err);
+          return res.status(501).json({
+            messages: "Bad request",
+          });
+        } else {
+          // If no event found
+          console.log("Err: ", err);
+          return res.status(404).json({
+            messages: "Event not found",
+          });
+        }
+      });
+
+    // DISPLAY THE DATA TO TEST
+    console.log("Student information: ", studentInfo);
+    console.log("Event information: ", eventInfo);
+
+    // STEP 5: Get the drive auth service
+    const jwToken = await getAuthServiceJwt();
+    const drive = google.drive({
+      version: "v3",
+      auth: jwToken,
     });
-  }
 
-  // Check if student faculty is correct or not   ?????????????????
+    // STEP 6: Create a folder to store student articles and upload to database
+    const studentFolderMetadata = {
+      name: `${studentInfo.userInfo.email} | ${new Date().getTime()}`,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [eventInfo.folderId_allArticles],
+    };
 
-  // STEP 3: If student and event are correct, assign data to studentInfo
-  const studentInfo = data;
+    await drive.files.create(
+      {
+        resource: studentFolderMetadata,
+        fields: "id",
+      },
+      async (err, file) => {
+        if (err) {
+          console.error(err);
+          res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Failed to upload files to the server!",
+          });
+        } else {
+          console.log("Student folder Id: ", file.data.id);
 
-  // Get facultyId from userInfo
-  const facultyId = studentInfo.userInfo.FK_faculty_id;
+          // Create permission information for current student
+          const studentPermissionList = [
+            {
+              kind: "drive#permission",
+              type: "user",
+              role: "writer",
+              emailAddress: studentInfo.userInfo.email,
+            },
+          ];
 
-  // STEP 4: Get the event information and check if the student faculty is correct or not
-  const query = getEventById(eventId, facultyId);
+          // Insert student permission to student's article folder
+          insertPermissionsToFolderId(
+            studentPermissionList,
+            file.data.id
+          ).catch((err) => {
+            console.log(
+              "Error when addding student permission to submitted article folder"
+            );
+          });
 
-  await query
-    .then((result) => {
-      // Assign query result to eventInfo
-      eventInfo = result[0];
+          // Insert data to articleInfo Object and INSERT into database
+          articleInfo.articleSubmissionDate = new Date().getTime();
+          articleInfo.articleFolderId = file.data.id;
+          articleInfo.FK_account_id = studentInfo.userInfo.account_id;
+          articleInfo.FK_event_id = eventInfo.event_id;
 
-      // Check if student have permission to submit to the event
-      if (eventInfo.FK_faculty_id != studentInfo.userInfo.FK_faculty_id) {
-        res.status(401).json({
-          success: false,
-          message: "You don't have submit permission to this event's faculty",
-        });
-      }
-    })
-    .catch((err) => {
-      if (!!err) {
-        console.log("Err: ", err);
-        return res.status(501).json({
-          messages: "Bad request",
-        });
-      } else {
-        // If no event found
-        console.log("Err: ", err);
-        return res.status(404).json({
-          messages: "Event not found",
-        });
-      }
-    });
+          const query1 = createNewArticle(articleInfo);
 
-  // DISPLAY THE DATA TO TEST
-  console.log("Student information: ", studentInfo);
-  console.log("Event information: ", eventInfo);
+          await query1.then(async (result) => {
+            // Get insertId after create new article in database
+            console.log("articleId: ", result.insertId);
 
-  // STEP 5: Get the drive auth service
-  const jwToken = await getAuthServiceJwt();
-  const drive = google.drive({
-    version: "v3",
-    auth: jwToken,
-  });
-
-  // STEP 6: Create a folder to store student articles and upload to database
-  const studentFolderMetadata = {
-    name: `${studentInfo.userInfo.email} | ${new Date().getTime()}`,
-    mimeType: "application/vnd.google-apps.folder",
-    parents: [eventInfo.folderId_allArticles],
-  };
-
-  await drive.files.create(
-    {
-      resource: studentFolderMetadata,
-      fields: "id",
-    },
-    async (err, file) => {
-      if (err) {
-        console.error(err);
-        res.status(501).json({
-          status: res.statusCode,
-          success: false,
-          message: "Failed to upload files to the server!",
-        });
-      } else {
-        console.log("Student folder Id: ", file.data.id);
-
-        // Create permission information for current student
-        const studentPermissionList = [
-          {
-            kind: "drive#permission",
-            type: "user",
-            role: "writer",
-            emailAddress: studentInfo.userInfo.email,
-          },
-        ];
-
-        // Insert student permission to student's article folder
-        insertPermissionsToFolderId(studentPermissionList, file.data.id).catch(err => {
-          console.log("Error when addding student permission to submitted article folder");
-        });
-
-        // Insert data to articleInfo Object and INSERT into database
-        articleInfo.articleSubmissionDate = new Date().getTime();
-        articleInfo.articleFolderId = file.data.id;
-        articleInfo.FK_account_id = studentInfo.userInfo.account_id;
-        articleInfo.FK_event_id = eventInfo.event_id;
-
-        const query1 = createNewArticle(articleInfo);
-
-        await query1.then(async (result) => {
-          // Get insertId after create new article in database
-          console.log("articleId: ", result.insertId);
-
-          const uploadMultiple = upload.any("uploadedImages");
-
-          // Upload file to google drive
-          uploadMultiple(req, res, function (err) {
-            if (err) throw err;
+            // Upload file to google drive
             console.log("files: ", req.files);
 
             // Get files[] from request
@@ -297,11 +302,11 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
               );
             });
           });
-        });
+        }
       }
-    }
-  );
-});
+    );
+  }
+);
 
 module.exports = router;
 
