@@ -16,7 +16,9 @@ const {
   getEventById,
   uploadFile,
   createNewArticle,
+  getCoordinatorAccountsByFaculty,
 } = require("../utils/dbService/index");
+const { sendMail } = require("../utils/mailer");
 const { upload } = require("../utils/multerStorage");
 const SERVICE_KEY = require("../private_key.json");
 
@@ -122,6 +124,23 @@ router.post(
     // DISPLAY THE DATA TO TEST
     console.log("Student information: ", studentInfo);
     console.log("Event information: ", eventInfo);
+
+    // Function to send noti mail to coordinators of exact faculty
+    const sendNotificationMailToCoordinator = async (
+      studentEmail,
+      eventInfo
+    ) => {
+      getCoordinatorAccountsByFaculty(facultyId).then((coordinatorAccounts) => {
+        console.log(coordinatorAccounts);
+        let coordinatorEmails = [];
+
+        coordinatorAccounts.forEach((coordinatorAccount) => {
+          coordinatorEmails.push(coordinatorAccount.email);
+        });
+
+        sendMail(coordinatorEmails, studentEmail, eventInfo)
+      });
+    };
 
     // STEP 5: Get the drive auth service
     const jwToken = await getAuthServiceJwt();
@@ -254,6 +273,8 @@ router.post(
                         if (index == files.length - 1) {
                           // Get all files and comments of current article
                           // ?????????????? Should return
+                          sendNotificationMailToCoordinator(studentInfo.userInfo.email, eventInfo)
+
                           return res.status(201).json({
                             status: res.statusCode,
                             success: true,

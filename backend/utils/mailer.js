@@ -24,7 +24,8 @@ const sendMail = (coordinatorEmail, studentEmail, eventInfo) => {
     subject: `New article submitted to ${eventInfo.event_title}.`, // Content of the mail
     html:
       studentEmail +
-      ` has submitted new post. Click the url to check: https://gw-magazine.site/api/events/${eventInfo.event_id}/submitted-articles`,
+      ` has submitted new post. `
+      //+ `Click the url to check: https://gw-magazine.site/api/events/${eventInfo.event_id}/submitted-articles`,
   };
   // Send mail
   transporter.sendMail(details, function (error, data) {
