@@ -135,17 +135,17 @@ const getContributionByFaculty = (facultyId) => {
     // WHERE Event.FK_faculty_id = ${facultyId}
     // GROUP BY Event.event_title;` +
     // Count total pending contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'pending'
     GROUP BY Event.event_title;` +
     // Count total selected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS selectedContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS selectedContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'accepted'
     GROUP BY Event.event_title;` +
     // Count total rejected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS rejectedContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS rejectedContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'rejected'
     GROUP BY Event.event_title;` +

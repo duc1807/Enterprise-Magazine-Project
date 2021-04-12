@@ -1,8 +1,14 @@
 require("dotenv").config();
 
+const { forEach, all } = require("async");
 const express = require("express");
 const router = express.Router();
 
+const ARTICLE_STATUS = [
+  "pendingContributions",
+  "selectedContributions",
+  "rejectedContributions",
+];
 // Import database services
 const {
   getOverallStats,
@@ -163,7 +169,7 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
   const query = getContributionByFaculty(facultyId);
   await query
     .then(async (results) => {
-      console.log("results uncomment list: ", results[5]);
+      // console.log("results uncomment list: ", results[5]);
       let uncommentArr = [];
       // loop for the query result to get all uncomment info by each articles at position[6]  ???? Or result.length - 1 ?????
       results[5].map((uncomment) => {
@@ -176,9 +182,10 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
       let pendingArr = [];
       const extension = "...";
       results[0].map((pendingResult) => {
-        // console.log("pendingResult: ", pendingResult);
+        console.log("pendingResult: ", pendingResult);
         let pendingObj = {
           pendingContributions: pendingResult.pendingContributions,
+          eventId: pendingResult.eventId,
         };
         if (pendingResult.eventTitle.length >= 10) {
           pendingObj.eventTitle =
@@ -186,6 +193,7 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
         } else {
           pendingObj.eventTitle = pendingResult.eventTitle;
         }
+
         pendingArr.push(pendingObj);
       });
 
@@ -194,6 +202,7 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
       results[1].map((selectedResult) => {
         let selectedObj = {
           selectedContributions: selectedResult.selectedContributions,
+          eventId: selectedResult.eventId,
         };
         if (selectedResult.eventTitle.length >= 10) {
           selectedObj.eventTitle =
@@ -209,6 +218,7 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
         // console.log("rejectedResult: ", rejectedResult);
         let rejectedObj = {
           rejectedContributions: rejectedResult.rejectedContributions,
+          eventId: rejectedResult.eventId,
         };
         if (rejectedResult.eventTitle.length >= 10) {
           rejectedObj.eventTitle =
@@ -218,21 +228,80 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
         }
         rejectedArr.push(rejectedObj);
       });
-      // Create object to store all stats of each faculty
-      const queryResult = {
-        totalPendingContributions: pendingArr,
-        totalSelectedContributions: selectedArr,
-        totalRejectedContributions: rejectedArr,
-        totalCommentedOnTimeContributions:
-          results[3][0].totalCommentedOnTimeContributions,
-        totalUncommentedOnTimeContributions:
-          results[4][0].totalUncommentedOnTimeContributions,
-        uncommentList: uncommentArr,
-      };
+
+      let statsResult = [];
+      let passedEventId = [];
+      let eventPosDetail = {};
+      let newArr = pendingArr.concat(selectedArr, rejectedArr);
+      console.log("newArr: ", newArr);
+      newArr.map((object) => {
+        console.log("object: ", object);
+        let key = `position${object.eventId}`;
+        if (passedEventId.includes(object.eventId)) {
+          let eventPosition = eventPosDetail[key];
+          console.log("position: ", eventPosition);
+
+          if (
+            (object && object.pendingContributions) ||
+            object.selectedContributions ||
+            object.rejectedContributions
+          ) {
+            let contribution =
+              (object.pendingContributions && {
+                pendingContributions: object.pendingContributions,
+              }) ||
+              (object.selectedContributions && {
+                selectedContributions: object.selectedContributions,
+              }) ||
+              (object.rejectedContributions && {
+                rejectedContributions: object.rejectedContributions,
+              });
+            statsResult[eventPosition].contributions[
+              Object.keys(contribution)[0]
+            ] = Object.values(contribution)[0];
+          }
+        } else {
+          passedEventId.push(object.eventId);
+          let eventInfo = {
+            // eventId: object.eventId,
+            eventName: object.eventTitle,
+            contributions: {},
+          };
+
+          if (
+            (object && object.pendingContributions) ||
+            object.selectedContributions ||
+            object.rejectedContributions
+          ) {
+            let contribution =
+              (object.pendingContributions && {
+                pendingContributions: object.pendingContributions,
+              }) ||
+              (object.selectedContributions && {
+                selectedContributions: object.selectedContributions,
+              }) ||
+              (object.rejectedContributions && {
+                rejectedContributions: object.rejectedContributions,
+              });
+
+            ARTICLE_STATUS.forEach((status) => {
+              eventInfo.contributions[status] = 0;
+            });
+
+            eventInfo.contributions[
+              Object.keys(contribution)[0]
+            ] = Object.values(contribution)[0];
+          }
+
+          statsResult.push(eventInfo);
+          eventPosDetail[key] = statsResult.length - 1;
+        }
+      });
+
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        data: queryResult,
+        data: statsResult,
       });
     })
     .catch((err) => {
