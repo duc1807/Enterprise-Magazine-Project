@@ -157,7 +157,7 @@ const updateGuestAccountStatus = (currentStatus, guestAccountId) => {
 
   // Check if account exist
   const sql = `SELECT * FROM Guest
-              WHERE guest_id = ${accountId}`;
+              WHERE guest_id = ${guestAccountId}`;
 
   // UPDATE guest account in database
   const sql1 = `UPDATE Guest
