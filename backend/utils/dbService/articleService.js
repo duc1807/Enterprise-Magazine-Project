@@ -180,14 +180,13 @@ const getPostedArticlesOfEvent = async (eventId) => {
   let db = getDataBaseConnection();
 
   const sql =
-    // Get event information
+    // Get event information (and published)
     `SELECT * FROM Event
-              WHERE event_id = ${eventId};`;
+              WHERE event_id = ${eventId} AND event_published = 1;`;
   // Get articles (nullable) INNER JOIN PA_Image
-  const sql1 = `SELECT * FROM Posted_Article 
-              LEFT JOIN PA_Image
-              ON Posted_Article.PA_id = PA_Image.FK_PA_id
-              WHERE FK_event_id = ${eventId}`;
+  const sql1 = `SELECT * FROM Article 
+                WHERE FK_event_id = ${eventId} 
+                AND article_status = '${ARTICLE_STATUS.accepted}'`;
   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
   // `;
 
