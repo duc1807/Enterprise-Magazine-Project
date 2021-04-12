@@ -40,6 +40,7 @@ const {
 
 // Constants
 const _COORDINATOR_ROLE_ID = 2;
+const STAFF_ROLE_ID = [2,3]
 const _STUDENT_ROLE_ID = 1;
 const POSTED_ARTICLE_IMAGE_STORAGE = "1Fy9FIpJKDenMEp7n5nI01eeRhXZgtcK_";
 
@@ -121,7 +122,7 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
   // Promise to check user role is student or coordinator
   const roleValidation = new Promise((resolve, reject) => {
     // If role is "student", check if student has permission to get this article
-    if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
+    if (!!STAFF_ROLE_ID.includes(data.userInfo.FK_role_id)) {
       // Get article by id and student_id to check if student has permission to access the article
       getArticleById(articleId, data.userInfo.account_id)
         .then((result) => {
