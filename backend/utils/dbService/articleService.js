@@ -740,6 +740,33 @@ const getPostedArticleById = async (postedArticleId) => {
   });
 };
 
+const deleteArticleById = async (articleId, userId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Article
+              WHERE article_id = ${articleId} 
+              AND FK_account_id = ${userId}`;
+              
+  const sql1 = `DELETE FROM Article
+                WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (err) reject(err);
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result) => {
+          if (err) reject(err);
+          resolve(result)
+        })
+      }
+      db.end();
+    });
+  });
+};
+
+
 module.exports = {
   getArticleById: getArticleByIdAndUserId,
   getArticleDetailById: getArticleDetailById,
@@ -761,4 +788,5 @@ module.exports = {
   getArticleInformationById: getArticleInformationById,
   createPostedArticleImages: createPostedArticleImages,
   getPostedArticleById: getPostedArticleById,
+  deleteArticleById: deleteArticleById,
 };

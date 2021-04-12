@@ -26,6 +26,7 @@ const {
   getFileDetailById,
   createPostedArticleImages,
   getPostedArticleById,
+  deleteArticleById
 } = require("../utils/dbService/index");
 const {
   moveFolderToOtherFolder,
@@ -387,6 +388,56 @@ router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
         success: false,
         message: "Bad request",
       });
+    });
+});
+
+/**
+ * @method DELETE
+ * @API /api/article/:articleId/
+ * @permission
+ *    - Student with exact articleId
+ * @description API for deleting an article
+ * @params
+ *    - articleId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ * @notes
+ */
+router.delete("/:articleId/", gwAccountValidation, async (req, res) => {
+  // Get articleId from params
+  const { articleId } = req.params;
+
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
+
+  const query = deleteArticleById(articleId, data.userInfo.account_id);
+
+  query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Article deleted successful",
+      });
+    })
+    .catch((err) => {
+      if (err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        // If err == false => Event not found
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
     });
 });
 
@@ -782,7 +833,7 @@ router.post(
     const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
 
     await query
-      .then(async(result) => {
+      .then(async (result) => {
         // Get posted_article id
         const postedArticleId = result.insertId;
 

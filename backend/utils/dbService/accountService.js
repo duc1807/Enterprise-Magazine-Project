@@ -1,4 +1,4 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const _TABLE_ACCOUNT = "Account";
 
@@ -23,7 +23,7 @@ const getAccountByEmail = async (email) => {
 
 const updateAccountInfoById = async (accountInfo, accountId) => {
   // Get data from accountInfo Object
-  const { firstName, surName } = accountInfo
+  const { firstName, surName } = accountInfo;
 
   let db = getDataBaseConnection();
 
@@ -54,8 +54,56 @@ const getAllGuestAccounts = async (username) => {
   });
 };
 
+const deleteAccountById = (accountId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Account
+              WHERE account_id = ${accountId}`;
+
+  const sql1 = `DELETE FROM Account
+              WHERE account_id = ${accountId}`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          resolve(result1);
+        });
+      }
+    });
+  });
+};
+
+const deleteGuestAccountById = (guestId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Guest
+              WHERE guest_id = ${guestId}`;
+
+  const sql1 = `DELETE FROM Guest
+              WHERE guest_id = ${guestId}`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          resolve(result1);
+        });
+      }
+    });
+  });
+};
+
 module.exports = {
-    getAccountByEmail: getAccountByEmail,
-    updateAccountInfoById: updateAccountInfoById,
-    getAllGuestAccounts: getAllGuestAccounts,
+  getAccountByEmail: getAccountByEmail,
+  updateAccountInfoById: updateAccountInfoById,
+  getAllGuestAccounts: getAllGuestAccounts,
+  deleteAccountById: deleteAccountById,
+  deleteGuestAccountById: deleteGuestAccountById,
 };

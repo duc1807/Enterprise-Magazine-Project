@@ -8,10 +8,7 @@ const {
   getEventByArticleId,
   getPublishedEventOfFacultyId,
 } = require("./eventService");
-const {
-  getAllFaculty,
-  getFacultyById,
-} = require("./facultyService");
+const { getAllFaculty, getFacultyById } = require("./facultyService");
 const {
   getArticleById,
   getPostedArticlesOfEvent,
@@ -32,15 +29,18 @@ const {
   setNewArticleSubmissionFolderId,
   getArticleInformationById,
   createPostedArticleImages,
-  getPostedArticleById
+  getPostedArticleById,
+  deleteArticleById,
 } = require("./articleService");
+const { getCoordinatorAccountsByFaculty } = require("./coordinatorService");
+const { getStudentAccountByFaculty } = require("./studentService");
 const {
-  getCoordinatorAccountsByFaculty,
-} = require("./coordinatorService");
-const {
-  getStudentAccountByFaculty,
-} = require("./studentService");
-const { getAccountByEmail, updateAccountInfoById, getAllGuestAccounts } = require("./accountService");
+  getAccountByEmail,
+  updateAccountInfoById,
+  getAllGuestAccounts,
+  deleteAccountById,
+  deleteGuestAccountById
+} = require("./accountService");
 const { getImageById } = require("./imageService");
 const {
   getAdminAccountByUsername,
@@ -60,9 +60,7 @@ const {
   uploadFile,
   deleteFileByFileId,
 } = require("./fileService");
-const {
-  getCommentByArticleId,
-} = require("./commentService");
+const { getCommentByArticleId } = require("./commentService");
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -71,8 +69,8 @@ const {
   getContributionEachMonthByYear,
 } = require("./statisticService");
 const { getGuestAccountByUsernameAndPassword } = require("./guestService");
-const { getAccountInfoById } = require('./accountInfoService')
-const { updateFacultyFolderId } = require("./appService")
+const { getAccountInfoById } = require("./accountInfoService");
+const { updateFacultyFolderId } = require("./appService");
 
 module.exports = {
   // ======================================================= Admin
@@ -106,6 +104,8 @@ module.exports = {
   getAccountByEmail: getAccountByEmail,
   updateAccountInfoById: updateAccountInfoById,
   getAllGuestAccounts: getAllGuestAccounts,
+  deleteAccountById: deleteAccountById,
+  deleteGuestAccountById: deleteGuestAccountById,
   // ================================================================
 
   // ======================================================= Account Info
@@ -178,6 +178,8 @@ module.exports = {
   createPostedArticleImages: createPostedArticleImages,
   // Get posted article information by id
   getPostedArticleById: getPostedArticleById,
+  // Delete an article
+  deleteArticleById: deleteArticleById,
   // ================================================================
 
   // ======================================================= File
@@ -215,8 +217,8 @@ module.exports = {
   // =========================================================== GUEST
   getGuestAccountByUsernameAndPassword: getGuestAccountByUsernameAndPassword,
   // ================================================================
-  
+
   // ============================================================ APP
-  updateFacultyFolderId: updateFacultyFolderId
+  updateFacultyFolderId: updateFacultyFolderId,
   // ================================================================
 };

@@ -16,6 +16,8 @@ const {
   updateGuestAccountStatus,
   updateAccountStatus,
   getAllGuestAccounts,
+  deleteGuestAccountById,
+  deleteAccountById
 } = require("../utils/dbService/index");
 
 /**
@@ -444,6 +446,94 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
         success: false,
         message: "Bad request",
       });
+    });
+});
+
+/**
+ * @method DELETE
+ * @API /api/admin/accounts/:accountId/
+ * @description API route to delete account
+ * @params
+ *    - accountId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ */
+ router.delete("/accounts/:accountId", async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  // Update guest account
+  const query = deleteAccountById(accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Account deleted successful",
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log("Err: ", err);
+        res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
+    });
+});
+
+/**
+ * @method DELETE
+ * @API /api/admin/guest-accounts/:accountId/
+ * @description API route to delete guest account
+ * @params
+ *    - accountId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ */
+ router.delete("/guest-accounts/:accountId", async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  // Update guest account
+  const query = deleteGuestAccountById(accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Guest account deleted successful",
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log("Err: ", err);
+        res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
     });
 });
 
