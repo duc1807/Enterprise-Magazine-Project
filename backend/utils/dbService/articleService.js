@@ -255,14 +255,18 @@ const createNewArticle = (articleInfo) => {
     articleFolderId,
     FK_account_id,
     FK_event_id,
+    title,
+    content,
+    author
   } = articleInfo;
 
   let db = getDataBaseConnection();
 
   const sql = `INSERT INTO ${DB_TABLE}
-              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
+              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id,
+                article_title, article_content, article_author)
               VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
-              ${FK_account_id}, ${FK_event_id})`;
+              ${FK_account_id}, ${FK_event_id}, '${title}', '${content}', '${author}')`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {

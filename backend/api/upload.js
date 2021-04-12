@@ -45,6 +45,9 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
   // Get eventId from request body
   const { eventId } = req.params;
 
+  // Get article information from req.body
+  const { title, content, author } = JSON.parse(req.body.newArticle)
+
   // Create eventInfo variable
   let eventInfo = undefined;
   // Create filesArray[] to store files information
@@ -56,6 +59,9 @@ router.post("/:eventId", gwAccountValidation, async (req, res) => {
     articleFolderId: "",
     FK_account_id: undefined,
     FK_event_id: undefined,
+    title: title,
+    content: content,
+    author: author
   };
 
   // STEP 1: Get student info passed from middleware
