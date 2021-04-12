@@ -175,14 +175,52 @@ const getFileAndCommentByFileId = async (fileId, articleId) => {
 // };
 
 // ============================================== DEVELOPMENT CODE (getPostedArticlesOfEvent)
-
-const getPostedArticlesOfEvent = async (eventId) => {
+// Student and Guest get only posted article of published event
+const getPostedArticlesOfPublishedEvent = async (eventId) => {
   let db = getDataBaseConnection();
 
   const sql =
     // Get event information (and published)
     `SELECT * FROM Event
               WHERE event_id = ${eventId} AND event_published = 1;`;
+  // Get articles (nullable) INNER JOIN PA_Image
+  const sql1 = `SELECT * FROM Article 
+                WHERE FK_event_id = ${eventId} 
+                AND article_status = '${ARTICLE_STATUS.accepted}'`;
+  // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
+  // `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+
+      // Check if event is existed or not
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          // Return eventInfo and its posted articles
+          const data = {
+            eventInfo: result[0],
+            postedArticles: result1
+          }
+          resolve(data);
+        });
+      }
+      db.end();
+    });
+  });
+};
+
+// Manager and Coordinator get posted article of any event
+const getPostedArticlesOfEvent = async (eventId) => {
+  let db = getDataBaseConnection();
+
+  const sql =
+    // Get event information (and published)
+              `SELECT * FROM Event
+              WHERE event_id = ${eventId}`;
   // Get articles (nullable) INNER JOIN PA_Image
   const sql1 = `SELECT * FROM Article 
                 WHERE FK_event_id = ${eventId} 
@@ -775,6 +813,7 @@ module.exports = {
   getArticleDetailById: getArticleDetailById,
   getSelfArticles: getSelfArticles,
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+  getPostedArticlesOfPublishedEvent: getPostedArticlesOfPublishedEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSelectedArticles: getSelectedArticlesByEventId,
   getRejectedArticles: getRejectedArticlesByEventId,

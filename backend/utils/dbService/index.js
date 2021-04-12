@@ -12,6 +12,7 @@ const { getAllFaculty, getFacultyById } = require("./facultyService");
 const {
   getArticleById,
   getPostedArticlesOfEvent,
+  getPostedArticlesOfPublishedEvent,
   getArticleDetailById,
   getSelfArticles,
   createNewArticle,
@@ -176,8 +177,10 @@ module.exports = {
   getArticleInformationById: getArticleInformationById,
   // Insert images of posted article into database
   createPostedArticleImages: createPostedArticleImages,
-  // Get posted article information by id
+  // Get posted article information by id for manager and coordinator
   getPostedArticleById: getPostedArticleById,
+  // Get posted article of only published event for student and guest
+  getPostedArticlesOfPublishedEvent: getPostedArticlesOfPublishedEvent,
   // Delete an article
   deleteArticleById: deleteArticleById,
   // ================================================================

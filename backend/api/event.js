@@ -32,6 +32,7 @@ const {
   getSubmittedArticles,
   getSelectedArticles,
   getRejectedArticles,
+  getPostedArticlesOfPublishedEvent
 } = require("../utils/dbService/index");
 
 // Import middleware validation
@@ -63,6 +64,7 @@ const eventSubFoldersConstant = {
   allArticlesFolderName: "All Articles",
 };
 const _MANAGER_ROLE_ID = 3;
+const _STAFF_ROLE_ID = [2,3]
 const _GUEST_ROLE_NAME = "guest";
 
 // ================================================= DEVELOPMENT CODE
@@ -205,8 +207,17 @@ router.get("/:eventId", gwAccountValidation, async (req, res) => {
 router.get("/:eventId/all", gwAccountValidation, async (req, res) => {
   const eventId = req.params.eventId;
 
+  let query = undefined
+
   // Get event info and its posted articles by eventId and facultyId
-  const query = getPostedArticlesOfEvent(eventId);
+  const data = res.locals.data
+
+  // Check if user is manager and coordinator or not
+  if(!_STAFF_ROLE_ID.includes(data.userInfo.role_id)) {
+    query = getPostedArticlesOfPublishedEvent(eventId);
+  } else {
+    query = getPostedArticlesOfEvent(eventId);
+  }
 
   await query
     .then((result) => {
