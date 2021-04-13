@@ -8,7 +8,9 @@ const getOverallStats = async () => {
     // Count total article are submitted to the system
     `SELECT COUNT(article_id) AS TotalReceived FROM Article;` +
     // Count total of posted article on the system
-    `SELECT COUNT(PA_id) AS TotalPublish FROM Posted_Article;`;
+    `SELECT COUNT(Article.article_id) AS TotalPublish FROM Article 
+    INNER JOIN Event ON Article.FK_event_id = Event.event_id 
+    WHERE Event.event_published = 1;`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
