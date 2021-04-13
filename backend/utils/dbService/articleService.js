@@ -786,7 +786,8 @@ const deleteArticleById = async (articleId, userId) => {
 
   const sql = `SELECT * FROM Article
               WHERE article_id = ${articleId} 
-              AND FK_account_id = ${userId}`;
+              AND FK_account_id = ${userId} 
+              AND article_status = '${ARTICLE_STATUS.pending}'`;
               
   const sql1 = `DELETE FROM Article
                 WHERE article_id = ${articleId}`;
