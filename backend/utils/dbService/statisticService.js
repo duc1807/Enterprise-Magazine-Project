@@ -1,5 +1,5 @@
 const { getDataBaseConnection } = require("./connection/dbConnection");
-
+const EVENT_PUBLISHED = 1;
 // Query for get overall stats includes (Received article, Publish,..)
 const getOverallStats = async () => {
   let db = getDataBaseConnection();
@@ -106,9 +106,14 @@ const getContributionEachMonthByYear = (year) => {
       // console.log("startDate: ", startDate);
       // console.log("endDate: ", endDate);
       // Sub query to count posted article following each month
-      const subSql = `SELECT COUNT(PA_id) AS PostedArticleInMonth${
+      // const subSql = `SELECT COUNT(PA_id) AS PostedArticleInMonth${
+      //   i + 1
+      // } FROM Posted_Article WHERE PA_posted_date BETWEEN ${startDate} AND ${endDate};`;
+      const subSql = `SELECT COUNT(Article.article_id) AS PostedArticleInMonth${
         i + 1
-      } FROM Posted_Article WHERE PA_posted_date BETWEEN ${startDate} AND ${endDate};`;
+      } FROM Article 
+        INNER JOIN Event ON Article.FK_event_id = Event.event_id
+        WHERE Event.event_published = ${EVENT_PUBLISHED} AND Article.article_submission_date BETWEEN ${startDate} AND ${endDate};`;
       // + string
       sql += subSql;
     }
