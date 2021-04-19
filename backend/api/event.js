@@ -2,14 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
-const webToken = require("jsonwebtoken");
 const async = require("async");
 const { google } = require("googleapis");
 
 // Import modules & utils
-const { getAuthUrl, getAuthClient } = require("../utils/auth");
-const OAuth2Data = require("../credentials.json");
+const { getAuthClient } = require("../utils/auth");
 const key = require("../private_key.json");
 
 const {
@@ -32,6 +29,7 @@ const {
   getSubmittedArticles,
   getSelectedArticles,
   getRejectedArticles,
+  getPostedArticlesOfPublishedEvent,
 } = require("../utils/dbService/index");
 
 // Import middleware validation
@@ -63,9 +61,8 @@ const eventSubFoldersConstant = {
   allArticlesFolderName: "All Articles",
 };
 const _MANAGER_ROLE_ID = 3;
+const _STAFF_ROLE_ID = [2, 3];
 const _GUEST_ROLE_NAME = "guest";
-
-// ================================================= DEVELOPMENT CODE
 
 /**
  * @method GET
@@ -78,9 +75,6 @@ const _GUEST_ROLE_NAME = "guest";
  * @return
  *      - events: Array[]
  *          + .................................. ???
- * @notes
- *      - Should put this API before /api/events/:eventId -> the request will run into that API
- *      - Permission for all ??? If true, all account and specially guest account should have faculty_id field inside userInfo
  */
 router.get("/published", gwAccountValidation, async (req, res) => {
   // Get facultyId from req.query
@@ -88,8 +82,6 @@ router.get("/published", gwAccountValidation, async (req, res) => {
 
   // Get user data from middleware
   const data = res.locals.data;
-
-  console.log(res.locals.data);
 
   // Check if user has permission to access API
   if (
@@ -111,8 +103,6 @@ router.get("/published", gwAccountValidation, async (req, res) => {
 
   await query
     .then((result) => {
-      console.log("result: ", result);
-
       res.status(200).json({
         status: res.statusCode,
         success: true,
@@ -120,7 +110,6 @@ router.get("/published", gwAccountValidation, async (req, res) => {
       });
     })
     .catch((err) => {
-      console.log("Err: ", err);
       return res.status(501).json({
         status: res.statusCode,
         success: false,
@@ -140,14 +129,10 @@ router.get("/published", gwAccountValidation, async (req, res) => {
  * @return
  *      - event: Object
  *          + ..................................
- * @notes
- *      - Need facultyName      ????
  */
 router.get("/:eventId", gwAccountValidation, async (req, res) => {
   // Get user info from middleware
   const user = res.locals.data;
-
-  console.log("user: ", user);
 
   // Initialize the constant variables
   const facultyId = user.userInfo.FK_faculty_id;
@@ -158,17 +143,14 @@ router.get("/:eventId", gwAccountValidation, async (req, res) => {
 
   await query
     .then((result) => {
-      console.log("result: ", result);
-
       res.status(200).json({
         status: res.statusCode,
         success: true,
-        event: result[0], ///// Not sure if its work
+        event: result[0],
       });
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -198,31 +180,33 @@ router.get("/:eventId", gwAccountValidation, async (req, res) => {
  *          + .................................. ???
  *      - articles: Array[]
  *          + ........................... ???
- * @notes
- *      - Should check role Guest? Manager? Student? before query ????
- * 		- Get data in db table 'Posted_Article'
  */
 router.get("/:eventId/all", gwAccountValidation, async (req, res) => {
   const eventId = req.params.eventId;
 
+  let query = undefined;
+
   // Get event info and its posted articles by eventId and facultyId
-  const query = getPostedArticlesOfEvent(eventId);
+  const data = res.locals.data;
+
+  // Check if user is manager and coordinator or not
+  if (!_STAFF_ROLE_ID.includes(data.userInfo.role_id)) {
+    query = getPostedArticlesOfPublishedEvent(eventId);
+  } else {
+    query = getPostedArticlesOfEvent(eventId);
+  }
 
   await query
     .then((result) => {
-      console.log("result: ", result);
-
       res.status(200).json({
         status: res.statusCode,
         success: true,
-        // Because event is only 1, so dont need to pass array to Frontend
-        event: result[0][0],
-        articles: result[1],
+        event: result.eventInfo,
+        articles: result.postedArticles,
       });
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -286,8 +270,6 @@ router.get(
 
     await query
       .then((result) => {
-        console.log("query result: ", result);
-
         // Create array to store final data to return to frontend
         let articlesResult = [];
 
@@ -306,7 +288,6 @@ router.get(
             // Get position of the article in 'articlesResult[]'
             let articlePosition =
               articlesPositionDetail[articleInfo.article_folderId];
-            console.log("position: ", articlePosition);
 
             // Create file Object to store file information
             let file = {
@@ -368,7 +349,6 @@ router.get(
       })
       .catch((err) => {
         if (err) {
-          console.log("Err: ", err);
           return res.status(501).json({
             status: res.statusCode,
             success: false,
@@ -390,7 +370,7 @@ router.get(
  * @method GET
  * @api /api/events/:eventId/selected-articles
  * @permissions
- *      - Manager		???????
+ *      - Manager
  *      - Coordinators (exact faculty)
  * @description API for getting selected articles
  * @params
@@ -416,8 +396,6 @@ router.get(
 
     await query
       .then((result) => {
-        console.log("result: ", result);
-
         // Create array to store final data to return to frontend
         let articlesResult = [];
 
@@ -436,7 +414,6 @@ router.get(
             // Get position of the article in 'articlesResult[]'
             let articlePosition =
               articlesPositionDetail[articleInfo.article_folderId];
-            console.log("position: ", articlePosition);
 
             // Create file Object to store file information
             let file = {
@@ -498,7 +475,6 @@ router.get(
       })
       .catch((err) => {
         if (err) {
-          console.log("Err: ", err);
           return res.status(501).json({
             status: res.statusCode,
             success: false,
@@ -520,7 +496,7 @@ router.get(
  * @method GET
  * @api /api/events/:eventId/rejected-articles
  * @permissions
- *      - Manager			??????
+ *      - Manager
  *      - Coordinators (exact faculty)
  * @description API for getting rejected articles
  * @params
@@ -536,7 +512,6 @@ router.get(
   async (req, res) => {
     // Get middleware data
     const data = res.locals.data;
-    console.log("data: ", data);
 
     // Get data from params & userInfo
     const facultyId = data.userInfo.FK_faculty_id;
@@ -547,8 +522,6 @@ router.get(
 
     await query
       .then((result) => {
-        console.log("result: ", result);
-
         // Create array to store final data to return to frontend
         let articlesResult = [];
 
@@ -567,7 +540,6 @@ router.get(
             // Get position of the article in 'articlesResult[]'
             let articlePosition =
               articlesPositionDetail[articleInfo.article_folderId];
-            console.log("position: ", articlePosition);
 
             // Create file Object to store file information
             let file = {
@@ -636,7 +608,6 @@ router.get(
       });
   }
 );
-// ==================================================================
 
 /**
  * @method POST
@@ -672,12 +643,12 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
 
   await query
     .then((result) => {
-      console.log("result: ", result);
       coordinatorAccounts = result;
     })
     .catch((err) => {
-      console.log("Err: ", err);
       return res.status(501).json({
+        status: res.statusCode,
+        success: false,
         messages: "Bad request",
       });
     });
@@ -688,21 +659,21 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
 
   await query1
     .then((result) => {
-      console.log("result: ", result);
-      // Not sure ===========================================================
       facultyInfo = result[0];
     })
     .catch((err) => {
       // If database error, return 501 error
       if (!!err) {
-        console.log("Err: ", err);
         return res.status(501).json({
+          status: res.statusCode,
+          success: false,
           messages: "Bad request",
         });
       } else {
         // If no faculty found, return 404 error
-        console.log("Err: ", err);
         return res.status(404).json({
+          status: res.statusCode,
+          success: false,
           messages: "Faculty not found",
         });
       }
@@ -715,20 +686,15 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
 
   await query2
     .then((result) => {
-      console.log("result: ", result);
       studentAccounts = result;
     })
     .catch((err) => {
-      console.log("Err: ", err);
       return res.status(501).json({
+        status: res.statusCode,
+        success: false,
         messages: "Bad request",
       });
     });
-
-  /* Image processing
-    // const imageData = fs.readFileSync(req.file.path, "base64"
-    // console.log("image base64 string :", imageBase64);
-    **/
 
   // Input startDate processing (from date format to timestamps)
   let splittedStartDate = startDate.split("-");
@@ -737,7 +703,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     splittedStartDate[1] - 1,
     splittedStartDate[2]
   ).getTime();
-  console.log(newStartDate);
 
   // Input endDate processing (from date format to timestamps)
   let splittedEndDate = endDate.split("-");
@@ -746,7 +711,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     splittedEndDate[1] - 1,
     splittedEndDate[2]
   ).getTime();
-  console.log(newEndDate);
 
   // Input endDate processing (from date format to timestamps)
   let splittedLastUpdateDate = lastUpdateDate.split("-");
@@ -755,7 +719,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     splittedLastUpdateDate[1] - 1,
     splittedLastUpdateDate[2]
   ).getTime();
-  console.log(newLastUpdateDate);
 
   // Get the current time
   const currentTime = new Date();
@@ -786,8 +749,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     auth: jwToken,
   });
 
-  console.log("faculty tra ve: ", facultyInfo);
-
   // The fileMetadata for event folder, with parent folder is folderId of its Faculty
   const eventFolderMetadata = {
     name: `${currentTime.toLocaleDateString()}: ${
@@ -807,32 +768,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     },
   ];
 
-  // let allArticlesFolderId = undefined;
-
-  // ** Development code
-
-  // var permissions = [
-  //   {
-  //     kind: "drive#permission",
-  //     type: "user",
-  //     role: "writer",
-  //     emailAddress: "trungduc.dev@gmail.com",
-  //     // permissionDetails: [
-  //     //   {
-  //     //     permissionType: "file",
-  //     //     role: "writer",
-  //     //     inherited: false
-  //     //   }
-  //     // ],
-  //   },
-  //   {
-  //     kind: "drive#permission",
-  //     type: "user",
-  //     role: "writer",
-  //     emailAddress: "ducdtgch18799@fpt.edu.vn",
-  //   },
-  // ];
-
   // Create coordinators permission data
   const coordinatorPermissions = coordinatorAccounts.map((coordinator) => ({
     kind: "drive#permission",
@@ -840,52 +775,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
     role: "writer",
     emailAddress: coordinator.email,
   }));
-
-  // Create student permission data (???? needed or not?)
-  // letstudentPermissions = [];
-
-  // studentAccounts.map((student) => {
-  // 	studentPermissions.push({
-  // 		kind: 'drive#permission',
-  // 		type: 'user',
-  // 		role: 'writer',
-  // 		emailAddress: student.email,
-  // 	});
-  // });
-
-  // // Asynchronous create students permission for "All Articles" folder
-  // const insertPermission = async(allArticlesFolderId) => {
-  //     async.eachSeries(
-  //         studentPermissions,
-  //         (permission, callback) => {
-  //             drive.permissions.create({
-  //                     fileId: allArticlesFolderId,
-  //                     requestBody: permission,
-  //                     fields: "id",
-  //                     sendNotificationEmail: false,
-  //                     shared: false,
-  //                 },
-  //                 function(err, file) {
-  //                     if (err) {
-  //                         callback(err);
-  //                     } else {
-  //                         console.log(`Added ${permission.emailAddress} to All Articles`);
-  //                         // callback(err);           ????????????
-  //                     }
-  //                 }
-  //             );
-  //         },
-  //         (err) => {
-  //             if (err) {
-  //                 // Handle error
-  //                 console.error(err);
-  //             } else {
-  //                 // All permissions inserted
-  //                 console.log("All permissions inserted");
-  //             }
-  //         }
-  //     );
-  // };
 
   // Create event folder
   createFolder(eventFolderMetadata)
@@ -902,11 +791,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
           // Assign the subfolder's folderId returned from 1 to event Object
           eventData.selectedArticles = subFoldersData.acceptedArticlesId;
           eventData.allArticles = subFoldersData.allArticlesId;
-
-          console.log("event data: ", eventData);
-
-          // Insert event image into drive
-          console.log("files: ", req.files);
 
           // Get files[] from request
           const files = req.files;
@@ -944,18 +828,13 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
                 }
 
                 // STEP 8: Get the file id after uploaded successful
-                console.log("File id: ", file.data.id);
-
                 fs.unlinkSync(filedata.path);
 
                 eventData.imageData = file.data.id;
 
                 // Insert eventData into database
-                console.log("event: ", eventData);
-
                 createNewEvent(eventData)
                   .then((result) => {
-                    console.log("Result: ", result);
                     return res.status(201).json({
                       status: res.statusCode,
                       success: true,
@@ -964,7 +843,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
                   })
                   .catch((err) => {
                     if (!!err) {
-                      console.log(err);
                       return res.status(500).json({
                         status: res.statusCode,
                         success: false,
@@ -984,7 +862,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
           });
         })
         .catch((err) => {
-          console.log(err);
           return res.status(500).json({
             status: res.statusCode,
             success: false,
@@ -993,7 +870,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
         });
     })
     .catch((err) => {
-      console.log(err);
       return res.status(500).json({
         status: res.statusCode,
         success: false,
@@ -1021,9 +897,6 @@ router.post("/", managerValidation, upload.any("file"), async (req, res) => {
  *      - userInfo: Object
  *          + username: String
  *          + role_name: String
- * @notes
- *      - Image data not implemented
- *      - Startdate needed?
  */
 router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
   const {
@@ -1037,28 +910,12 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
 
   const { eventId } = req.params;
 
-  /// Image base64 encoded upload
-
-  /* Check which fields is need to be updated !!!!!!!!!!!!!!! */
-
-  // var img = fs.readFileSync(req.file.path);
-  // console.log("path: ", req.file);
-  // var encode_image = img.toString("base64");
-
-  // var finalImg = {
-  //     contentType: req.file.mimetype,
-  //     image: new Buffer.from(encode_image, "base64"),
-  // };
-
-  // console.log("finalll: ", finalImg);
-
   let splittedEndDate = endDate.split("-");
   const newEndDate = new Date(
     splittedEndDate[0],
     splittedEndDate[1] - 1,
     splittedEndDate[2]
   ).getTime();
-  console.log(newEndDate);
 
   // Input endDate processing (from date format to timestamps)
   let splittedLastUpdateDate = lastUpdateDate.split("-");
@@ -1067,7 +924,6 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
     splittedLastUpdateDate[1] - 1,
     splittedLastUpdateDate[2]
   ).getTime();
-  console.log(newLastUpdateDate);
 
   // Get current time constants and create data Object
   const currentTime = new Date();
@@ -1082,11 +938,7 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
     facultyId: facultyId,
   };
 
-  console.log(eventData);
-
   // Insert event image into drive
-  console.log("files: ", req.files);
-
   // Get files[] from request
   const files = req.files;
 
@@ -1125,8 +977,6 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
           }
 
           // STEP 8: Get the file id after uploaded successful
-          console.log("File id: ", file.data.id);
-
           fs.unlinkSync(filedata.path);
 
           eventData.imageData = file.data.id;
@@ -1135,20 +985,22 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
           updateEvent(eventData)
             .then((result) => {
               return res.status(200).json({
+                status: res.statusCode,
                 success: true,
                 message: `Event ${title} updated successfully.`,
               });
             })
             .catch((err) => {
               if (!!err) {
-                console.log(err);
                 return res.status(500).json({
+                  status: res.statusCode,
                   success: false,
                   message: "Server error!",
                 });
               } else {
                 // If err = false return eventId not found
                 return res.status(404).json({
+                  status: res.statusCode,
                   success: false,
                   message: "Not found!",
                 });
@@ -1163,20 +1015,22 @@ router.put("/:eventId", managerValidation, upload.any("file"), (req, res) => {
     updateEvent(eventData)
       .then((result) => {
         return res.status(200).json({
+          status: res.statusCode,
           success: true,
           message: `Event ${title} updated successfully.`,
         });
       })
       .catch((err) => {
         if (!!err) {
-          console.log(err);
           return res.status(500).json({
+            status: res.statusCode,
             success: false,
             message: "Server error!",
           });
         } else {
           // If err = false return eventId not found
           return res.status(404).json({
+            status: res.statusCode,
             success: false,
             message: "Not found!",
           });
@@ -1202,20 +1056,22 @@ router.patch("/:eventId/publish", managerValidation, (req, res) => {
   query
     .then((result) => {
       return res.status(202).json({
+        status: res.statusCode,
         success: true,
         message: `Event ${result.event_title} published successfully`,
       });
     })
     .catch((err) => {
       if (!!err) {
-        console.log(err);
         return res.status(500).json({
+          status: res.statusCode,
           success: false,
           message: "Server error!",
         });
       } else {
         // If err == false, return event not found
         return res.status(404).json({
+          status: res.statusCode,
           success: false,
           message: "Invalid request!",
         });
@@ -1230,8 +1086,6 @@ router.patch("/:eventId/publish", managerValidation, (req, res) => {
  * @params
  *      - eventId: Int
  * @return null
- * @notes
- *      - Delete event on drive??? Or not??
  */
 router.delete("/:eventId", managerValidation, (req, res) => {
   const { eventId } = req.params;
@@ -1241,6 +1095,7 @@ router.delete("/:eventId", managerValidation, (req, res) => {
   query
     .then((result) => {
       return res.status(202).json({
+        status: res.statusCode,
         success: true,
         message: `Event ${result.event_title} deleted successfully`,
       });
@@ -1249,272 +1104,19 @@ router.delete("/:eventId", managerValidation, (req, res) => {
       if (!!err) {
         console.log(err);
         return res.status(500).json({
+          status: res.statusCode,
           success: false,
           message: "Server error!",
         });
       } else {
         // If err = false, return event not found
         return res.status(404).json({
+          status: res.statusCode,
           success: false,
           message: "Event not found!",
         });
       }
     });
-});
-
-// ================================================================ TEST UPLOAD
-
-const multer = require("multer");
-const fs = require("fs");
-const mysql = require("mysql2");
-const { dbconfig } = require("../utils/config/dbconfig");
-const { type } = require("os");
-
-// var storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, "./temp");
-//     },
-//     filename: (req, file, cb) => {
-//         cb(null, `${Date.now()}-${file.originalname}`);
-//     },
-// });
-
-// var upload = multer({ storage: storage });
-
-router.get("/updateEvent", (req, res) => {
-  res.render("updateEvent");
-});
-
-router.post("/createfolder", (req, res) => {
-  const { folderName } = req.body;
-
-  const oAuth2Client = getAuthClient();
-
-  const drive = google.drive({
-    version: "v3",
-    auth: oAuth2Client,
-  });
-
-  // ** Development code
-  var permissions = [
-    {
-      kind: "drive#permission",
-      type: "user",
-      role: "writer",
-      emailAddress: "trungduc.dev@gmail.com",
-    },
-    {
-      kind: "drive#permission",
-      type: "user",
-      role: "writer",
-      emailAddress: "ducdtgch18799@fpt.edu.vn",
-    },
-  ];
-  // **************************
-
-  const fileMetadata = {
-    name: folderName,
-    mimeType: "application/vnd.google-apps.folder",
-    // starred: true,
-  };
-
-  drive.files.create(
-    {
-      resource: fileMetadata,
-      fields: "id",
-    },
-    function (err, file) {
-      if (err) {
-        // Handle error
-        console.error(err);
-      } else {
-        console.log("Folder Id: ", file.data.id);
-
-        async.eachSeries(
-          permissions,
-          (permission, callback) => {
-            drive.permissions.create(
-              {
-                fileId: file.data.id,
-                requestBody: permission,
-                fields: "id",
-                sendNotificationEmail: false,
-              },
-              function (err, file) {
-                if (err) {
-                  console.error(err);
-                  callback(err);
-                } else {
-                  console.log("done");
-                  callback(err);
-                }
-              }
-            );
-          },
-          (err) => {
-            if (err) {
-              // Handle error
-              console.error(err);
-            } else {
-              // All permissions inserted
-              console.log("All permissions inserted");
-            }
-          }
-        );
-      }
-    }
-  );
-
-  console.log("name: ", folderName);
-});
-
-router.get("/testt", async (req, res) => {
-  const jwToken = new google.auth.JWT(
-    key.client_email,
-    null,
-    key.private_key,
-    process.env.SERVICE_ACCOUNT_SCOPES,
-    null
-  );
-  jwToken.authorize((err) => {
-    if (err) console.log("err: ", err);
-    else console.log("Authorization successful");
-  });
-  jwToken.getAccessToken().then((result) => {
-    // console.log(result)
-    jwToken
-      .getTokenInfo(result.token)
-      .then((tokenInfo) => console.log(tokenInfo));
-  });
-
-  const drive = google.drive({
-    version: "v3",
-    auth: jwToken,
-  });
-
-  // drive.files.get({
-  //   fileId: '1yEnOfJzvD9nrlSQVbJEHLwIHqm9QzgKu'
-  // }).then(result => console.log(("file info: ", result))).catch(err => console.log(err))
-
-  const a = {
-    hihi: "name",
-  };
-
-  a.test = {
-    hi: "",
-  };
-
-  a.test.hi = "lala";
-
-  console.log(a);
-
-  const query = getCoordinatorAccountByFacultyAndRole("1", "2");
-  let queryResult = [];
-
-  await query
-    .then((result) => {
-      console.log("result: ", result);
-      queryResult = result;
-    })
-    .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        messages: "Bad request",
-      });
-    });
-});
-
-router.get("/uploadimage", (req, res) => {
-  res.render("imageUpload");
-});
-
-router.post("/uploadimage", upload.single("file"), (req, res) => {
-  console.log("chay vao router");
-  const connection = mysql.createConnection(dbconfig);
-
-  connection.connect(function (err) {
-    if (!!err) console.log(err);
-    else console.log("Database connected");
-  });
-
-  // const imageFilter = (req, file, cb) => {
-  //     if (file.mimetype.startsWith("image")) {
-  //         cb(null, true);
-  //     } else {
-  //         cb("Please upload only images.", false);
-  //     }
-  // };
-
-  var img = fs.readFileSync(req.file.path);
-  const test = fs.readFileSync(req.file.path, "base64");
-  var encode_image = img.toString("base64");
-
-  var finalImg = {
-    contentType: req.file.mimetype,
-    image: new Buffer.from(encode_image, "base64"),
-  };
-
-  console.log("finalll: ", test);
-
-  const final = JSON.stringify(finalImg);
-
-  let sql = `INSERT INTO Test (image)
-              VALUES ('${test}')`;
-
-  connection.query(sql, (err, result) => {
-    if (err) throw err;
-    // Check if the Faculty is existed or not
-    let a = finalImg.image;
-    console.log("resultt: ", a);
-    fs.unlinkSync(req.file.path);
-    res.contentType("image/jpeg");
-    res.send(finalImg.image);
-  });
-
-  // uploadFile.single()
-
-  const uploadFiles = async (file) => {
-    console.log(file);
-    // try {
-
-    //   if (req.file == undefined) {
-    //     return res.send(`You must select a file.`);
-    //   }
-
-    //   Image.create({
-    //     type: req.file.mimetype,
-    //     name: req.file.originalname,
-    //     data: fs.readFileSync(
-    //       __basedir + "/resources/static/assets/uploads/" + req.file.filename
-    //     ),
-    //   }).then((image) => {
-    //     fs.writeFileSync(
-    //       __basedir + "/resources/static/assets/tmp/" + image.name,
-    //       image.data
-    //     );
-
-    //     return res.send(`File has been uploaded.`);
-    //   });
-    // } catch (error) {
-    //   console.log(error);
-    //   return res.send(`Error when trying upload images: ${error}`);
-    // }
-  };
-});
-
-// Update folder (Rename)
-// Delete folder
-
-router.get("/testDate", (req, res) => {
-  res.render("date");
-});
-
-router.post("/testDate", (req, res) => {
-  let { date } = req.body;
-  let splittedDate = date.split("-");
-  var newDate = new Date(splittedDate[0], splittedDate[1] - 1, splittedDate[2]);
-  console.log(splittedDate);
-  console.log(newDate.getTime());
 });
 
 module.exports = router;

@@ -8,13 +8,11 @@ const {
   getEventByArticleId,
   getPublishedEventOfFacultyId,
 } = require("./eventService");
-const {
-  getAllFaculty,
-  getFacultyById,
-} = require("./facultyService");
+const { getAllFaculty, getFacultyById } = require("./facultyService");
 const {
   getArticleById,
   getPostedArticlesOfEvent,
+  getPostedArticlesOfPublishedEvent,
   getArticleDetailById,
   getSelfArticles,
   createNewArticle,
@@ -22,7 +20,6 @@ const {
   getSelectedArticles,
   getRejectedArticles,
   getSubmittedArticleById,
-  addNewCommentToArticle,
   setArticleCommentOntime,
   setPendingArticle,
   setSelectedArticle,
@@ -32,29 +29,24 @@ const {
   setNewArticleSubmissionFolderId,
   getArticleInformationById,
   createPostedArticleImages,
-  getPostedArticleById
+  getPostedArticleById,
+  deleteArticleById,
 } = require("./articleService");
+const { getCoordinatorAccountsByFaculty } = require("./coordinatorService");
+const { getStudentAccountByFaculty } = require("./studentService");
 const {
-  getCoordinatorAccountsByFaculty,
-} = require("./coordinatorService");
-const {
-  getStudentAccountByFaculty,
-} = require("./studentService");
-const { getAccountByEmail, updateAccountInfoById } = require("./accountService");
-const { getImageById } = require("./imageService");
-const {
-  getAdminAccountByUsername,
+  getAccountByEmail,
+  updateAccountInfoById,
+  deleteAccountById,
   createNewAccount,
-  createNewGuestAccount,
   createAccountInformation,
   updateAccount,
   updateAccountStatus,
-  updateGuestAccount,
-  updateGuestAccountStatus,
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
-} = require("./adminService");
+} = require("./accountService");
+const { getAdminAccountByUsername } = require("./adminService");
 const {
   getFileDetailById,
   uploadFile,
@@ -62,6 +54,7 @@ const {
 } = require("./fileService");
 const {
   getCommentByArticleId,
+  addNewCommentToArticle,
 } = require("./commentService");
 const {
   getOverallStats,
@@ -70,13 +63,30 @@ const {
   getAverageCommentStats,
   getContributionEachMonthByYear,
 } = require("./statisticService");
-const { getGuestAccountByUsernameAndPassword } = require("./guestService");
-const { getAccountInfoById } = require('./accountInfoService')
-const { updateFacultyFolderId } = require("./appService")
+const {
+  getGuestAccountByUsernameAndPassword,
+  updateGuestAccount,
+  updateGuestAccountStatus,
+  createNewGuestAccount,
+  deleteGuestAccountById,
+  getAllGuestAccounts,
+} = require("./guestService");
+const { getAccountInfoById } = require("./accountInfoService");
+const { updateFacultyFolderId } = require("./appService");
 
 module.exports = {
   // ======================================================= Admin
   getAdminAccountByUsername: getAdminAccountByUsername,
+  // ================================================================
+
+  // ======================================================= Coordinator
+  getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
+  // ================================================================
+
+  // ======================================================= Account
+  getAccountByEmail: getAccountByEmail,
+  updateAccountInfoById: updateAccountInfoById,
+  deleteAccountById: deleteAccountById,
   // Create new account
   createNewAccount: createNewAccount,
   // Create new account's information
@@ -90,21 +100,6 @@ module.exports = {
   getAllRolesInformation: getAllRolesInformation,
   // Get all accounts by role
   getAccountsByRole: getAccountsByRole,
-  // Create new guest account
-  createNewGuestAccount: createNewGuestAccount,
-  // Update guest account
-  updateGuestAccount: updateGuestAccount,
-  // Update guest account status
-  updateGuestAccountStatus: updateGuestAccountStatus,
-  // ================================================================
-
-  // ======================================================= Coordinator
-  getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
-  // ================================================================
-
-  // ======================================================= Account
-  getAccountByEmail: getAccountByEmail,
-  updateAccountInfoById: updateAccountInfoById,
   // ================================================================
 
   // ======================================================= Account Info
@@ -159,8 +154,6 @@ module.exports = {
   getRejectedArticles: getRejectedArticles,
   // Get a specific article by id
   getSubmittedArticleById: getSubmittedArticleById,
-  // Add a comment to an article
-  addNewCommentToArticle: addNewCommentToArticle,
   // Set status of article to 'pending'
   setPendingArticle: setPendingArticle,
   // Set status of article to 'selected'
@@ -175,8 +168,12 @@ module.exports = {
   getArticleInformationById: getArticleInformationById,
   // Insert images of posted article into database
   createPostedArticleImages: createPostedArticleImages,
-  // Get posted article information by id
+  // Get posted article information by id for manager and coordinator
   getPostedArticleById: getPostedArticleById,
+  // Get posted article of only published event for student and guest
+  getPostedArticlesOfPublishedEvent: getPostedArticlesOfPublishedEvent,
+  // Delete an article
+  deleteArticleById: deleteArticleById,
   // ================================================================
 
   // ======================================================= File
@@ -190,16 +187,14 @@ module.exports = {
   getStudentAccountByFaculty: getStudentAccountByFaculty,
   // ================================================================
 
-  // ======================================================= Image
-  getImageById: getImageById,
-  // ================================================================
-
   // ======================================================= Comment
   getCommentByArticleId: getCommentByArticleId,
+  // Add a comment to an article
+  addNewCommentToArticle: addNewCommentToArticle,
   // ================================================================
 
   // ======================================================= Statistic
-  // Count total of Stats in general: All Event, All Contribution, ALL Selected, ALL Rejected
+  // Count total of Stats in general: All Event, All Contribution, all Selected, all Rejected
   getOverallStats: getOverallStats,
   // Count total of Contribution By Faculty And Article_STATUS
   getContributionByFaculty: getContributionByFaculty,
@@ -211,11 +206,19 @@ module.exports = {
   getContributionEachMonthByYear: getContributionEachMonthByYear,
   // ================================================================
 
-  // =========================================================== GUEST
+  // =========================================================== Guest
   getGuestAccountByUsernameAndPassword: getGuestAccountByUsernameAndPassword,
+  getAllGuestAccounts: getAllGuestAccounts,
+  deleteGuestAccountById: deleteGuestAccountById,
+  // Create new guest account
+  createNewGuestAccount: createNewGuestAccount,
+  // Update guest account
+  updateGuestAccount: updateGuestAccount,
+  // Update guest account status
+  updateGuestAccountStatus: updateGuestAccountStatus,
   // ================================================================
-  
-  // ============================================================ APP
-  updateFacultyFolderId: updateFacultyFolderId
+
+  // ============================================================ App
+  updateFacultyFolderId: updateFacultyFolderId,
   // ================================================================
 };

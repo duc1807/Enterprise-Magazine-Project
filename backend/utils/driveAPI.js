@@ -27,7 +27,6 @@ const getAuthServiceJwt = () => {
     if (err) console.log("err: ", err);
     else console.log("Authorization successful");
   });
-
   return jwToken;
 };
 
@@ -65,7 +64,7 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
             callback(err);
           } else {
             console.log(`Added ${permission.emailAddress} to Event`);
-            // callback(err);           ????????????
+            callback(err);
           }
         }
       );
@@ -75,7 +74,7 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
         // Handle error
         console.error(err);
       } else {
-        // All permissions inserted
+        // All permissions inserted successful
         console.log("All permissions inserted");
       }
     }
@@ -83,12 +82,10 @@ const insertPermissionsToFolderId = async (permissionList, folderId) => {
 };
 
 /**
- * @description move article submission folder of student to "Selected Article" folder on Drive
+ * @description Move article submission folder of student to "Selected Article" folder on Drive
  * @params
  *      - Article info INNER JOIN Event info
  * @return null
- * @notes
- *      - Using try catch to retry in case the drive API is down
  */
 const moveFolderToOtherFolder = async (articleAndEventInfo) => {
   const data = articleAndEventInfo;
@@ -169,7 +166,6 @@ const createFolder = async (folderMetadata) => {
           // Handle error
           reject(err);
         } else {
-          console.log("Event folder Id: ", file.data.id);
           resolve(file.data.id);
         }
       }
@@ -238,8 +234,6 @@ const createSubFolders = (
             reject(err);
             console.error(err);
           } else {
-            console.log(`${subFolderMetadata.name} Id: `, file.data.id);
-
             // If folder is all articles, insert the permission for student
             if (
               subFolderMetadata.name == subFolderConstants.allArticlesFolderName
@@ -247,7 +241,6 @@ const createSubFolders = (
               // insertPermissionsToFolderId(studentPermissions, file.data.id);
             }
 
-            /* Hardcoding !!!!!!!!!!!!!!!!!!!!! */
             // If the folder is selected articles, assign the folderId to '_subFolderId' Object
             if (folder.name == subFolderConstants.acceptedArticlesFolderName) {
               _subFolderId.acceptedArticlesId = file.data.id;
@@ -357,7 +350,7 @@ const createFacultiesFolders = (
               let isFulfilled = true;
               for (const facultyFolderId in _facultiesFoldersId) {
                 // If a property of "_facultiesFoldersId" does not have value
-                // set isFulfilled = false 
+                // set isFulfilled = false
                 if (
                   arrayFacultyName.includes(
                     _facultiesFoldersId[facultyFolderId]

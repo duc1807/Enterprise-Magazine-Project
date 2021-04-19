@@ -1,4 +1,4 @@
-const { getDataBaseConnection } = require('./connection/dbConnection')
+const { getDataBaseConnection } = require("./connection/dbConnection");
 
 const DB_TABLE = "Article";
 
@@ -175,17 +175,18 @@ const getFileAndCommentByFileId = async (fileId, articleId) => {
 // };
 
 // ============================================== DEVELOPMENT CODE (getPostedArticlesOfEvent)
-
-const getPostedArticlesOfEvent = async (eventId) => {
+// Student and Guest get only posted article of published event
+const getPostedArticlesOfPublishedEvent = async (eventId) => {
   let db = getDataBaseConnection();
 
   const sql =
-    // Get event information
+    // Get event information (and published)
     `SELECT * FROM Event
-              WHERE event_id = ${eventId};` +
-    // Get articles (nullable)
-    `SELECT * FROM Posted_Article 
-              WHERE FK_event_id = ${eventId}`;
+              WHERE event_id = ${eventId} AND event_published = 1;`;
+  // Get articles (nullable) INNER JOIN PA_Image
+  const sql1 = `SELECT * FROM Article 
+                WHERE FK_event_id = ${eventId} 
+                AND article_status = '${ARTICLE_STATUS.accepted}'`;
   // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
   // `;
 
@@ -194,12 +195,57 @@ const getPostedArticlesOfEvent = async (eventId) => {
       if (!!err) reject(err);
 
       // Check if event is existed or not
-      if (!result[0].length) {
+      if (!result.length) {
         reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          // Return eventInfo and its posted articles
+          const data = {
+            eventInfo: result[0],
+            postedArticles: result1
+          }
+          resolve(data);
+        });
       }
-      console.log("event res: ", result);
-      // Return result at the last position (Event info & Posted articles)
-      resolve([result[0], result[1]]);
+      db.end();
+    });
+  });
+};
+
+// Manager and Coordinator get posted article of any event
+const getPostedArticlesOfEvent = async (eventId) => {
+  let db = getDataBaseConnection();
+
+  const sql =
+    // Get event information (and published)
+              `SELECT * FROM Event
+              WHERE event_id = ${eventId}`;
+  // Get articles (nullable) INNER JOIN PA_Image
+  const sql1 = `SELECT * FROM Article 
+                WHERE FK_event_id = ${eventId} 
+                AND article_status = '${ARTICLE_STATUS.accepted}'`;
+  // AND ${DB_TABLE}._article_status = '${ARTICLE_STATUS.posted}'
+  // `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+
+      // Check if event is existed or not
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result1) => {
+          if (!!err) reject(err);
+          // Return eventInfo and its posted articles
+          const data = {
+            eventInfo: result[0],
+            postedArticles: result1
+          }
+          resolve(data);
+        });
+      }
       db.end();
     });
   });
@@ -246,14 +292,18 @@ const createNewArticle = (articleInfo) => {
     articleFolderId,
     FK_account_id,
     FK_event_id,
+    title,
+    content,
+    author
   } = articleInfo;
 
   let db = getDataBaseConnection();
 
   const sql = `INSERT INTO ${DB_TABLE}
-              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id)
+              (article_submission_date, article_status, article_folderId, FK_account_id, FK_event_id,
+                article_title, article_content, article_author)
               VALUES (${articleSubmissionDate}, '${ARTICLE_STATUS.pending}', '${articleFolderId}',
-              ${FK_account_id}, ${FK_event_id})`;
+              ${FK_account_id}, ${FK_event_id}, '${title}', '${content}', '${author}')`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -490,53 +540,6 @@ const getSubmittedArticleById = (articleId) => {
   });
 };
 
-/**
- * @description Add new comment to a specific article
- * @params
- *      - commentInfo: Object
- * 		  - userInfo: Object
- * @return null
- * @notes
- */
-const addNewCommentToArticle = (commentInfo, userInfo) => {
-  const { content, time, FK_article_id, FK_account_id } = commentInfo;
-  let db = getDataBaseConnection();
-
-  // Check if the current user has permission to add comment to the article or not
-  const sql = `SELECT * , Event.event_id, Event.FK_faculty_id
-				FROM Article
-				LEFT JOIN Event
-				ON Article.FK_event_id = Event.event_id
-				LEFT JOIN Faculty
-				ON Event.FK_faculty_id = Faculty.faculty_id
-				LEFT JOIN Account
-				ON Account.FK_faculty_id = Faculty.faculty_id
-				WHERE Article.article_id = ${FK_article_id}
-				AND Account.account_id = ${userInfo.account_id}`;
-
-  // SQL for insert comment into database
-  const sql1 = `INSERT INTO
-                Comment (comment_content, comment_time, FK_article_id, FK_account_id)
-				VALUES ('${content}', '${time}', '${FK_article_id}', '${FK_account_id}')`;
-
-  return new Promise((resolve, reject) => {
-    db.query(sql, (err, result) => {
-      if (!!err) reject(err);
-
-      // Check if the article exist or the faculty permission is valid
-      if (!result.length) {
-        reject(false);
-      } else {
-        db.query(sql1, (err, result1) => {
-          if (!!err) reject(err);
-          resolve(result1);
-        });
-      }
-      db.end();
-    });
-  });
-};
-
 const setArticleCommentOntime = (articleId, status) => {
   let db = getDataBaseConnection();
 
@@ -574,7 +577,7 @@ const createPostedArticle = (articleInfo, coordinatorId) => {
               AND Event.event_id = ${eventId}`;
   // Create new posted article
   const sql1 = `INSERT INTO Posted_Article(PA_title, PA_content, PA_author, PA_posted_date, FK_event_id)
-                VALUES ('${title}', '${content}', '${author}', ${postedDate}, ${eventId})`
+                VALUES ('${title}', '${content}', '${author}', ${postedDate}, ${eventId})`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -583,11 +586,10 @@ const createPostedArticle = (articleInfo, coordinatorId) => {
         reject(false);
       } else {
         // If valid, create posted article
-        db.query(sql1, (err, result1) => 
-        {
+        db.query(sql1, (err, result1) => {
           if (!!err) reject(err);
           resolve(result1);
-        })
+        });
       }
       db.end();
     });
@@ -697,11 +699,10 @@ const setRejectedArticle = (articleId) => {
 const createPostedArticleImages = async (imageIdArr, postedArticleId) => {
   let db = getDataBaseConnection();
 
-  const sql = `INSERT INTO PA_Image (Image_image, FK_PA_id)
+  const sql =
+    `INSERT INTO PA_Image (Image_image, FK_PA_id)
               VALUES ` +
-              `${imageIdArr.map(
-              (imageId) => `('${imageId}', ${postedArticleId})`
-              )}`;
+    `${imageIdArr.map((imageId) => `('${imageId}', ${postedArticleId})`)}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
@@ -716,15 +717,15 @@ const getPostedArticleById = async (postedArticleId) => {
   let db = getDataBaseConnection();
 
   const sql = `SELECT * FROM Posted_Article
-              INNER JOIN PA_Image
+              LEFT JOIN PA_Image
               ON PA_Image.FK_PA_id = Posted_Article.PA_id
               WHERE Posted_Article.PA_id = ${postedArticleId}`;
 
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (err) reject(err);
-      if(!result.length) {
-        reject(false)
+      if (!result.length) {
+        reject(false);
       } else {
         resolve(result);
       }
@@ -733,17 +734,45 @@ const getPostedArticleById = async (postedArticleId) => {
   });
 };
 
+const deleteArticleById = async (articleId, userId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Article
+              WHERE article_id = ${articleId} 
+              AND FK_account_id = ${userId} 
+              AND article_status = '${ARTICLE_STATUS.pending}'`;
+              
+  const sql1 = `DELETE FROM Article
+                WHERE article_id = ${articleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (err) reject(err);
+      if (!result.length) {
+        reject(false);
+      } else {
+        db.query(sql1, (err, result) => {
+          if (err) reject(err);
+          resolve(result)
+        })
+      }
+      db.end();
+    });
+  });
+};
+
+
 module.exports = {
   getArticleById: getArticleByIdAndUserId,
   getArticleDetailById: getArticleDetailById,
   getSelfArticles: getSelfArticles,
   getPostedArticlesOfEvent: getPostedArticlesOfEvent,
+  getPostedArticlesOfPublishedEvent: getPostedArticlesOfPublishedEvent,
   getSubmittedArticles: getSubmittedArticlesByEventId,
   getSelectedArticles: getSelectedArticlesByEventId,
   getRejectedArticles: getRejectedArticlesByEventId,
   getSubmittedArticleById: getSubmittedArticleById,
   getFileAndCommentByFileId: getFileAndCommentByFileId,
-  addNewCommentToArticle: addNewCommentToArticle,
   setArticleCommentOntime: setArticleCommentOntime,
   createNewArticle: createNewArticle,
   createPostedArticle: createPostedArticle,
@@ -753,5 +782,6 @@ module.exports = {
   setNewArticleSubmissionFolderId: setNewArticleSubmissionFolderId,
   getArticleInformationById: getArticleInformationById,
   createPostedArticleImages: createPostedArticleImages,
-  getPostedArticleById: getPostedArticleById
+  getPostedArticleById: getPostedArticleById,
+  deleteArticleById: deleteArticleById,
 };

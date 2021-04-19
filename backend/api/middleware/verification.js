@@ -193,38 +193,8 @@ const gwAccountValidation = (req, res, next) => {
   });
 };
 
-
-// ====================================================== Test code
-
-const studentValidation = (req, res, next) => {
-  // Retrieve the token from cookies
-  const token = req.cookies["Token"];
-  // If the token is not existed, throw 401 error
-  if (!token) {
-    return res.status(401).json({
-      status: res.statusCode,
-      success: false,
-      message: "Please login",
-    });
-  }
-  // Check if the token is not valid | expired, throw 401 error if true
-  webToken.verify(token, env.ACCESS_TOKEN_SECRET, (err, data) => {
-    if (err)
-      return res.status(403).json({
-        status: res.statusCode,
-        success: false,
-        message: "Session expired! Please login",
-      });
-    // If the user permission is not student, throw the 401 error to prevent unauthorised access
-    res.locals.data = data;
-    console.log("qua verifi func");
-    next();
-  });
-};
-
 module.exports = {
   adminValidation: adminValidation,
-  studentValidation: studentValidation,
   accessValidation: accessValidation,
   managerValidation: managerValidation,
   coordinatorValidation: coordinatorValidation,

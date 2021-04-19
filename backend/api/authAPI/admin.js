@@ -28,21 +28,11 @@ const _ROUTER_ROLE = "admin";
  *            + role_name: String
  *        - iat: Int
  *        - exp: Int
- * @note
- *    - (!!! CORS problems)
  */
 router.get("/", adminValidation, (req, res) => {
   console.log("data", res.locals.data);
   // Get user info passed from middleware
   const data = res.locals.data;
-
-  // Set header respones ????
-  res.setHeader(
-    "X-Content-Type-Options",
-    "nosniff",
-    "X-XSS-Protection",
-    "1;mode=block"
-  );
 
   res.status(200).json({
     status: res.statusCode,
@@ -178,33 +168,6 @@ router.post("/logout", (req, res) => {
     status: res.statusCode,
     success: true,
     message: "Signed out",
-  });
-});
-
-// ========================================= API FOR TESTING
-const {
-  getDataBaseConnection,
-} = require("../../utils/dbService/connection/dbConnection");
-
-router.get("/all-accounts", (req, res) => {
-  let db = getDataBaseConnection();
-
-  const sql = `SELECT * FROM Account`;
-
-  db.query(sql, (err, result) => {
-    if (!!err) {
-      return res.status(500).json({
-        status: res.statusCode,
-        success: false,
-        message: "Server error",
-      });
-    }
-    db.end();
-    return res.status(200).json({
-      status: res.statusCode,
-      success: true,
-      accounts: result,
-    });
   });
 });
 

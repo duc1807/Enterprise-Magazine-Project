@@ -26,6 +26,7 @@ const {
   getFileDetailById,
   createPostedArticleImages,
   getPostedArticleById,
+  deleteArticleById,
 } = require("../utils/dbService/index");
 const {
   moveFolderToOtherFolder,
@@ -35,10 +36,12 @@ const {
 const {
   gwAccountValidation,
   coordinatorValidation,
+  accessValidation,
 } = require("./middleware/verification");
 
 // Constants
 const _COORDINATOR_ROLE_ID = 2;
+const STAFF_ROLE_ID = [2, 3];
 const _STUDENT_ROLE_ID = 1;
 const POSTED_ARTICLE_IMAGE_STORAGE = "1Fy9FIpJKDenMEp7n5nI01eeRhXZgtcK_";
 
@@ -53,14 +56,10 @@ const POSTED_ARTICLE_IMAGE_STORAGE = "1Fy9FIpJKDenMEp7n5nI01eeRhXZgtcK_";
  *    - status: Int
  *    - success: Boolean
  *    - myArticles: Array[Object]
- * @notes
- *    - Need endDate2
  */
 router.get("/my-articles", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
-
-  console.log("data: ", data);
 
   // Get all articles list of current user
   const query = getSelfArticles(data.userInfo.account_id);
@@ -106,177 +105,139 @@ router.get("/my-articles", gwAccountValidation, async (req, res) => {
  *    - status: Int
  *    - success: Boolean
  *    - article: Object
- * @notes
- *    - Not yet validation coordinator with exact faculty ??? Is coordinator need this API ??? Already have another API
- *    - if needed, can get article JOIN account_submission => then check coordinator faculty with account_submission faculty
  */
-router.get("/:articleId", gwAccountValidation, async (req, res) => {
+router.get("/:articleId", accessValidation, async (req, res) => {
   // Get articleId from params
   const { articleId } = req.params;
 
-  // Get userInfo passed from middleware
-  const data = res.locals.data;
+  // Get article information (with files & comments)
+  const query = getArticleDetailById(articleId);
 
-  // Promise to check user role is student or coordinator
-  const roleValidation = new Promise((resolve, reject) => {
-    // If role is "student", check if student has permission to get this article
-    if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
-      // Get article by id and student_id to check if student has permission to access the article
-      getArticleById(articleId, data.userInfo.account_id)
-        .then((result) => {
-          resolve();
-        })
-        .catch((err) => {
-          if (!!err) {
-            console.log("Err: ", err);
-            return res.status(500).json({
-              status: res.statusCode,
-              success: false,
-              message: "Server error",
-            });
-          } else {
-            return res.status(401).json({
-              status: res.statusCode,
-              success: false,
-              messsage: "Permission required",
-            });
-          }
-        });
-    } else {
-      resolve();
-    }
-  });
+  await query
+    .then((result) => {
+      // result[0] : article and its files
+      // result[1] : article and its comments
+      console.log("result: ", result);
 
-  roleValidation.then(async () => {
-    // Get article information (with files & comments)
-    const query = getArticleDetailById(articleId);
+      // Create array to store final data to return to frontend
+      let articlesResult = [];
 
-    await query
-      .then((result) => {
-        // result[0] : article and its files
-        // result[1] : article and its comments
-        console.log("result: ", result);
+      // Create array for storing distinc iterated article_id
+      let passedArticlesId = [];
 
-        // Create array to store final data to return to frontend
-        let articlesResult = [];
+      // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
+      let articlesPositionDetail = {};
 
-        // Create array for storing distinc iterated article_id
-        let passedArticlesId = [];
+      // Itarate each data in result[0]
+      result[0].map((articleInfo) => {
+        // Check if this article is exist in 'articlesResult' array or not
+        if (passedArticlesId.includes(articleInfo.article_id)) {
+          // If this article existed in 'articlesResult' array, push its file into 'article.files'
 
-        // Create Object for storing the article's position in 'articlesResult[]' for searching optimization
-        let articlesPositionDetail = {};
-
-        // Itarate each data in result[0]
-        result[0].map((articleInfo) => {
-          // Check if this article is exist in 'articlesResult' array or not
-          if (passedArticlesId.includes(articleInfo.article_id)) {
-            // If this article existed in 'articlesResult' array, push its file into 'article.files'
-
-            // Get position of the article in 'articlesResult[]'
-            let articlePosition =
-              articlesPositionDetail[articleInfo.article_folderId];
-            console.log("position: ", articlePosition);
-
-            // Create file Object to store file information
-            let file = {
-              file_id: articleInfo.file_id,
-              file_mimeType: articleInfo.file_mimeType,
-              file_name: articleInfo.file_name,
-              file_fileId: articleInfo.file_fileId,
-              FK_article_id: articleInfo.FK_article_id,
-            };
-
-            // Insert file Object to its article in 'articlesResult[]'
-            articlesResult[articlePosition].files.push(file);
-          } else {
-            // If this article not exist, push the article_id into 'passedArticlesId'
-            passedArticlesId.push(articleInfo.article_id);
-
-            // Create article Object to store information from result
-            let article = {
-              article_id: articleInfo.article_id,
-              article_submission_date: articleInfo.article_submission_date,
-              article_status: articleInfo.article_status,
-              article_folderId: articleInfo.article_folderId,
-              email: articleInfo.email,
-              FK_faculty_id: articleInfo.FK_faculty_id,
-              FK_account_id: articleInfo.FK_account_id,
-              FK_event_id: articleInfo.FK_event_id,
-              files: [],
-              comments: [],
-            };
-
-            // Create file Object to store file information
-            let file = {
-              file_id: articleInfo.file_id,
-              file_mimeType: articleInfo.file_mimeType,
-              file_name: articleInfo.file_name,
-              file_fileId: articleInfo.file_fileId,
-              FK_article_id: articleInfo.FK_article_id,
-            };
-
-            // Push file Object into 'article.files' (only in first-time run)
-            article.files.push(file);
-
-            // Finally, push article information into 'articlesResult[]'
-            articlesResult.push(article);
-
-            // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
-            articlesPositionDetail[articleInfo.article_folderId] =
-              articlesResult.length - 1;
-          }
-        });
-
-        // Itarate each data in result[1]
-        result[1].map((articleInfo) => {
           // Get position of the article in 'articlesResult[]'
           let articlePosition =
             articlesPositionDetail[articleInfo.article_folderId];
           console.log("position: ", articlePosition);
 
           // Create file Object to store file information
-          let comment = {
-            comment_id: articleInfo.comment_id,
-            comment_time: articleInfo.comment_time,
-            comment_content: articleInfo.comment_content,
+          let file = {
+            file_id: articleInfo.file_id,
+            file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
+            file_fileId: articleInfo.file_fileId,
             FK_article_id: articleInfo.FK_article_id,
-            FK_account_id: articleInfo.FK_account_id,
           };
 
           // Insert file Object to its article in 'articlesResult[]'
-          articlesResult[articlePosition].comments.push(comment);
-        });
-
-        // Finally, response the selectedArticles[]
-        res.status(200).json({
-          status: res.statusCode,
-          success: true,
-          article: articlesResult,
-        });
-      })
-      .catch((err) => {
-        if (err) {
-          console.log("Err: ", err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request",
-          });
+          articlesResult[articlePosition].files.push(file);
         } else {
-          // If err == false => Event not found
-          return res.status(404).json({
-            status: res.statusCode,
-            success: false,
-            message: "Event not found",
-          });
+          // If this article not exist, push the article_id into 'passedArticlesId'
+          passedArticlesId.push(articleInfo.article_id);
+
+          // Create article Object to store information from result
+          let article = {
+            article_id: articleInfo.article_id,
+            article_submission_date: articleInfo.article_submission_date,
+            article_status: articleInfo.article_status,
+            article_folderId: articleInfo.article_folderId,
+            email: articleInfo.email,
+            FK_faculty_id: articleInfo.FK_faculty_id,
+            FK_account_id: articleInfo.FK_account_id,
+            FK_event_id: articleInfo.FK_event_id,
+            files: [],
+            comments: [],
+          };
+
+          // Create file Object to store file information
+          let file = {
+            file_id: articleInfo.file_id,
+            file_mimeType: articleInfo.file_mimeType,
+            file_name: articleInfo.file_name,
+            file_fileId: articleInfo.file_fileId,
+            FK_article_id: articleInfo.FK_article_id,
+          };
+
+          // Push file Object into 'article.files' (only in first-time run)
+          article.files.push(file);
+
+          // Finally, push article information into 'articlesResult[]'
+          articlesResult.push(article);
+
+          // Storing article position in Object (key: articleFolderId, value: position in 'articlesResult[]')
+          articlesPositionDetail[articleInfo.article_folderId] =
+            articlesResult.length - 1;
         }
       });
-  });
+
+      // Itarate each data in result[1]
+      result[1].map((articleInfo) => {
+        // Get position of the article in 'articlesResult[]'
+        let articlePosition =
+          articlesPositionDetail[articleInfo.article_folderId];
+        console.log("position: ", articlePosition);
+
+        // Create file Object to store file information
+        let comment = {
+          comment_id: articleInfo.comment_id,
+          comment_time: articleInfo.comment_time,
+          comment_content: articleInfo.comment_content,
+          FK_article_id: articleInfo.FK_article_id,
+          FK_account_id: articleInfo.FK_account_id,
+        };
+
+        // Insert file Object to its article in 'articlesResult[]'
+        articlesResult[articlePosition].comments.push(comment);
+      });
+
+      // Finally, response the selectedArticles[]
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        article: articlesResult,
+      });
+    })
+    .catch((err) => {
+      if (err) {
+        console.log("Err: ", err);
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        // If err == false => Event not found
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Event not found",
+        });
+      }
+    });
 });
 
 /**
  * @method GET
- * @API /api/article/:articleId/file/:fileId/        ?????????????
+ * @API /api/article/:articleId/file/:fileId/
  * @permission
  *    - Manager coordinator of exact faculty
  * @description API for getting article's .doc file information & comments
@@ -287,9 +248,6 @@ router.get("/:articleId", gwAccountValidation, async (req, res) => {
  *
  *    - file: Object
  *    - comments: Array[Object]
- * @notes
- *    - Not yet validate permission
- *    - Replace ??? Dont need !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 router.get(
   "/:articleId/file/:fileId",
@@ -298,23 +256,11 @@ router.get(
     // Get articleId from params
     const { articleId, fileId } = req.params;
 
-    // Get userInfo passed from middleware
-    const data = res.locals.data;
-
     // Get files and comments by fileId and articleId
     const query = getFileAndCommentByFileId(fileId, articleId);
 
     await query
       .then(async (result) => {
-        // Initialize drive service
-        const jwToken = await getAuthServiceJwt();
-        const drive = google.drive({
-          version: "v3",
-          auth: jwToken,
-        });
-
-        console.log("result: ", result);
-
         // Assignn result to variables
         const file = result[0][0]; // Because the file is only 1, so get the Object data at position 0
         const comments = result[1];
@@ -365,9 +311,6 @@ router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get articleId from params
   const { articleId } = req.params;
 
-  // Get userInfo passed from middleware
-  const data = res.locals.data;
-
   // Get files and comments by fileId and articleId
   const query = getCommentByArticleId(articleId);
 
@@ -392,6 +335,55 @@ router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
 
 /**
  * @method DELETE
+ * @API /api/article/:articleId/
+ * @permission
+ *    - Student with exact articleId
+ * @description API for deleting an article
+ * @params
+ *    - articleId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ * @notes
+ */
+router.delete("/:articleId/", gwAccountValidation, async (req, res) => {
+  // Get articleId from params
+  const { articleId } = req.params;
+
+  // Get userInfo passed from middleware
+  const data = res.locals.data;
+
+  const query = deleteArticleById(articleId, data.userInfo.account_id);
+
+  query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Article deleted successful",
+      });
+    })
+    .catch((err) => {
+      if (err) {
+        return res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        // If err == false => Event not found
+        return res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
+    });
+});
+
+/**
+ * @method DELETE
  * @API /api/article/:articleId/file/:fileId/
  * @permission
  *    - Student with exact articleId
@@ -411,7 +403,7 @@ router.delete(
   gwAccountValidation,
   async (req, res) => {
     // Get articleId from params
-    const { articleId, fileId } = req.params;
+    const { fileId } = req.params;
 
     // Get userInfo passed from middleware
     const data = res.locals.data;
@@ -438,7 +430,6 @@ router.delete(
           })
           .catch((err) => {
             if (err) {
-              console.log("Err: ", err);
               return res.status(501).json({
                 status: res.statusCode,
                 success: false,
@@ -468,8 +459,6 @@ router.delete(
  *    - articleId: Int
  * 		- content: String (comment)
  * @return null
- * @notes
- *    - (!!! CORS problems)
  */
 router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get comment content
@@ -489,9 +478,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     });
   }
 
-  // Log the data for testing
-  console.log("data: ", data);
-
   // Get the current time
   const currentTime = new Date();
 
@@ -508,9 +494,7 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     .then(async (result) => {
       await getArticleInformationById(articleId)
         .then((result1) => {
-          console.log(result1);
           // Get defalt article at position[0]
-          console.log(result1[0].article_submission_date);
           const articleSubmittedDate = result1[0].article_submission_date;
           const commentOntime = result1[0].comment_onTime;
 
@@ -528,7 +512,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
                   });
                 })
                 .catch((err) => {
-                  console.log("Err: ", err);
                   return res.status(501).json({
                     status: res.statusCode,
                     success: false,
@@ -572,7 +555,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -599,8 +581,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
  *    - status: Int
  *    - success: Boolean
  *    - message: String
- * @notes
- *    - Still not validate permission
  */
 router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
   // Get articleId from param
@@ -637,6 +617,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
           return res.status(204).json({
             status: res.statusCode,
             success: true,
+            messages: "Article selected",
           });
         })
         .catch((err) => {
@@ -650,7 +631,6 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -683,12 +663,8 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
   // Get articleId from req.params
   const { articleId } = req.params;
 
-  console.log("ARTICLEID: ", articleId);
-
   // Get the userInfo passed from middleware
   const data = res.locals.data;
-
-  console.log("DATA USERINFO: ", data);
 
   // Check if user has permisson to this api or not
   if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
@@ -712,7 +688,6 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log(err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -744,6 +719,7 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
  *    - success: Boolean
  *    - message: String
  * @notes
+ *    - Dont need for coordinator ========================================== ???????????
  */
 router.post(
   "/post-article/:eventId",
@@ -753,7 +729,7 @@ router.post(
     // Get information from param
     const { eventId } = req.params;
     // Get data from req.body
-    const { title, content, author } = req.body;
+    const { title, content, author } = JSON.parse(req.body.newPost);
 
     // Get userInfo passed from middleware
     const data = res.locals.data;
@@ -782,7 +758,7 @@ router.post(
     const query = createPostedArticle(article, data.userInfo.FK_faculty_id);
 
     await query
-      .then(async(result) => {
+      .then(async (result) => {
         // Get posted_article id
         const postedArticleId = result.insertId;
 
@@ -907,44 +883,11 @@ router.get("/posted/:postedArticleId", async (req, res) => {
 
   await query
     .then((postedArticles) => {
-      let article = undefined
-      postedArticles.forEach(postedArticle => {
-        if (!article) {
-          // Create image info Object
-          const imageInfo = {
-            Image_id: postedArticle.Image_id,
-            Image_image: postedArticle.Image_image,
-            FK_PA_id: postedArticle.FK_PA_id,
-          }
-
-          // Initialize data for article
-          article = {
-            PA_id: postedArticle.PA_id,
-            PA_title: postedArticle.PA_title,
-            PA_content:postedArticle.PA_content,
-            PA_author: postedArticle.PA_author,
-            PA_posted_date: postedArticle.PA_posted_date,
-            FK_event_id: postedArticle.FK_event_id,
-            images: [imageInfo]
-          }     
-        } else {
-          // Create image info Object
-          const imageInfo = {
-            Image_id: postedArticle.Image_id,
-            Image_image: postedArticle.Image_image,
-            FK_PA_id: postedArticle.FK_PA_id,
-          }
-
-          // Push image to article
-          article.images.push(imageInfo)
-        }
-      })
-
-      // Finally, response the comments[]
+      // Finally, response the posted article information
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        article: article,
+        article: postedArticles[0],
       });
     })
     .catch((err) => {
@@ -984,9 +927,8 @@ router.put(
     // Get the userInfo passed from middleware
     const data = res.locals.data;
 
-    // Get articleId from req.params and initialize facultyId
+    // Get articleId from req.params
     const { articleId } = req.params;
-    const facultyId = data.userInfo.FK_faculty_id;
 
     // Initialize the articleResult to hold the result return from query
     let articleResult = undefined;
@@ -1007,7 +949,6 @@ router.put(
 
     await query
       .then((result) => {
-        console.log("res: ", result);
         // Get the article at the position 0 (Bcs only 1 article found)
         articleResult = result[0];
       })
@@ -1044,7 +985,6 @@ router.put(
     // Upload file function
     uploadMultiple(req, res, function (err) {
       if (err) throw err;
-      console.log("files: ", req.files);
 
       const files = req.files;
 

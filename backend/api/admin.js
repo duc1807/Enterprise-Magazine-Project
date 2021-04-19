@@ -1,5 +1,4 @@
 const express = require("express");
-const { google } = require("googleapis");
 const router = express.Router();
 
 // Import modules from other file
@@ -7,14 +6,15 @@ const { adminValidation } = require("./middleware/verification");
 const {
   createNewAccount,
   createAccountInformation,
-  updateAccount,
-  updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
   createNewGuestAccount,
   updateGuestAccount,
   updateGuestAccountStatus,
   updateAccountStatus,
+  getAllGuestAccounts,
+  deleteGuestAccountById,
+  deleteAccountById,
 } = require("../utils/dbService/index");
 
 /**
@@ -27,7 +27,7 @@ const {
  *    - success: Boolean
  *    - roles: Array[]
  */
-router.get("/roles", async (req, res) => {
+router.get("/roles", adminValidation, async (req, res) => {
   // Get all roles information from database
   const query = getAllRolesInformation();
 
@@ -60,7 +60,7 @@ router.get("/roles", async (req, res) => {
  *    - success: Boolean
  *    - accounts: Array[]
  */
-router.get("/accounts/:roleId", async (req, res) => {
+router.get("/accounts/:roleId", adminValidation, async (req, res) => {
   // Get accountId from params
   const { roleId } = req.params;
 
@@ -86,6 +86,38 @@ router.get("/accounts/:roleId", async (req, res) => {
 });
 
 /**
+ * @method GET
+ * @API /api/admin/guest-accounts/
+ * @description API route to get all guest accounts
+ * @params
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - guestAccounts: Array[]
+ */
+router.get("/guest-accounts", adminValidation, async (req, res) => {
+  // Get all accounts of roleId
+  const query = getAllGuestAccounts();
+
+  await query
+    .then((result) => {
+      res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        guestAccounts: result,
+      });
+    })
+    .catch((err) => {
+      console.log("Err: ", err);
+      res.status(501).json({
+        status: res.statusCode,
+        success: false,
+        message: "Bad request",
+      });
+    });
+});
+
+/**
  * @method POST
  * @API /api/admin/accounts/
  * @description API route to create new internal account
@@ -97,7 +129,7 @@ router.get("/accounts/:roleId", async (req, res) => {
  *    - facultyId: Int
  * @return
  */
-router.post("/accounts", async (req, res) => {
+router.post("/accounts", adminValidation, async (req, res) => {
   const { email, firstName, surName, roleId, facultyId } = req.body;
 
   // Create account info Object
@@ -161,7 +193,7 @@ router.post("/accounts", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
-router.post("/guest-accounts", async (req, res) => {
+router.post("/guest-accounts", adminValidation, async (req, res) => {
   // Get data from req.body
   const { username, password, facultyId } = req.body;
 
@@ -206,7 +238,7 @@ router.post("/guest-accounts", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
-router.patch("/accounts/:accountId", async (req, res) => {
+router.patch("/accounts/:accountId", adminValidation, async (req, res) => {
   // Get accountId from params
   const { accountId } = req.params;
 
@@ -243,81 +275,6 @@ router.patch("/accounts/:accountId", async (req, res) => {
 });
 
 /**
- * @method PUT
- * @API /api/admin/accounts/:accountId/
- * @description API route to update internal account information
- * @params
- *    - email: String
- *    - firstName: String
- *    - surName: String
- *    - accountStatus: Int
- *    - facultyId: Int
- * @return
- * @notes
- *    - Wait for frontend solution (not implemented)
- *    - Check which fields will be updated ???????
- *    - where account_id will be passed ? req.body or req.params?
- *    - Temporaly unused !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- */
-router.put("/accounts/:accountId", async (req, res) => {
-  // Get accountId from params
-  const { accountId } = req.params;
-
-  // Get data from req.body
-  const { email, firstName, surName, enabled, facultyId } = req.body;
-
-  // Create account info Object
-  const accountInfo = {
-    email: email,
-    enabled: enabled,
-    facultyId: facultyId,
-  };
-
-  // Update account information
-  const query = updateAccount(accountInfo, accountId);
-
-  await query
-    .then((result) => {
-      // If account is updated successful in "Account" table
-      // => Update in "Account_Info" table
-
-      // Create account detail Object
-      const accountDetail = {
-        firstName: firstName,
-        surName: surName,
-      };
-
-      // Update "Account_Info" in database
-      const query1 = updateAccountInformation(accountDetail, accountId);
-
-      query1
-        .then((result1) => {
-          return res.status(200).json({
-            status: res.statusCode,
-            success: true,
-            message: "Account updated successfully",
-          });
-        })
-        .catch((err) => {
-          console.log("Err: ", err);
-          return res.status(501).json({
-            status: res.statusCode,
-            success: false,
-            message: "Bad request",
-          });
-        });
-    })
-    .catch((err) => {
-      console.log("Err: ", err);
-      return res.status(501).json({
-        status: res.statusCode,
-        success: false,
-        message: "Bad request",
-      });
-    });
-});
-
-/**
  * @method PATCH
  * @API /api/admin/guest-accounts/:accountId/
  * @description API route to update guest account status (enable/disable)
@@ -329,43 +286,47 @@ router.put("/accounts/:accountId", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
-router.patch("/guest-accounts/:accountId", async (req, res) => {
-  // Get accountId from params
-  const { accountId } = req.params;
+router.patch(
+  "/guest-accounts/:accountId",
+  adminValidation,
+  async (req, res) => {
+    // Get accountId from params
+    const { accountId } = req.params;
 
-  // Get status from req.body
-  const { status } = req.body;
+    // Get status from req.body
+    const { status } = req.body;
 
-  // Update guest account
-  const query = updateGuestAccountStatus(status, accountId);
+    // Update guest account
+    const query = updateGuestAccountStatus(status, accountId);
 
-  await query
-    .then((result) => {
-      return res.status(200).json({
-        status: res.statusCode,
-        success: true,
-        message: `Guest account ${
-          status ? "unactivated" : "activated"
-        } successfully`,
+    await query
+      .then((result) => {
+        return res.status(200).json({
+          status: res.statusCode,
+          success: true,
+          message: `Guest account ${
+            status ? "unactivated" : "activated"
+          } successfully`,
+        });
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("Err: ", err);
+          res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
+        } else {
+          res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Not found",
+          });
+        }
       });
-    })
-    .catch((err) => {
-      if (!!err) {
-        console.log("Err: ", err);
-        res.status(501).json({
-          status: res.statusCode,
-          success: false,
-          message: "Bad request",
-        });
-      } else {
-        res.status(404).json({
-          status: res.statusCode,
-          success: false,
-          message: "Not found",
-        });
-      }
-    });
-});
+  }
+);
 
 /**
  * @method PUT
@@ -379,7 +340,7 @@ router.patch("/guest-accounts/:accountId", async (req, res) => {
  *    - success: Boolean
  *    - message: String
  */
-router.put("/guest-accounts/:accountId", async (req, res) => {
+router.put("/guest-accounts/:accountId", adminValidation, async (req, res) => {
   // Get accountId from params
   const { accountId } = req.params;
 
@@ -412,5 +373,97 @@ router.put("/guest-accounts/:accountId", async (req, res) => {
       });
     });
 });
+
+/**
+ * @method DELETE
+ * @API /api/admin/accounts/:accountId/
+ * @description API route to delete account
+ * @params
+ *    - accountId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ */
+router.delete("/accounts/:accountId", adminValidation, async (req, res) => {
+  // Get accountId from params
+  const { accountId } = req.params;
+
+  // Update guest account
+  const query = deleteAccountById(accountId);
+
+  await query
+    .then((result) => {
+      return res.status(200).json({
+        status: res.statusCode,
+        success: true,
+        message: "Account deleted successful",
+      });
+    })
+    .catch((err) => {
+      if (!!err) {
+        console.log("Err: ", err);
+        res.status(501).json({
+          status: res.statusCode,
+          success: false,
+          message: "Bad request",
+        });
+      } else {
+        res.status(404).json({
+          status: res.statusCode,
+          success: false,
+          message: "Not found",
+        });
+      }
+    });
+});
+
+/**
+ * @method DELETE
+ * @API /api/admin/guest-accounts/:accountId/
+ * @description API route to delete guest account
+ * @params
+ *    - accountId: Int
+ * @return
+ *    - status: Int
+ *    - success: Boolean
+ *    - message: String
+ */
+router.delete(
+  "/guest-accounts/:accountId",
+  adminValidation,
+  async (req, res) => {
+    // Get accountId from params
+    const { accountId } = req.params;
+
+    // Update guest account
+    const query = deleteGuestAccountById(accountId);
+
+    await query
+      .then((result) => {
+        return res.status(200).json({
+          status: res.statusCode,
+          success: true,
+          message: "Guest account deleted successful",
+        });
+      })
+      .catch((err) => {
+        if (!!err) {
+          console.log("Err: ", err);
+          res.status(501).json({
+            status: res.statusCode,
+            success: false,
+            message: "Bad request",
+          });
+        } else {
+          res.status(404).json({
+            status: res.statusCode,
+            success: false,
+            message: "Not found",
+          });
+        }
+      });
+  }
+);
 
 module.exports = router;

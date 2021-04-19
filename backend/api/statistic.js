@@ -3,6 +3,11 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 
+const ARTICLE_STATUS = [
+  "pendingContributions",
+  "selectedContributions",
+  "rejectedContributions",
+];
 // Import database services
 const {
   getOverallStats,
@@ -17,7 +22,7 @@ const { managerValidation } = require("./middleware/verification");
 
 /**
  * @method GET
- * @api /api/statistic/overall/:year
+ * @api /api/statistics/overall/:year
  * @permissions
  *      - Manager
  * @description API for getting overall stats
@@ -97,7 +102,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
                   });
                 })
                 .catch((err) => {
-                  if (err) console.log("Err: ", err);
                   return res.status(501).json({
                     status: res.statusCode,
                     success: false,
@@ -106,7 +110,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
                 });
             })
             .catch((err) => {
-              if (err) console.log("Err: ", err);
               return res.status(501).json({
                 status: res.statusCode,
                 success: false,
@@ -115,7 +118,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
             });
         })
         .catch((err) => {
-          if (err) console.log("Err: ", err);
           return res.status(501).json({
             status: res.statusCode,
             success: false,
@@ -125,14 +127,13 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
           messages: "Bad request",
         });
       } else {
-        // If er == false => Contribution stats not found
+        // If err == false => Contribution stats not found
         return res.status(404).json({
           status: res.statusCode,
           success: false,
@@ -144,10 +145,9 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
 
 /**
  * @method GET
- * @api /api/statistic/:facultyId
+ * @api /api/statistics/:facultyId
  * @permissions
  *      - Manager
-
  * @description API for getting all contribution stats on each events of a faculty
  * @params
  *      - facultyId: Int (req.params)
@@ -163,7 +163,6 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
   const query = getContributionByFaculty(facultyId);
   await query
     .then(async (results) => {
-      console.log("results uncomment list: ", results[5]);
       let uncommentArr = [];
       // loop for the query result to get all uncomment info by each articles at position[6]  ???? Or result.length - 1 ?????
       results[5].map((uncomment) => {
@@ -173,42 +172,128 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
 
       // Create an array for storing total pending article following event title
       let pendingArr = [];
+      const extension = "...";
       results[0].map((pendingResult) => {
         console.log("pendingResult: ", pendingResult);
-        pendingArr.push(pendingResult);
+        let pendingObj = {
+          pendingContributions: pendingResult.pendingContributions,
+          eventId: pendingResult.eventId,
+        };
+        if (pendingResult.eventTitle.length >= 10) {
+          pendingObj.eventTitle =
+            pendingResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          pendingObj.eventTitle = pendingResult.eventTitle;
+        }
+
+        pendingArr.push(pendingObj);
       });
 
       // Create an array for storing total selected article following event title
       let selectedArr = [];
       results[1].map((selectedResult) => {
-        selectedArr.push(selectedResult);
+        let selectedObj = {
+          selectedContributions: selectedResult.selectedContributions,
+          eventId: selectedResult.eventId,
+        };
+        if (selectedResult.eventTitle.length >= 10) {
+          selectedObj.eventTitle =
+            selectedResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          selectedObj.eventTitle = selectedResult.eventTitle;
+        }
+        selectedArr.push(selectedObj);
       });
       // Create an array for storing total rejected article following event title
       let rejectedArr = [];
       results[2].map((rejectedResult) => {
         // console.log("rejectedResult: ", rejectedResult);
-        rejectedArr.push(rejectedResult);
+        let rejectedObj = {
+          rejectedContributions: rejectedResult.rejectedContributions,
+          eventId: rejectedResult.eventId,
+        };
+        if (rejectedResult.eventTitle.length >= 10) {
+          rejectedObj.eventTitle =
+            rejectedResult.eventTitle.substr(0, 11) + extension;
+        } else {
+          rejectedObj.eventTitle = rejectedResult.eventTitle;
+        }
+        rejectedArr.push(rejectedObj);
       });
-      // Create object to store all stats of each faculty
-      const queryResult = {
-        totalPendingContributions: pendingArr,
-        totalSelectedContributions: selectedArr,
-        totalRejectedContributions: rejectedArr,
-        totalCommentedOnTimeContributions:
-          results[3][0].totalCommentedOnTimeContributions,
-        totalUncommentedOnTimeContributions:
-          results[4][0].totalUncommentedOnTimeContributions,
-        uncommentList: uncommentArr,
-      };
+
+      let statsResult = [];
+      let passedEventId = [];
+      let eventPosDetail = {};
+      let newArr = pendingArr.concat(selectedArr, rejectedArr);
+      newArr.map((object) => {
+        let key = `position${object.eventId}`;
+        if (passedEventId.includes(object.eventId)) {
+          let eventPosition = eventPosDetail[key];
+          if (
+            (object && object.pendingContributions) ||
+            object.selectedContributions ||
+            object.rejectedContributions
+          ) {
+            let contribution =
+              (object.pendingContributions && {
+                pendingContributions: object.pendingContributions,
+              }) ||
+              (object.selectedContributions && {
+                selectedContributions: object.selectedContributions,
+              }) ||
+              (object.rejectedContributions && {
+                rejectedContributions: object.rejectedContributions,
+              });
+            statsResult[eventPosition].contributions[
+              Object.keys(contribution)[0]
+            ] = Object.values(contribution)[0];
+          }
+        } else {
+          passedEventId.push(object.eventId);
+          let eventInfo = {
+            // eventId: object.eventId,
+            eventName: object.eventTitle,
+            contributions: {},
+          };
+
+          if (
+            (object && object.pendingContributions) ||
+            object.selectedContributions ||
+            object.rejectedContributions
+          ) {
+            let contribution =
+              (object.pendingContributions && {
+                pendingContributions: object.pendingContributions,
+              }) ||
+              (object.selectedContributions && {
+                selectedContributions: object.selectedContributions,
+              }) ||
+              (object.rejectedContributions && {
+                rejectedContributions: object.rejectedContributions,
+              });
+
+            ARTICLE_STATUS.forEach((status) => {
+              eventInfo.contributions[status] = 0;
+            });
+
+            eventInfo.contributions[
+              Object.keys(contribution)[0]
+            ] = Object.values(contribution)[0];
+          }
+
+          statsResult.push(eventInfo);
+          eventPosDetail[key] = statsResult.length - 1;
+        }
+      });
+
       return res.status(200).json({
         status: res.statusCode,
         success: true,
-        data: queryResult,
+        data: statsResult,
       });
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,

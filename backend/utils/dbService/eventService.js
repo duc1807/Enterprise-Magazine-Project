@@ -18,14 +18,10 @@ const getEventsByFacultyId = async (facultyId) => {
       }
       // If faculty is valid, return the final query (get events by faculty)
       resolve(result[result.length - 1]);
-
-      // connection.destroy();
-      // return result
     });
   });
 };
 
-// ================================================= event_published currently is Number (1 and 2)
 const getPublishedEventOfFacultyId = (facultyId) => {
   let db = getDataBaseConnection();
 
@@ -43,24 +39,6 @@ const getPublishedEventOfFacultyId = (facultyId) => {
   });
 };
 
-// const getEventById = (eventId) => {
-//   let db = getDataBaseConnection();
-
-//   const sql = `SELECT * FROM ${TABLE}
-//                 WHERE event_id = ${eventId}`;
-
-//   return new Promise((resolve, reject) => {
-//     db.query(sql, (err, result) => {
-//       if (!!err) reject(err);
-//       if (!result.length) {
-//         reject(false);
-//       }
-//       resolve(result);
-//       db.end();
-//     });
-//   });
-// };
-// =============================================================== TEST NEW CODE
 const getEventById = (eventId, facultyId) => {
   let db = getDataBaseConnection();
 
@@ -82,7 +60,6 @@ const getEventById = (eventId, facultyId) => {
     });
   });
 };
-// ===============================================================
 
 const createNewEvent = async (eventInfo) => {
   const {

@@ -13,7 +13,6 @@ const getAllFaculty = async () => {
         if (!!err) reject(err);
         resolve(result);
         db.end();
-        // return result
       });
   });
 };
@@ -29,14 +28,10 @@ const getFacultyById = async (facultyID) => {
         reject(false)
       }
       resolve(result);
-
-      // connection.destroy();
-      // return result
+      db.end();
     });
   });
 };
-
-// getEventsByFacultyName("IT").then(result => console.log(result))
 
 module.exports = {
   getFacultyById: getFacultyById,
