@@ -41,19 +41,6 @@ const updateAccountInfoById = async (accountInfo, accountId) => {
   });
 };
 
-const getAllGuestAccounts = async (username) => {
-  let db = getDataBaseConnection();
-
-  const sql = `SELECT * FROM Guest`;
-  return new Promise((resolve, reject) => {
-    db.query(sql, (err, result) => {
-      if (!!err) reject(err);
-      resolve(result);
-      // return result
-    });
-  });
-};
-
 const deleteAccountById = (accountId) => {
   let db = getDataBaseConnection();
 
@@ -77,33 +64,158 @@ const deleteAccountById = (accountId) => {
   });
 };
 
-const deleteGuestAccountById = (guestId) => {
+const getAllRolesInformation = () => {
   let db = getDataBaseConnection();
 
-  const sql = `SELECT * FROM Guest
-              WHERE guest_id = ${guestId}`;
+  const sql = `SELECT * FROM Role`;
 
-  const sql1 = `DELETE FROM Guest
-              WHERE guest_id = ${guestId}`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
-      if (!result.length) {
-        reject(false);
-      } else {
-        db.query(sql1, (err, result1) => {
-          if (!!err) reject(err);
-          resolve(result1);
-        });
-      }
+      resolve(result);
     });
   });
 };
 
+const getAccountsByRole = (roleId) => {
+  let db = getDataBaseConnection();
+
+  const sql = `SELECT * FROM Account
+              LEFT JOIN Account_Info
+              ON Account.account_id = Account_Info.FK_account_id 
+              WHERE FK_role_id = ${roleId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+
+const createNewAccount = (accountInfo) => {
+  const { email, roleId, facultyId } = accountInfo;
+
+  let db = getDataBaseConnection();
+
+  // INSERT account into database, with enabled = 1 (TRUE)
+  const sql = `INSERT INTO Account (email, FK_role_id, FK_faculty_id)
+                VALUES ('${email}', ${roleId}, ${facultyId})`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+      // return result
+    });
+  });
+};
+
+
+
+const createAccountInformation = (accountDetail, accountId) => {
+  const { firstName, surName } = accountDetail;
+
+  let db = getDataBaseConnection();
+
+  const sql = `INSERT INTO Account_Info (first_name, sur_name, FK_account_id)
+                VALUES ('${firstName}', '${surName}', ${accountId})`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+const updateAccountStatus = (currentStatus, accountId) => {
+  // If currentStatus = 1 => newStatus = 0 and opposite
+  const newStatus = currentStatus ? 0 : 1;
+
+  let db = getDataBaseConnection();
+
+  // Check if account exist
+  const sql = `SELECT * FROM Account
+              WHERE account_id = ${accountId}`;
+
+  // UPDATE account in database
+  const sql1 = `UPDATE Account
+              SET 
+              enabled = ${newStatus}
+              WHERE account_id = ${accountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      if (!result.length) {
+        reject(false)
+      } else {
+        db.query(sql1, (err, result) => {
+          if (!!err) reject(err);
+          resolve(result);
+        })
+      }
+      db.end()
+    });
+  });
+};
+
+// =============================================== Temporarily ignore
+const updateAccount = (accountDetail, accountId) => {
+  const { email, roleId, enabled, facultyId } = accountDetail;
+
+  let db = getDataBaseConnection();
+
+  const sql = `UPDATE Account
+                SET 
+                email = '${email}', 
+                FK_role_id = ${roleId}, 
+                FK_faculty_id = ${facultyId},
+                enabled = ${enabled}
+                WHERE account_id = ${accountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
+
+const updateAccountInformation = (accountDetail, accountId) => {
+  const { firstName, surName } = accountDetail;
+
+  let db = getDataBaseConnection();
+
+  const sql = `UPDATE Account_Info
+                SET 
+                first_name = '${firstName}', 
+                sur_name = '${surName}'
+                WHERE FK_account_id = ${accountId}`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, (err, result) => {
+      if (!!err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
+
 module.exports = {
   getAccountByEmail: getAccountByEmail,
   updateAccountInfoById: updateAccountInfoById,
-  getAllGuestAccounts: getAllGuestAccounts,
   deleteAccountById: deleteAccountById,
-  deleteGuestAccountById: deleteGuestAccountById,
+  createNewAccount: createNewAccount,
+  createAccountInformation: createAccountInformation,
+  updateAccount: updateAccount,
+  updateAccountStatus: updateAccountStatus,
+  updateAccountInformation: updateAccountInformation,
+  getAllRolesInformation: getAllRolesInformation,
+  getAccountsByRole: getAccountsByRole,
 };

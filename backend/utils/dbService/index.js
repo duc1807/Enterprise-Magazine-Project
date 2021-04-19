@@ -20,7 +20,6 @@ const {
   getSelectedArticles,
   getRejectedArticles,
   getSubmittedArticleById,
-  addNewCommentToArticle,
   setArticleCommentOntime,
   setPendingArticle,
   setSelectedArticle,
@@ -38,30 +37,25 @@ const { getStudentAccountByFaculty } = require("./studentService");
 const {
   getAccountByEmail,
   updateAccountInfoById,
-  getAllGuestAccounts,
   deleteAccountById,
-  deleteGuestAccountById
-} = require("./accountService");
-const { getImageById } = require("./imageService");
-const {
-  getAdminAccountByUsername,
   createNewAccount,
-  createNewGuestAccount,
   createAccountInformation,
   updateAccount,
   updateAccountStatus,
-  updateGuestAccount,
-  updateGuestAccountStatus,
   updateAccountInformation,
   getAllRolesInformation,
   getAccountsByRole,
-} = require("./adminService");
+} = require("./accountService");
+const { getAdminAccountByUsername } = require("./adminService");
 const {
   getFileDetailById,
   uploadFile,
   deleteFileByFileId,
 } = require("./fileService");
-const { getCommentByArticleId } = require("./commentService");
+const {
+  getCommentByArticleId,
+  addNewCommentToArticle,
+} = require("./commentService");
 const {
   getOverallStats,
   getContributionByFaculty,
@@ -69,13 +63,30 @@ const {
   getAverageCommentStats,
   getContributionEachMonthByYear,
 } = require("./statisticService");
-const { getGuestAccountByUsernameAndPassword } = require("./guestService");
+const {
+  getGuestAccountByUsernameAndPassword,
+  updateGuestAccount,
+  updateGuestAccountStatus,
+  createNewGuestAccount,
+  deleteGuestAccountById,
+  getAllGuestAccounts,
+} = require("./guestService");
 const { getAccountInfoById } = require("./accountInfoService");
 const { updateFacultyFolderId } = require("./appService");
 
 module.exports = {
   // ======================================================= Admin
   getAdminAccountByUsername: getAdminAccountByUsername,
+  // ================================================================
+
+  // ======================================================= Coordinator
+  getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
+  // ================================================================
+
+  // ======================================================= Account
+  getAccountByEmail: getAccountByEmail,
+  updateAccountInfoById: updateAccountInfoById,
+  deleteAccountById: deleteAccountById,
   // Create new account
   createNewAccount: createNewAccount,
   // Create new account's information
@@ -89,24 +100,6 @@ module.exports = {
   getAllRolesInformation: getAllRolesInformation,
   // Get all accounts by role
   getAccountsByRole: getAccountsByRole,
-  // Create new guest account
-  createNewGuestAccount: createNewGuestAccount,
-  // Update guest account
-  updateGuestAccount: updateGuestAccount,
-  // Update guest account status
-  updateGuestAccountStatus: updateGuestAccountStatus,
-  // ================================================================
-
-  // ======================================================= Coordinator
-  getCoordinatorAccountsByFaculty: getCoordinatorAccountsByFaculty,
-  // ================================================================
-
-  // ======================================================= Account
-  getAccountByEmail: getAccountByEmail,
-  updateAccountInfoById: updateAccountInfoById,
-  getAllGuestAccounts: getAllGuestAccounts,
-  deleteAccountById: deleteAccountById,
-  deleteGuestAccountById: deleteGuestAccountById,
   // ================================================================
 
   // ======================================================= Account Info
@@ -161,8 +154,6 @@ module.exports = {
   getRejectedArticles: getRejectedArticles,
   // Get a specific article by id
   getSubmittedArticleById: getSubmittedArticleById,
-  // Add a comment to an article
-  addNewCommentToArticle: addNewCommentToArticle,
   // Set status of article to 'pending'
   setPendingArticle: setPendingArticle,
   // Set status of article to 'selected'
@@ -196,16 +187,14 @@ module.exports = {
   getStudentAccountByFaculty: getStudentAccountByFaculty,
   // ================================================================
 
-  // ======================================================= Image
-  getImageById: getImageById,
-  // ================================================================
-
   // ======================================================= Comment
   getCommentByArticleId: getCommentByArticleId,
+  // Add a comment to an article
+  addNewCommentToArticle: addNewCommentToArticle,
   // ================================================================
 
   // ======================================================= Statistic
-  // Count total of Stats in general: All Event, All Contribution, ALL Selected, ALL Rejected
+  // Count total of Stats in general: All Event, All Contribution, all Selected, all Rejected
   getOverallStats: getOverallStats,
   // Count total of Contribution By Faculty And Article_STATUS
   getContributionByFaculty: getContributionByFaculty,
@@ -217,11 +206,19 @@ module.exports = {
   getContributionEachMonthByYear: getContributionEachMonthByYear,
   // ================================================================
 
-  // =========================================================== GUEST
+  // =========================================================== Guest
   getGuestAccountByUsernameAndPassword: getGuestAccountByUsernameAndPassword,
+  getAllGuestAccounts: getAllGuestAccounts,
+  deleteGuestAccountById: deleteGuestAccountById,
+  // Create new guest account
+  createNewGuestAccount: createNewGuestAccount,
+  // Update guest account
+  updateGuestAccount: updateGuestAccount,
+  // Update guest account status
+  updateGuestAccountStatus: updateGuestAccountStatus,
   // ================================================================
 
-  // ============================================================ APP
+  // ============================================================ App
   updateFacultyFolderId: updateFacultyFolderId,
   // ================================================================
 };

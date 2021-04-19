@@ -1,5 +1,8 @@
 const { getDataBaseConnection } = require("./connection/dbConnection");
+
+// Constants
 const EVENT_PUBLISHED = 1;
+
 // Query for get overall stats includes (Received article, Publish,..)
 const getOverallStats = async () => {
   let db = getDataBaseConnection();
@@ -16,7 +19,6 @@ const getOverallStats = async () => {
       if (!!err) reject(err);
       // Check if article is existed or not
       if (!result.length) {
-        console.log("result: ", result);
         reject(false);
       }
       // Return articles if true
@@ -51,29 +53,7 @@ const getAverageSelectedStats = () => {
 // Query average article has comment in 14 days
 const getAverageCommentStats = () => {
   let db = getDataBaseConnection();
-  // let commentOnTimes = [];
-  // let submissionTimes = [];
-  // const preSql = `SELECT article_submission_date FROM Article`;
   return new Promise((resolve, reject) => {
-    // db.query(preSql, (err, timestamp) => {
-    //   if (!!err) {
-    //     return false;
-    //   }
-    //   if (!timestamp.length) {
-    //     reject(false);
-    //   } else {
-    //     // console.log("my timestamp: ", timestamp);
-    //     submissionTimes = timestamp;
-    //     console.log("submissionTimes: ", submissionTimes);
-    //     submissionTimes.map((result) => {
-    //       //default milisecond ditance time per day
-    //       const totalTimePerDay = 1000 * 3600 * 24;
-    //       //comment time after 14 days
-    //       let after = result.article_submission_date + 14 * totalTimePerDay;
-    //       let commentObj = { commentTime: 0 };
-    //       commentObj.commentTime = after;
-    //       commentOnTimes.push(commentObj);
-    //     });
     const sql =
       // Count all article
       `SELECT COUNT(*) AS AllArticle FROM Article;` +
@@ -88,10 +68,6 @@ const getAverageCommentStats = () => {
       resolve(result1);
       db.end();
     });
-    // }
-    //   console.log("CommentOnTimes: ", commentOnTimes);
-    //   db.end();
-    // });
   });
 };
 
@@ -101,16 +77,10 @@ const getContributionEachMonthByYear = (year) => {
   return new Promise((resolve, reject) => {
     // Main query
     let sql = ``;
-    //---only development
     for (let i = 0; i < 12; i++) {
       let startDate = new Date(year, i, 1).getTime();
       let endDate = new Date(year, i + 1, 0).getTime();
-      // console.log("startDate: ", startDate);
-      // console.log("endDate: ", endDate);
       // Sub query to count posted article following each month
-      // const subSql = `SELECT COUNT(PA_id) AS PostedArticleInMonth${
-      //   i + 1
-      // } FROM Posted_Article WHERE PA_posted_date BETWEEN ${startDate} AND ${endDate};`;
       const subSql = `SELECT COUNT(Article.article_id) AS PostedArticleInMonth${
         i + 1
       } FROM Article 
@@ -135,12 +105,6 @@ const getContributionEachMonthByYear = (year) => {
 const getContributionByFaculty = (facultyId) => {
   let db = getDataBaseConnection();
   const sql =
-    // //Count total of contributions on each event by faculty
-    // `SELECT COUNT(Article.article_id) AS totalContributions, Event.event_title AS Event_Title
-    // FROM Article
-    // INNER JOIN Event ON Article.FK_event_id = Event.event_id
-    // WHERE Event.FK_faculty_id = ${facultyId}
-    // GROUP BY Event.event_title;` +
     // Count total pending contributions on each event by faculty -- Group by event_title
     `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
@@ -178,7 +142,6 @@ const getContributionByFaculty = (facultyId) => {
       if (!result.length) {
         reject(false);
       }
-
       resolve(result);
       db.end();
     });
