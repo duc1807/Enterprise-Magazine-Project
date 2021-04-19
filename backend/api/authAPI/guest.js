@@ -40,7 +40,7 @@ router.get("/", accessValidation, (req, res) => {
  * @method POST
  * @API /api/authentication/guest/login/
  *  * @description API for login guest account
- * @params 
+ * @params
  *    - username: String
  *    - password: String
  * @return
@@ -56,15 +56,6 @@ router.post("/login", async (req, res) => {
 
   // Using Regex to test input contain special characters or not
   const regex = new RegExp(`[\s!@#$%^&*(),.\\?-_":{}|<>/=]`, "g");
-
-  //  Error when test
-  // if (regex.test(username) || regex.test(password)) {
-  //   return res.status(401).json({
-  //     status: res.statusCode,
-  //     success: false,
-  //     message: "Invalid input",
-  //   });
-  // }
 
   // Check if username & password is invalid
   if (

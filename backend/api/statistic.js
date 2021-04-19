@@ -23,7 +23,7 @@ const { managerValidation } = require("./middleware/verification");
 
 /**
  * @method GET
- * @api /api/statistic/overall/:year
+ * @api /api/statistics/overall/:year
  * @permissions
  *      - Manager
  * @description API for getting overall stats
@@ -150,7 +150,7 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
 
 /**
  * @method GET
- * @api /api/statistic/:facultyId
+ * @api /api/statistics/:facultyId
  * @permissions
  *      - Manager
 
