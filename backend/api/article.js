@@ -56,14 +56,10 @@ const POSTED_ARTICLE_IMAGE_STORAGE = "1Fy9FIpJKDenMEp7n5nI01eeRhXZgtcK_";
  *    - status: Int
  *    - success: Boolean
  *    - myArticles: Array[Object]
- * @notes
- *    - Need endDate2
  */
 router.get("/my-articles", gwAccountValidation, async (req, res) => {
   // Get userInfo passed from middleware
   const data = res.locals.data;
-
-  console.log("data: ", data);
 
   // Get all articles list of current user
   const query = getSelfArticles(data.userInfo.account_id);
@@ -241,7 +237,7 @@ router.get("/:articleId", accessValidation, async (req, res) => {
 
 /**
  * @method GET
- * @API /api/article/:articleId/file/:fileId/        ?????????????
+ * @API /api/article/:articleId/file/:fileId/
  * @permission
  *    - Manager coordinator of exact faculty
  * @description API for getting article's .doc file information & comments
@@ -252,9 +248,6 @@ router.get("/:articleId", accessValidation, async (req, res) => {
  *
  *    - file: Object
  *    - comments: Array[Object]
- * @notes
- *    - Not yet validate permission
- *    - Replace ??? Dont need !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 router.get(
   "/:articleId/file/:fileId",
@@ -263,23 +256,11 @@ router.get(
     // Get articleId from params
     const { articleId, fileId } = req.params;
 
-    // Get userInfo passed from middleware
-    const data = res.locals.data;
-
     // Get files and comments by fileId and articleId
     const query = getFileAndCommentByFileId(fileId, articleId);
 
     await query
       .then(async (result) => {
-        // Initialize drive service
-        const jwToken = await getAuthServiceJwt();
-        const drive = google.drive({
-          version: "v3",
-          auth: jwToken,
-        });
-
-        console.log("result: ", result);
-
         // Assignn result to variables
         const file = result[0][0]; // Because the file is only 1, so get the Object data at position 0
         const comments = result[1];
@@ -329,9 +310,6 @@ router.get(
 router.get("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get articleId from params
   const { articleId } = req.params;
-
-  // Get userInfo passed from middleware
-  const data = res.locals.data;
 
   // Get files and comments by fileId and articleId
   const query = getCommentByArticleId(articleId);
@@ -388,7 +366,6 @@ router.delete("/:articleId/", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -426,7 +403,7 @@ router.delete(
   gwAccountValidation,
   async (req, res) => {
     // Get articleId from params
-    const { articleId, fileId } = req.params;
+    const { fileId } = req.params;
 
     // Get userInfo passed from middleware
     const data = res.locals.data;
@@ -453,7 +430,6 @@ router.delete(
           })
           .catch((err) => {
             if (err) {
-              console.log("Err: ", err);
               return res.status(501).json({
                 status: res.statusCode,
                 success: false,
@@ -483,8 +459,6 @@ router.delete(
  *    - articleId: Int
  * 		- content: String (comment)
  * @return null
- * @notes
- *    - (!!! CORS problems)
  */
 router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
   // Get comment content
@@ -504,9 +478,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     });
   }
 
-  // Log the data for testing
-  console.log("data: ", data);
-
   // Get the current time
   const currentTime = new Date();
 
@@ -523,9 +494,7 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     .then(async (result) => {
       await getArticleInformationById(articleId)
         .then((result1) => {
-          console.log(result1);
           // Get defalt article at position[0]
-          console.log(result1[0].article_submission_date);
           const articleSubmittedDate = result1[0].article_submission_date;
           const commentOntime = result1[0].comment_onTime;
 
@@ -543,7 +512,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
                   });
                 })
                 .catch((err) => {
-                  console.log("Err: ", err);
                   return res.status(501).json({
                     status: res.statusCode,
                     success: false,
@@ -587,7 +555,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -614,8 +581,6 @@ router.post("/:articleId/comments", gwAccountValidation, async (req, res) => {
  *    - status: Int
  *    - success: Boolean
  *    - message: String
- * @notes
- *    - Still not validate permission
  */
 router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
   // Get articleId from param
@@ -652,6 +617,7 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
           return res.status(204).json({
             status: res.statusCode,
             success: true,
+            messages: "Article selected",
           });
         })
         .catch((err) => {
@@ -665,7 +631,6 @@ router.patch("/:articleId/select", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -698,12 +663,8 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
   // Get articleId from req.params
   const { articleId } = req.params;
 
-  console.log("ARTICLEID: ", articleId);
-
   // Get the userInfo passed from middleware
   const data = res.locals.data;
-
-  console.log("DATA USERINFO: ", data);
 
   // Check if user has permisson to this api or not
   if (data.userInfo.FK_role_id != _COORDINATOR_ROLE_ID) {
@@ -727,7 +688,6 @@ router.patch("/:articleId/reject", gwAccountValidation, async (req, res) => {
     })
     .catch((err) => {
       if (!!err) {
-        console.log(err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
@@ -967,9 +927,8 @@ router.put(
     // Get the userInfo passed from middleware
     const data = res.locals.data;
 
-    // Get articleId from req.params and initialize facultyId
+    // Get articleId from req.params
     const { articleId } = req.params;
-    const facultyId = data.userInfo.FK_faculty_id;
 
     // Initialize the articleResult to hold the result return from query
     let articleResult = undefined;
@@ -990,7 +949,6 @@ router.put(
 
     await query
       .then((result) => {
-        console.log("res: ", result);
         // Get the article at the position 0 (Bcs only 1 article found)
         articleResult = result[0];
       })
@@ -1027,7 +985,6 @@ router.put(
     // Upload file function
     uploadMultiple(req, res, function (err) {
       if (err) throw err;
-      console.log("files: ", req.files);
 
       const files = req.files;
 

@@ -22,15 +22,11 @@ const sendMail = (coordinatorEmail, studentEmail, eventInfo) => {
     from: "vuatrochoi.theblue@gmail.com", // The mail used to send the OTP code
     to: coordinatorEmail, // The coordinator email
     subject: `New article submitted to ${eventInfo.event_title}.`, // Content of the mail
-    html:
-      studentEmail +
-      ` has submitted new post. `
-      //+ `Click the url to check: https://gw-magazine.site/api/events/${eventInfo.event_id}/submitted-articles`,
+    html: studentEmail + ` has submitted new post. `,
   };
   // Send mail
   transporter.sendMail(details, function (error, data) {
     if (error) console.log(error);
-    else console.log(data);
   });
 };
 
@@ -43,7 +39,11 @@ const sendMail = (coordinatorEmail, studentEmail, eventInfo) => {
  * @return
  * @notes
  */
-const sendWarningMailToMultipleAccounts = (managersEmail, yearError, GW_STORAGE_FOLDER_ID) => {
+const sendWarningMailToMultipleAccounts = (
+  managersEmail,
+  yearError,
+  GW_STORAGE_FOLDER_ID
+) => {
   managersEmail.map((managerEmail) => {
     const details = {
       from: "vuatrochoi.theblue@gmail.com", // The mail used to send the OTP code
@@ -55,7 +55,6 @@ const sendWarningMailToMultipleAccounts = (managersEmail, yearError, GW_STORAGE_
     // Send mail
     transporter.sendMail(details, function (error, data) {
       if (error) console.log(error);
-      else console.log(data);
     });
   });
 };

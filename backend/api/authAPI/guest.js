@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcrypt");
 const webToken = require("jsonwebtoken");
 
 const {
@@ -27,7 +26,6 @@ const _ROUTER_ROLE = "guest";
 router.get("/", accessValidation, (req, res) => {
   // Get userInfo from middleware
   const data = res.locals.data;
-  console.log("data: ", data);
 
   res.status(200).json({
     status: res.statusCode,
@@ -53,9 +51,6 @@ router.get("/", accessValidation, (req, res) => {
 
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
-
-  // Using Regex to test input contain special characters or not
-  const regex = new RegExp(`[\s!@#$%^&*(),.\\?-_":{}|<>/=]`, "g");
 
   // Check if username & password is invalid
   if (

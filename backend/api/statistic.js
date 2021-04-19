@@ -1,6 +1,5 @@
 require("dotenv").config();
 
-const { forEach, all } = require("async");
 const express = require("express");
 const router = express.Router();
 
@@ -103,7 +102,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
                   });
                 })
                 .catch((err) => {
-                  if (err) console.log("Err: ", err);
                   return res.status(501).json({
                     status: res.statusCode,
                     success: false,
@@ -112,7 +110,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
                 });
             })
             .catch((err) => {
-              if (err) console.log("Err: ", err);
               return res.status(501).json({
                 status: res.statusCode,
                 success: false,
@@ -121,7 +118,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
             });
         })
         .catch((err) => {
-          if (err) console.log("Err: ", err);
           return res.status(501).json({
             status: res.statusCode,
             success: false,
@@ -131,14 +127,13 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
           messages: "Bad request",
         });
       } else {
-        // If er == false => Contribution stats not found
+        // If err == false => Contribution stats not found
         return res.status(404).json({
           status: res.statusCode,
           success: false,
@@ -153,7 +148,6 @@ router.get("/overall/:year", managerValidation, async (req, res) => {
  * @api /api/statistics/:facultyId
  * @permissions
  *      - Manager
-
  * @description API for getting all contribution stats on each events of a faculty
  * @params
  *      - facultyId: Int (req.params)
@@ -169,7 +163,6 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
   const query = getContributionByFaculty(facultyId);
   await query
     .then(async (results) => {
-      // console.log("results uncomment list: ", results[5]);
       let uncommentArr = [];
       // loop for the query result to get all uncomment info by each articles at position[6]  ???? Or result.length - 1 ?????
       results[5].map((uncomment) => {
@@ -178,7 +171,6 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
       });
 
       // Create an array for storing total pending article following event title
-
       let pendingArr = [];
       const extension = "...";
       results[0].map((pendingResult) => {
@@ -233,14 +225,10 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
       let passedEventId = [];
       let eventPosDetail = {};
       let newArr = pendingArr.concat(selectedArr, rejectedArr);
-      console.log("newArr: ", newArr);
       newArr.map((object) => {
-        console.log("object: ", object);
         let key = `position${object.eventId}`;
         if (passedEventId.includes(object.eventId)) {
           let eventPosition = eventPosDetail[key];
-          console.log("position: ", eventPosition);
-
           if (
             (object && object.pendingContributions) ||
             object.selectedContributions ||
@@ -306,7 +294,6 @@ router.get("/:facultyId", managerValidation, async (req, res) => {
     })
     .catch((err) => {
       if (err) {
-        console.log("Err: ", err);
         return res.status(501).json({
           status: res.statusCode,
           success: false,
