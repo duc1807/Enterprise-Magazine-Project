@@ -1,0 +1,139 @@
+<app-navbar-student></app-navbar-student>
+
+<!-- Form moi -->
+<form
+  class="needs-validation mx-auto cre-e"
+  style="max-width: 70%"
+  novalidate
+  [formGroup]="form"
+>
+  <div class="cre-box">
+    <h2 class="text-center text-dark mb-5">Upload article</h2>
+    <div class="form-row">
+      <!--Title-->
+      <div class="col-md-12 mb-3 form-group">
+        <label for="titleInput" class="font-weight-bold">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Enter title here..."
+          id="titleInput"
+          formControlName="title"
+          required
+        />
+      </div>
+
+      <!--Content-->
+      <div class="col-md-12 mb-3 form-group">
+        <label for="contentInput" class="font-weight-bold">Content</label>
+        <textarea
+          type="text"
+          class="form-control"
+          id="contentInput"
+          placeholder="Enter content here..."
+          rows="10"
+          formControlName="content"
+          required
+        ></textarea>
+      </div>
+
+      <!--Author-->
+      <div class="col-md-12 mb-3 form-group">
+        <label for="authorInput" class="font-weight-bold">Author</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Enter title here..."
+          id="authorInput"
+          formControlName="author"
+          required
+        />
+      </div>
+    </div>
+
+    <!--Image-->
+    <div class="form-group">
+      <label class="form-label font-weight-bold" for="customFile">
+        Files
+      </label>
+      <input
+        type="file"
+        class="form-control"
+        id="customFile"
+        formControlName="file"
+        multiple
+        (change)="selectFiles($event)"
+      />
+    </div>
+
+    <div class="form-group">
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          value=""
+          id="invalidCheck"
+          formControlName="agreeTerm"
+          required
+        />
+        <label class="form-check-label" for="invalidCheck">
+          Agree to terms and conditions &nbsp;&nbsp;
+          <span
+            class="text-primary"
+            data-toggle="modal"
+            data-target="#exampleModalCenter"
+          >
+            Read terms</span
+          >
+        </label>
+      </div>
+    </div>
+
+    <button
+      class="btn btn-primary"
+      type="submit"
+      [disabled]="form.invalid"
+      (click)="onSubmit()"
+    >
+      Upload article
+    </button>
+
+    <button class="btn btn-light ml-3" type="button" (click)="routerBack()">
+      Cancel
+    </button>
+  </div>
+</form>
+
+<!--Term modal-->
+<div
+  class="modal fade"
+  id="exampleModalCenter"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">
+          Terms and conditions
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">Insert any term here</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

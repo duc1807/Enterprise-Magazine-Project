@@ -1,0 +1,61 @@
+.container {
+  margin-top: 50px;
+}
+
+.event-card {
+  position: sticky;
+  top: 100px;
+}
+
+.btn {
+  width: 280px;
+}
+
+.mx-auto {
+  margin-right: auto !important;
+  margin-left: auto !important;
+}
+
+.card-text {
+  height: 125px;
+  overflow: hidden;
+  max-width: 30ch;
+}
+
+.card-title {
+  height: 50px;
+  overflow: hidden;
+  max-width: 30ch;
+}
+
+.art-content {
+  height: 250px;
+}
+
+.container {
+  margin-top: 50px;
+}
+
+.file-link {
+  margin-left: 20px;
+}
+
+.modal-dialog-full-width {
+  width: 100% !important;
+  height: auto !important;
+  margin-top: 50px !important;
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+.modal-content-full-width {
+  height: 100% !important;
+  min-height: 100% !important;
+  border-radius: 0 !important;
+}
+
+/*@media only screen and (min-width: 1200px) and (max-width: 1399px) {*/
+/*  .card {*/
+/*    width: 11rem !important;*/
+/*  }*/
+/*}*/

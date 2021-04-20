@@ -1,0 +1,23 @@
+<app-navbar-login></app-navbar-login>
+
+<div class="container">
+  <div>
+    <div class="ml-auto p-2 text-secondary">
+      <button type="button" (click)="goBack()" class="btn btn-light">
+        Go back
+      </button>
+    </div>
+  </div>
+  <h2 class="text-center">{{ article.PA_title }}</h2>
+  <div class="mt-3 mb-3 text-center">
+    <img
+      src="https://drive.google.com/uc?export=view&id={{ article.Image_image }}"
+      alt=""
+    />
+  </div>
+  <div>
+    <p>
+      {{ article.PA_content }}
+    </p>
+  </div>
+</div>

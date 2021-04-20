@@ -1,0 +1,93 @@
+<app-navbar-student></app-navbar-student>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 text-center mt-5" *ngIf="eventInfo">
+      <div class="container">
+        <h1>{{ eventInfo.event_title }}</h1>
+        <img
+          src="https://drive.google.com/uc?export=view&id={{
+            eventInfo.event_image
+          }}"
+          style="height: 230px; width: 70%"
+          alt=""
+        />
+        <p style="width: 65%; text-align: justify" class="text-center mx-auto">
+          {{ eventInfo.event_content }}
+        </p>
+
+        <p>Last update date: {{ eventInfo.event_lastUpdate | date }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="today <= eventInfo.event_lastUpdate">
+      <div class="col-md-6 mx-auto mt-5">
+        <form [formGroup]="form">
+          <!--Upload files -->
+          <div class="form-group files color">
+            <input
+              type="file"
+              class="form-control"
+              multiple=""
+              formControlName="file"
+              (change)="uploadFiles($event)"
+            />
+          </div>
+
+          <!-- Uploaded files -->
+          <div class="file-list mb-3">
+            <ul class="list-group" style="width: 200%">
+              <li class="list-group-item bg-light">Uploaded file(s)</li>
+              <li
+                class="list-group-item"
+                *ngFor="let file of files; let i = index"
+              >
+                {{ file.file_name }}
+                <button type="button" class="close" (click)="deleteFile(i)">
+                  <span class="text-danger"><i class="fas fa-times"></i></span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Agree term -->
+          <div class="form-group">
+            <div class="form-check">
+              <!--Input file-->
+              <div class="mx-auto">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value=""
+                  id="invalidCheck"
+                  required
+                  formControlName="agreeTerm"
+                />
+                <label class="form-check-label" for="invalidCheck">
+                  Agree to terms and conditions
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Update btn -->
+          <div class="btn-center mt-4">
+            <div class="btn-center mt-3 mb-3">
+              <button
+                class="btn btn-primary mx-auto"
+                [disabled]="form.invalid"
+                (click)="onSubmit()"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div *ngIf="today > eventInfo.event_lastUpdate">
+      <h1 class="text-danger text-center">Event update closed</h1>
+    </div>
+  </div>
+</div>

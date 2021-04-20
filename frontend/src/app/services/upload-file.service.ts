@@ -1,7 +1,7 @@
 import { HttpClient, HttpEvent, HttpRequest } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SaveDataService } from './save-data.service';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -9,23 +9,30 @@ import { SaveDataService } from './save-data.service';
 export class UploadFileService {
   private baseUrl = 'http://localhost:5000/api/upload';
 
-  constructor(
-    private http: HttpClient,
-    private saveDataService: SaveDataService
-  ) {}
+  constructor(private http: HttpClient) {}
 
-  upload(file: File): Observable<HttpEvent<any>> {
-    const formData: FormData = new FormData();
+  // upload(file: File): Observable<HttpEvent<any>> {
+  //   const formData: FormData = new FormData();
+  //
+  //   formData.append('file', file);
+  //
+  //   const req = new HttpRequest('POST', `${this.baseUrl}`, formData, {
+  //     reportProgress: true,
+  //     responseType: 'json',
+  //   });
+  //
+  //   return this.http.request(req);
+  // }
 
-    formData.append('file', file);
-
-    const url = `${this.baseUrl}/${this.saveDataService.getEvent()}`;
-    const req = new HttpRequest('POST', `${url}`, formData, {
-      reportProgress: true,
-      responseType: 'json',
-    });
-
-    return this.http.request(req);
+  upload(eventId: number, form: FormData): Observable<HttpEvent<any>> {
+    const url = `${this.baseUrl}/${eventId}`;
+    console.log(url);
+    console.log('form in service ', form.get('newArticle'));
+    return this.http.post<any>(url, form).pipe(
+      map((res) => {
+        return res;
+      })
+    );
   }
 
   getFiles(): Observable<any> {

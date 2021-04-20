@@ -1,0 +1,598 @@
+<app-navbar-admin></app-navbar-admin>
+
+<div class="container mt-5">
+  <div class="row">
+    <div class="col-sm-12 d-flex justify-content-start">
+      <button
+        class="btn btn-primary mr-3"
+        data-bs-toggle="modal"
+        data-bs-target="#newUserModal"
+      >
+        Create new user
+      </button>
+      <button
+        class="btn btn-dark"
+        data-bs-toggle="modal"
+        data-bs-target="#newGuestModal"
+      >
+        Create guest
+      </button>
+
+      <!--Check variables-->
+      <!--      <button class="btn btn-dark" (click)="testChosen()">-->
+      <!--        Check variables-->
+      <!--      </button>-->
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="container mt-5">
+  <mat-tab-group animationDuration="1000ms">
+    <!-- Tab of Guest-->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <div (click)="resetPag()">Guest</div>
+      </ng-template>
+      <ng-template matTabContent>
+        <!-- Table goes here -->
+        <div class="mat-elevation-z8 mx-auto mt-5 mb-5">
+          <table mat-table [dataSource]="dataSource1">
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let element">
+                <button
+                  class="btn status-btn rounded-pill"
+                  [ngClass]="{
+                    'btn-danger text-white': element.enabled === 0,
+                    'btn-success text-white': element.enabled === 1
+                  }"
+                  (click)="changeGuestStatus(element)"
+                >
+                  {{ element.enabled | status }}
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Faculty Column -->
+            <ng-container matColumnDef="faculty">
+              <th mat-header-cell *matHeaderCellDef>Faculty</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.FK_faculty_id | facultyName }}
+              </td>
+            </ng-container>
+
+            <!-- Account Column -->
+            <ng-container matColumnDef="username">
+              <th
+                mat-header-cell
+                *matHeaderCellDef
+                class="d-none d-md-table-cell"
+              >
+                Username
+              </th>
+              <td
+                mat-cell
+                *matCellDef="let element"
+                class="d-none d-md-table-cell"
+              >
+                {{ element.guest_name }}
+              </td>
+            </ng-container>
+
+            <!-- Action Column -->
+            <ng-container matColumnDef="action">
+              <th mat-header-cell *matHeaderCellDef>Action</th>
+              <td mat-cell *matCellDef="let element; let i = index">
+                <button
+                  class="btn btn-light edit-btn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#guestInfo"
+                  (click)="setGuest(guestData.indexOf(element))"
+                >
+                  View info
+                </button>
+              </td>
+            </ng-container>
+
+            <tr
+              mat-header-row
+              *matHeaderRowDef="['status', 'faculty', 'username', 'action']"
+            ></tr>
+            <tr
+              mat-row
+              *matRowDef="
+                let row;
+                columns: ['status', 'faculty', 'username', 'action']
+              "
+            ></tr>
+          </table>
+
+          <mat-paginator
+            #guestPaginator
+            [pageSizeOptions]="[5, 10, 20]"
+            showFirstLastButtons
+          ></mat-paginator>
+        </div>
+      </ng-template>
+    </mat-tab>
+
+    <!-- Other user -->
+    <mat-tab *ngFor="let role of roles">
+      <ng-template mat-tab-label>
+        <div (click)="getAccounts(role.role_id)">
+          {{ role.role_name | titlecase }}
+        </div>
+      </ng-template>
+      <ng-template matTabContent>
+        <div *ngIf="dataSource2; else loading">
+          <!-- Table goes here -->
+          <div class="mat-elevation-z8 mx-auto mt-5 mb-5">
+            <table mat-table [dataSource]="dataSource2">
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let element">
+                  <button
+                    class="btn status-btn rounded-pill"
+                    [ngClass]="{
+                      'btn-danger text-white': element.enabled === 0,
+                      'btn-success text-white': element.enabled === 1
+                    }"
+                    (click)="changeUserStatus(element)"
+                  >
+                    {{ element.enabled | status }}
+                  </button>
+                </td>
+              </ng-container>
+
+              <!-- Faculty Column -->
+              <ng-container matColumnDef="faculty">
+                <th mat-header-cell *matHeaderCellDef>Faculty</th>
+                <td mat-cell *matCellDef="let element">
+                  {{ element.FK_faculty_id | facultyName }}
+                </td>
+              </ng-container>
+
+              <!-- Email Column -->
+              <ng-container matColumnDef="email">
+                <th
+                  mat-header-cell
+                  *matHeaderCellDef
+                  class="d-none d-md-table-cell"
+                >
+                  Email
+                </th>
+                <td
+                  mat-cell
+                  *matCellDef="let element"
+                  class="d-none d-md-table-cell"
+                >
+                  {{ element.email }}
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef>Action</th>
+                <td mat-cell *matCellDef="let element; let i = index">
+                  <button
+                    class="btn btn-light edit-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#userInfo"
+                    (click)="setUser(accountData.indexOf(element))"
+                  >
+                    View info
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr
+                mat-header-row
+                *matHeaderRowDef="['status', 'faculty', 'email', 'action']"
+              ></tr>
+              <tr
+                mat-row
+                *matRowDef="
+                  let row;
+                  columns: ['status', 'faculty', 'email', 'action']
+                "
+              ></tr>
+            </table>
+
+            <mat-paginator
+              #userPaginator
+              [pageSizeOptions]="[5, 10, 20]"
+              showFirstLastButtons
+            ></mat-paginator>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<ng-template #loading>Loading...</ng-template>
+
+<!-- User info modal -->
+<div
+  class="modal fade"
+  id="userInfo"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Student info</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <!-- Body -->
+      <div class="modal-body" *ngIf="currentUser">
+        <form class="row g-3">
+          <!-- User first name -->
+          <div class="col-md-6">
+            <label for="userFirstName" class="form-label">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="userFirstName"
+              value="{{ currentUser.first_name }}"
+              readonly
+            />
+          </div>
+
+          <!-- User surname -->
+          <div class="col-md-6">
+            <label for="userSurname" class="form-label"> Surname </label>
+            <input
+              type="text"
+              class="form-control"
+              id="userSurname"
+              value="{{ currentUser.sur_name }}"
+              readonly
+            />
+          </div>
+
+          <!-- User email -->
+          <div class="col-12">
+            <label for="userEmail" class="form-label"> Email </label>
+            <input
+              type="email"
+              class="form-control"
+              id="userEmail"
+              value="{{ currentUser.email }}"
+              readonly
+            />
+          </div>
+
+          <!-- User role -->
+          <div class="col-md-6">
+            <label for="userRole" class="form-label">Role</label>
+            <input
+              type="email"
+              class="form-control"
+              id="userRole"
+              value="{{ currentUser.FK_role_id | roleName }}"
+              readonly
+            />
+          </div>
+
+          <!-- User faculty -->
+          <div class="col-md-6">
+            <label for="userFaculty" class="form-label">Faculty</label>
+            <input
+              type="email"
+              class="form-control"
+              id="userFaculty"
+              value="{{ currentUser.FK_faculty_id | facultyName }}"
+              readonly
+            />
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          (click)="resetChosen()"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Guest info modal -->
+<div
+  class="modal fade"
+  id="guestInfo"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Guest info</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <!-- Body -->
+      <div class="modal-body" *ngIf="currentGuest">
+        <form class="row g-3">
+          <!-- Username -->
+          <div class="col-12">
+            <label for="guestUsername" class="form-label">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="guestUsername"
+              value="{{ currentGuest.guest_name }}"
+              readonly
+            />
+          </div>
+
+          <!-- Pass word -->
+          <div class="col-12">
+            <label for="guestPassword" class="form-label"> Password </label>
+            <input
+              type="text"
+              class="form-control"
+              id="guestPassword"
+              value="{{ currentGuest.password }}"
+              readonly
+            />
+          </div>
+
+          <!-- Faculty -->
+          <div class="col-md-6">
+            <label for="guestFaculty" class="form-label">Faculty</label>
+            <input
+              type="email"
+              class="form-control"
+              id="guestFaculty"
+              value="{{ currentGuest.FK_faculty_id | facultyName }}"
+              readonly
+            />
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          (click)="resetChosen()"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create user modal -->
+<div
+  class="modal fade"
+  id="newUserModal"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createUserHead">Create user</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" *ngIf="userForm">
+        <form class="row g-3" [formGroup]="userForm">
+          <!-- First name -->
+          <div class="col-md-6">
+            <label for="newFirstName" class="form-label">First name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="newFirstName"
+              formControlName="firstName"
+            />
+          </div>
+
+          <!-- Surname -->
+          <div class="col-md-6">
+            <label for="newSurname" class="form-label">Surname</label>
+            <input
+              type="text"
+              class="form-control"
+              id="newSurname"
+              formControlName="surname"
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="col-12">
+            <label for="newMail" class="form-label"> Email </label>
+            <input
+              type="email"
+              class="form-control"
+              id="newMail"
+              formControlName="email"
+            />
+          </div>
+
+          <!-- Role -->
+          <div class="col-md-6">
+            <label for="newUserRole" class="form-label">Role</label>
+            <select
+              id="newUserRole"
+              class="form-select"
+              formControlName="role"
+              (change)="chooseRole2($event)"
+            >
+              <option value="" disabled>Choose faculty</option>
+              <option *ngFor="let role of roleList" [ngValue]="role">
+                {{ role }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Faculty -->
+          <div class="col-md-6">
+            <label for="newUserFaculty" class="form-label">Faculty</label>
+            <select
+              id="newUserFaculty"
+              class="form-select"
+              formControlName="faculty"
+              (change)="chooseFaculty2($event)"
+            >
+              <option value="" disabled>Choose faculty</option>
+              <option
+                *ngFor="let faculty of facultyList"
+                [ngValue]="faculty"
+                [disabled]="!ready"
+              >
+                {{ faculty }}
+              </option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Button -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="userForm.invalid"
+          data-bs-dismiss="modal"
+          (click)="onSubmitUser()"
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create guest modal-->
+<div
+  class="modal fade"
+  id="newGuestModal"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createGuestHead">Create guest</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body" *ngIf="guestForm">
+        <form class="row g-3" [formGroup]="guestForm">
+          <!-- Guest username -->
+          <div class="col-md-12">
+            <label for="newGuestName" class="form-label">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="newGuestName"
+              formControlName="username"
+            />
+          </div>
+
+          <!-- Pass word -->
+          <div class="col-md-12">
+            <div formGroupName="PasswordValidation" class="row">
+              <div class="col-md-6">
+                <label for="newPassword" class="form-label">Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="newPassword"
+                  formControlName="password"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="newConfirm" class="form-label">
+                  Confirm password
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="newConfirm"
+                  formControlName="confirmPassword"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Faculty -->
+          <div class="col-md-12">
+            <label for="newGuestFaculty" class="form-label">Faculty</label>
+            <select
+              id="newGuestFaculty"
+              class="form-select"
+              formControlName="faculty"
+              (change)="chooseFaculty1($event)"
+            >
+              <option value="" disabled>Choose faculty</option>
+              <option *ngFor="let fal of facultyList" [ngValue]="fal">
+                {{ fal }}
+              </option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <!-- Button -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="guestForm.invalid"
+          data-bs-dismiss="modal"
+          (click)="onSubmitGuest()"
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

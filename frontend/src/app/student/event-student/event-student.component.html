@@ -1,0 +1,128 @@
+<app-navbar-student></app-navbar-student>
+
+<h2 class="container text-center text-dark">All events</h2>
+
+<div class="container">
+  <div class="row">
+    <div
+      *ngFor="let event of events"
+      class="col-sm-12 col-md-6 col-lg-6 col-xl-4 mb-5"
+    >
+      <div>
+        <div class="card mx-auto" style="width: 20rem">
+          <img
+            class="card-img-top"
+            src="https://drive.google.com/uc?export=view&id={{
+              event.event_image
+            }}"
+            alt=""
+          />
+          <div class="card-body">
+            <h5 class="card-title">{{ event.event_title }}</h5>
+            <p class="card-text">
+              {{ event.event_content }}
+            </p>
+            <p class="text-muted font-italic">
+              End date: {{ event.event_endDate | date: "dd/MM/yyyy" }}
+            </p>
+            <div>
+              <div *ngIf="(event.event_endDate | dayLeft) <= 0">
+                <div class="alert alert-danger" role="alert">Expired</div>
+              </div>
+              <div
+                *ngIf="
+                  (event.event_endDate | dayLeft) > 0 &&
+                  (event.event_endDate | dayLeft) <= 5
+                "
+              >
+                <div class="alert alert-warning" role="alert">
+                  Almost expired.
+                  {{ event.event_endDate | dayLeft | roundup }} day(s) left!
+                </div>
+              </div>
+              <div *ngIf="(event.event_endDate | dayLeft) > 5">
+                <div class="alert alert-success" role="alert">
+                  {{ event.event_endDate | dayLeft | roundup }} day(s) left!
+                </div>
+              </div>
+            </div>
+            <div
+              *ngIf="
+                (event.event_endDate | dayLeft) > 0 &&
+                today > event.event_startDate
+              "
+            >
+              <a
+                routerLink="upload/{{ event.event_id }}"
+                class="btn btn-primary"
+              >
+                Choose event
+              </a>
+            </div>
+            <div *ngIf="(event.event_endDate | dayLeft) <= 0">
+              <a class="btn btn-danger a-disable"> Event expired </a>
+            </div>
+            <div *ngIf="today <= event.event_startDate">
+              <a class="btn btn-warning a-disable"> Event close </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--Data-->
+<!--
+{
+    "status": 200,
+    "success": true,
+    "events": [
+        {
+            "event_id": 16,
+            "event_title": "Spring 2021 1",
+            "event_content": "New event",
+            "event_image": "test",
+            "event_startDate": 1614962739956,
+            "event_endDate": 1615827600000,
+            "event_createdAt": 1614962739956,
+            "event_lastUpdate": 1614962739956,
+            "event_published": 1,
+            "event_folderId": "10o1scgdzebahi8wkm2dLrSc_0xwhvQy6",
+            "folderId_selectedArticles": "1f2bS5-sLAOtXR5IIvUfUF_tG6TLwumfJ",
+            "folderId_allArticles": "12THBjua9E30F6JqdLSBwDarJOJimrvs_",
+            "FK_faculty_id": 2
+        },
+        {
+            "event_id": 39,
+            "event_title": "Business, the key to the future",
+            "event_content": "Why Business still be the hotest faculty of FPT-Greenwich, give your own idea!",
+            "event_image": "test",
+            "event_startDate": 1616086800000,
+            "event_endDate": 1616432400000,
+            "event_createdAt": 1616061820885,
+            "event_lastUpdate": 1616061820885,
+            "event_published": 0,
+            "event_folderId": "110FUr_YO7L4wpgQ8gzsBE-enOB8i9BBl",
+            "folderId_selectedArticles": "1LGnDzwnMs0lQUQB-ZmS88HOVRfi8aZFG",
+            "folderId_allArticles": "1VzY4Q6Wlu612CI8v-ynXBG8K_MlB_dt-",
+            "FK_faculty_id": 2
+        },
+        {
+            "event_id": 42,
+            "event_title": "Event created by Angular",
+            "event_content": "Test new event content",
+            "event_image": "test",
+            "event_startDate": 1616173200000,
+            "event_endDate": 1617123600000,
+            "event_createdAt": 1616164861114,
+            "event_lastUpdate": 1616164861114,
+            "event_published": 0,
+            "event_folderId": "1e3XrM-6mxSa13qGrwgXcZo3NY4o8x8Cv",
+            "folderId_selectedArticles": "1bW2G7tqTv1_-Sl2iKApHMcKWiLElpUgQ",
+            "folderId_allArticles": "1luF3Cf1s8Nj48QNFxaX41isKzsc63rl6",
+            "FK_faculty_id": 2
+        }
+    ]
+}
+-->

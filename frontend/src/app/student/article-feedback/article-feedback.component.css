@@ -1,0 +1,66 @@
+table {
+  width: 100%;
+}
+
+.mat-elevation-z8 {
+  width: 90%;
+}
+
+.accept-font {
+  font-weight: bold;
+  color: #5cb85c;
+}
+
+.decline-font {
+  font-weight: bold;
+  color: #d9534f;
+}
+
+.pending-font {
+  font-weight: bold;
+  color: #292b2c;
+}
+
+.file-link {
+  margin-left: 20px;
+}
+
+.modal-dialog-full-width {
+  width: 100% !important;
+  height: auto !important;
+  margin-top: 50px !important;
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+.modal-content-full-width {
+  height: 100% !important;
+  min-height: 100% !important;
+  border-radius: 0 !important;
+}
+
+.border {
+  border: solid 3px !important;
+}
+
+.filter {
+  width: 20%;
+}
+
+.refresh-btn {
+  border: none;
+  background: white;
+}
+
+@media only screen and (max-width: 768px) {
+  .action-btn {
+    width: 80px;
+    font-size: 12px;
+  }
+}
+
+@media only screen and (max-width: 1000px) {
+  .filter {
+    width: 100%;
+  }
+}

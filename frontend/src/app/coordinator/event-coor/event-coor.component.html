@@ -1,0 +1,58 @@
+<app-navbar-coor></app-navbar-coor>
+
+<h2 class="container text-center text-dark">All events</h2>
+
+<div class="container">
+  <div class="row">
+    <div
+      *ngFor="let event of events"
+      class="col-sm-12 col-md-6 col-lg-6 col-xl-4 mb-5"
+    >
+      <div class="card mx-auto" style="width: 20rem">
+        <img
+          class="card-img-top"
+          src="https://drive.google.com/uc?export=view&id={{
+            event.event_image
+          }}"
+          alt=""
+        />
+        <div class="card-body">
+          <h5 class="card-title">{{ event.event_title }}</h5>
+          <p class="card-text">
+            {{ event.event_content }}
+          </p>
+          <p class="text-muted font-italic">
+            End date: {{ event.event_endDate | date: "dd/MM/yyyy" }}
+          </p>
+          <div>
+            <div *ngIf="(event.event_endDate | dayLeft) <= 0">
+              <div class="alert alert-danger" role="alert">Expired</div>
+            </div>
+            <div
+              *ngIf="
+                (event.event_endDate | dayLeft) > 0 &&
+                (event.event_endDate | dayLeft) <= 5
+              "
+            >
+              <div class="alert alert-warning" role="alert">
+                Almost expired.
+                {{ event.event_endDate | dayLeft | roundup }} day(s) left!
+              </div>
+            </div>
+            <div *ngIf="(event.event_endDate | dayLeft) > 5">
+              <div class="alert alert-success" role="alert">
+                {{ event.event_endDate | dayLeft | roundup }} day(s) left!
+              </div>
+            </div>
+          </div>
+          <a
+            routerLink="articlemanage/{{ event.event_id }}"
+            class="btn btn-primary"
+          >
+            View submissions
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

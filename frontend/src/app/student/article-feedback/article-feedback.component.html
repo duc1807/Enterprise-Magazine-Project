@@ -1,0 +1,271 @@
+<app-navbar-student></app-navbar-student>
+
+<div class="mat-elevation-z8 mx-auto m-5">
+  <div class="container">
+    <!--Search bar-->
+    <br />
+    <div class="row">
+      <div class="col-sm-12">
+        <mat-form-field class="filter">
+          <mat-label>Search</mat-label>
+          <input (keyup)="applyFilter($event.target.value)" matInput />
+        </mat-form-field>
+      </div>
+      <div class="col-sm-1">
+        <div class="example-button-row mt-2">
+          <button mat-raised-button (click)="refreshTable()">
+            <i class="fas fa-sync-alt"></i>&nbsp; Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!--Table rows here-->
+    <table mat-table [dataSource]="dataSource">
+      <!-- Position Column -->
+      <ng-container matColumnDef="position">
+        <th mat-header-cell *matHeaderCellDef>No.</th>
+        <td mat-cell *matCellDef="let element">
+          {{ myArticles.indexOf(element) + 1 }}
+        </td>
+      </ng-container>
+
+      <!-- Date Column -->
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Submit date</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.article_submission_date | date }}
+        </td>
+      </ng-container>
+
+      <!-- Id Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef class="d-none d-md-table-cell">
+          Article Id
+        </th>
+        <td mat-cell *matCellDef="let element" class="d-none d-md-table-cell">
+          {{ element.article_id }}
+        </td>
+      </ng-container>
+
+      <!-- Event Column -->
+      <ng-container matColumnDef="event">
+        <th mat-header-cell *matHeaderCellDef>Event</th>
+        <td mat-cell *matCellDef="let element">{{ element.event_title }}</td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td
+          mat-cell
+          *matCellDef="let element"
+          [ngClass]="{
+            'accept-font': element.article_status === 'accepted',
+            'decline-font': element.article_status === 'rejected',
+            'pending-font': element.article_status === 'pending'
+          }"
+        >
+          {{ element.article_status }}
+        </td>
+      </ng-container>
+
+      <!-- Action Column -->
+      <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef>Action</th>
+        <td mat-cell *matCellDef="let element">
+          <div class="btn-group">
+            <button
+              type="button"
+              class="btn btn-light dropdown-toggle action-btn"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              Action
+            </button>
+            <div class="dropdown-menu">
+              <a
+                class="dropdown-item action-btn"
+                routerLink="edit_article/{{ element.article_id }}"
+                disabled
+              >
+                Update
+              </a>
+
+              <a
+                class="dropdown-item action-btn"
+                href="#"
+                data-toggle="modal"
+                data-target="#fakeViewCommentModal"
+                (click)="getArticleInfo(element.article_id)"
+              >
+                View comment
+              </a>
+
+              <a
+                class="dropdown-item action-btn"
+                (click)="checkDelete(myArticles.indexOf(element))"
+                style="cursor: pointer"
+              >
+                Delete article
+              </a>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 20]"
+      showFirstLastButtons
+    ></mat-paginator>
+  </div>
+</div>
+
+<!--Modal-->
+<div
+  class="modal fade"
+  id="fakeViewCommentModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-full-width"
+    role="document"
+  >
+    <div class="modal-content modal-content-full-width">
+      <div class="modal-header modal-header-full-width">
+        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!--File-->
+          <div
+            class="embed-responsive embed-responsive-4by3 col-sm-12 col-md-12 col-lg-9"
+          >
+            <iframe
+              class="embed-responsive-item"
+              [src]="safeActiveLink"
+              height="800px"
+              width="1000px"
+            ></iframe>
+          </div>
+
+          <!--Option comment-->
+          <!--<div class="col-sm-12 col-md-12 col-lg-3">
+            <div class="row">
+              &lt;!&ndash;Comment&ndash;&gt;
+              <div class="col-sm-12">
+                <form>
+                  <div class="form-group row" *ngIf="comments">
+                    <label class="col-sm-12 col-form-label font-weight-bold">
+                      Comment
+                    </label>
+
+                    <div
+                      *ngIf="
+                        comments.length > 0;
+                        then haveComments;
+                        else noComments
+                      "
+                    >
+                      Comments go here
+                    </div>
+                    <ng-template #noComments>
+                      <small style="opacity: 0.8"> There is no comments </small>
+                    </ng-template>
+                    <ng-template #haveComments
+                      ><div *ngFor="let comment of comments">
+                        <div
+                          class="col-sm-12 rounded"
+                          style="background-color: #f0f0f0"
+                        >
+                          <div>{{ comment.comment_content }}</div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </div>
+                </form>
+              </div>
+
+              &lt;!&ndash;Footer modal&ndash;&gt;
+              <div class="modal-footer col-sm-12">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>-->
+
+          <div class="col-sm-12 col-md-12 col-lg-3">
+            <div class="row">
+              <!--List of files-->
+              <div class="col-sm-12 container">
+                <label class="font-weight-bold">List of files</label>
+                <ul
+                  class="list-group"
+                  *ngFor="let file of fileList; let i = index"
+                >
+                  <li
+                    class="list-group-item list-group-item-action border-left-0 border-right-0 border-top-0"
+                    (click)="setActive(file.file_fileId)"
+                    style="width: auto"
+                  >
+                    {{ file.file_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <!--Comment function-->
+              <div class="col-sm-12" *ngIf="comments; else loading">
+                <div class="form-group row">
+                  <label class="col-sm-12 col-form-label font-weight-bold"
+                    >Comment</label
+                  >
+
+                  <div class="col-sm-12" *ngFor="let comment of comments">
+                    <div class="border bg-light mb-3">
+                      <p class="p-2">{{ comment.comment_content }}</p>
+                      <!--<small>{{ comment.comment_time | date }}</small>-->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!--Footer buttons-->
+              <div class="modal-footer col-sm-12">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>Loading...</ng-template>

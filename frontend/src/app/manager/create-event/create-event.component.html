@@ -1,0 +1,246 @@
+<app-navbar-manager></app-navbar-manager>
+
+<!--
+<form
+  class="needs-validation mx-auto cre-e"
+  style="max-width: 70%"
+  novalidate
+  (ngSubmit)="submitEvent()"
+>
+  <div class="cre-box">
+    <h2 class="text-center text-dark mb-5">Create new Event</h2>
+    <div class="form-row">
+      &lt;!&ndash;Title&ndash;&gt;
+      <div class="col-md-12 mb-3 form-group" [formGroup]="form">
+        <label for="titleInput" class="font-weight-bold">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Enter title here..."
+          id="titleInput"
+          formControlName="title"
+          required
+        />
+      </div>
+
+      &lt;!&ndash;Content&ndash;&gt;
+      <div class="col-md-12 mb-3 form-group" [formGroup]="form">
+        <label for="contentInput" class="font-weight-bold">Content</label>
+        <textarea
+          type="text"
+          class="form-control"
+          id="contentInput"
+          placeholder="Enter content here..."
+          rows="10"
+          formControlName="content"
+          required
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="form-row">
+      &lt;!&ndash;Start date&ndash;&gt;
+      <div class="col-md-4 mb-3 form-group" [formGroup]="form">
+        <label for="startDate" class="font-weight-bold">Start date</label>
+        <input
+          type="date"
+          id="startDate"
+          class="form-control"
+          min="{{ today | date: 'yyyy-MM-dd' }}"
+          name="start"
+          formControlName="startDate"
+          value="{{ today | date: 'yyyy-MM-dd' }}"
+          [(ngModel)]="startdate"
+        />
+      </div>
+
+      &lt;!&ndash;End date&ndash;&gt;
+      <div class="col-md-4 mb-3 form-group" [formGroup]="form">
+        <label for="validationCustom04" class="font-weight-bold"
+          >End date</label
+        >
+        <input
+          type="date"
+          class="form-control"
+          id="validationCustom04"
+          min="{{ startdate }}"
+          name="end"
+          formControlName="endDate"
+          [(ngModel)]="enddate"
+          [readonly]="form.get('startDate').hasError('required')"
+        />
+      </div>
+
+      &lt;!&ndash;Last update date&ndash;&gt;
+      <div class="col-md-4 mb-3 form-group" [formGroup]="form">
+        <label for="validationCustom05" class="font-weight-bold"
+          >Last update date</label
+        >
+        <input
+          type="date"
+          class="form-control"
+          id="validationCustom05"
+          min="{{ enddate }}"
+          formControlName="updateDate"
+          [readonly]="form.get('endDate').hasError('required')"
+        />
+      </div>
+    </div>
+
+    &lt;!&ndash;Image&ndash;&gt;
+    <div class="form-group" [formGroup]="form">
+      <label class="form-label font-weight-bold" for="customFile"
+        >Event image</label
+      >
+      <input
+        type="file"
+        class="form-control"
+        id="customFile"
+        accept="image/*"
+        formControlName="image"
+        (change)="onFileSelect($event)"
+      />
+    </div>
+
+    <button
+      class="btn btn-primary"
+      type="submit"
+      [disabled]="form.invalid"
+      (click)="showLoading()"
+    >
+      Create event
+    </button>
+
+    <button
+      class="btn btn-light ml-3"
+      id="cancelButton"
+      type="button"
+      (click)="routerBack()"
+    >
+      Cancel
+    </button>
+  </div>
+</form>
+-->
+
+<form
+  class="needs-validation mx-auto cre-e"
+  style="max-width: 70%"
+  novalidate
+  [formGroup]="form"
+  (ngSubmit)="submitEvent()"
+>
+  <div class="cre-box">
+    <h2 class="text-center text-dark mb-5">Create new Event</h2>
+    <div class="form-row">
+      <!--Title-->
+      <div class="col-md-12 mb-3 form-group">
+        <label for="titleInput" class="font-weight-bold">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Enter title here..."
+          id="titleInput"
+          formControlName="title"
+          required
+        />
+      </div>
+
+      <!--Content-->
+      <div class="col-md-12 mb-3 form-group">
+        <label for="contentInput" class="font-weight-bold">Content</label>
+        <textarea
+          type="text"
+          class="form-control"
+          id="contentInput"
+          placeholder="Enter content here..."
+          rows="10"
+          formControlName="content"
+          required
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <!--Start date-->
+      <div class="col-md-4 mb-3 form-group">
+        <label for="startDate" class="font-weight-bold">Start date</label>
+        <input
+          type="date"
+          id="startDate"
+          class="form-control"
+          min="{{ today | date: 'yyyy-MM-dd' }}"
+          name="start"
+          formControlName="startDate"
+          value="{{ today | date: 'yyyy-MM-dd' }}"
+          [(ngModel)]="startdate"
+        />
+      </div>
+
+      <!--End date-->
+      <div class="col-md-4 mb-3 form-group">
+        <label for="validationCustom04" class="font-weight-bold"
+          >End date</label
+        >
+        <input
+          type="date"
+          class="form-control"
+          id="validationCustom04"
+          min="{{ startdate }}"
+          name="end"
+          formControlName="endDate"
+          [(ngModel)]="enddate"
+          [readonly]="form.get('startDate').hasError('required')"
+        />
+      </div>
+
+      <!--Last update date-->
+      <div class="col-md-4 mb-3 form-group">
+        <label for="validationCustom05" class="font-weight-bold"
+          >Last update date</label
+        >
+        <input
+          type="date"
+          class="form-control"
+          id="validationCustom05"
+          min="{{ enddate }}"
+          formControlName="updateDate"
+          [readonly]="form.get('endDate').hasError('required')"
+        />
+      </div>
+    </div>
+
+    <!--Image-->
+    <div class="form-group">
+      <label class="form-label font-weight-bold" for="customFile"
+        >Event image</label
+      >
+      <input
+        type="file"
+        class="form-control"
+        id="customFile"
+        accept="image/*"
+        formControlName="image"
+        (change)="onFileSelect($event)"
+      />
+    </div>
+
+    <button
+      class="btn btn-primary"
+      type="submit"
+      [disabled]="form.invalid"
+      (click)="showLoading()"
+    >
+      Create event
+    </button>
+
+    <button
+      class="btn btn-light ml-3"
+      id="cancelButton"
+      type="button"
+      (click)="routerBack()"
+    >
+      Cancel
+    </button>
+  </div>
+</form>

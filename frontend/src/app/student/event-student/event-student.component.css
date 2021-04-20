@@ -1,0 +1,28 @@
+.container {
+  margin-top: 50px;
+}
+
+.d-flex {
+  margin-right: 50px;
+}
+
+.card-text {
+  height: 125px;
+  overflow: hidden;
+  max-width: 30ch;
+}
+
+.card-title {
+  height: 50px;
+  overflow: hidden;
+  max-width: 30ch;
+}
+
+.a-disable {
+  pointer-events: none;
+  cursor: default;
+}
+
+.card-img-top {
+  height: 150px;
+}

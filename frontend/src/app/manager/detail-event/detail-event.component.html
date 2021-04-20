@@ -1,0 +1,329 @@
+<app-navbar-manager></app-navbar-manager>
+
+<h2 class="container text-center text-dark">
+  Event {{ eventInfo.event_title }}
+</h2>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-4 mb-5">
+      <div class="event-card">
+        <div class="card mx-auto mb-4" style="width: 20rem">
+          <img
+            class="card-img-top"
+            src="https://drive.google.com/uc?export=view&id={{
+              eventInfo.event_image
+            }}"
+            alt=""
+          />
+          <div class="card-body">
+            <h5 class="card-title">{{ eventInfo.event_title }}</h5>
+            <p class="card-text">
+              {{ eventInfo.event_content }}
+            </p>
+          </div>
+        </div>
+        <!-- Button -->
+        <div>
+          <div class="d-flex align-items-center flex-column">
+            <!--Edit event-->
+            <div class="p2 mb-2">
+              <button
+                class="btn btn-primary"
+                data-toggle="modal"
+                data-target="#exampleModal"
+              >
+                Edit event
+              </button>
+            </div>
+
+            <!--Download all-->
+            <div class="p2 mb-2">
+              <a
+                target="_blank"
+                href="https://drive.google.com/drive/folders/{{
+                  eventInfo.folderId_selectedArticles
+                }}?usp=sharing"
+              >
+                <button class="btn btn-primary">Download all</button>
+              </a>
+            </div>
+
+            <!--Publish event-->
+            <div class="p2 mb-2">
+              <button
+                class="btn btn-primary"
+                [disabled]="eventInfo.event_published === 1"
+                (click)="publishEvent(eventInfo.event_id)"
+              >
+                {{
+                  eventInfo.event_published === 1
+                    ? "Published"
+                    : "Publish event"
+                }}
+              </button>
+            </div>
+
+            <!--Button delete-->
+            <div class="p2 mb-2">
+              <button
+                class="btn btn-danger"
+                (click)="delete(eventInfo.event_id)"
+              >
+                Delete event
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--List of article-->
+    <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8">
+      <div *ngFor="let art of articles" class="card mb-5">
+        <div
+          class="card-header"
+          data-toggle="modal"
+          data-target="#modalStatus"
+          (click)="chooseArticle(art.article_id)"
+        >
+          {{
+            art.article_title.length > 100
+              ? (art.article_title | slice: 0:100) + "..."
+              : art.article_title
+          }}
+        </div>
+        <div class="card-body">
+          <blockquote class="blockquote mb-0">
+            <p class="art-content">
+              {{
+                art.article_content.length > 500
+                  ? (art.article_content | slice: 0:500) + "..."
+                  : art.article_content
+              }}
+            </p>
+            <footer class="blockquote-footer">
+              Submitted by
+              <cite title="Source Title">{{ art.article_author }}</cite>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal to edit event -->
+
+<div
+  class="modal fade"
+  id="exampleModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit event</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!--Show old values of the event-->
+
+        <form class="row g-3" [formGroup]="form">
+          <div class="col-md-12">
+            <label for="inputEmail4" class="form-label">Title</label>
+            <input
+              #title1
+              type="text"
+              class="form-control"
+              id="inputEmail4"
+              formControlName="title"
+            />
+          </div>
+
+          <div class="col-md-12">
+            <label for="inputPassword4" class="form-label">Content</label>
+            <textarea
+              #content1
+              type="text"
+              class="form-control"
+              id="inputPassword4"
+              value="{{ eventInfo.event_content }}"
+              formControlName="content"
+              rows="7"
+            ></textarea>
+          </div>
+
+          <div class="col-12">
+            <label for="inputAddress" class="form-label">Start Date</label>
+            <input
+              #start1
+              type="date"
+              class="form-control"
+              id="inputAddress"
+              value="{{ eventInfo.event_startDate | date: 'yyyy-MM-dd' }}"
+            />
+          </div>
+
+          <div class="col-12">
+            <label for="inputend" class="form-label">End Date</label>
+            <input
+              #end1
+              type="date"
+              class="form-control"
+              id="inputend"
+              min="{{ today | date: 'yyyy-MM-dd' }}"
+              value="{{ eventInfo.event_endDate | date: 'yyyy-MM-dd' }}"
+            />
+          </div>
+
+          <div class="col-12">
+            <label for="inputupdate" class="form-label">Last Update Date</label>
+            <input
+              #update1
+              type="date"
+              class="form-control"
+              id="inputupdate"
+              value="{{ eventInfo.event_lastUpdate | date: 'yyyy-MM-dd' }}"
+              min="{{ today | date: 'yyyy-MM-dd' }}"
+            />
+          </div>
+        </form>
+
+        <!--End modal body-->
+        <!--Có nên có input của ảnh không??-->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          Close
+        </button>
+        <!--Nhớ check validate cho nút click này-->
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="
+            updateEvent(
+              title1.value,
+              content1.value,
+              start1.value,
+              end1.value,
+              update1.value,
+              eventInfo.FK_faculty_id,
+              eventInfo.event_id
+            )
+          "
+          data-dismiss="modal"
+        >
+          Save changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--Modal to view article -->
+
+<div
+  class="modal fade"
+  id="modalStatus"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-full-width"
+    role="document"
+  >
+    <div class="modal-content modal-content-full-width">
+      <div class="modal-header modal-header-full-width">
+        <h5 class="modal-title" id="exampleModalLongTitle">View article</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="articleDetail">
+        <div class="row">
+          <!--Content review div-->
+          <div
+            class="embed-responsive embed-responsive-4by3 col-sm-12 col-md-12 col-lg-9"
+          >
+            <!--Iframe-->
+            <iframe
+              class="embed-responsive-item"
+              [src]="safeActiveLink"
+              height="800px"
+              width="1000px"
+            ></iframe>
+          </div>
+
+          <!--Function div (in the right)-->
+          <div class="col-sm-12 col-md-12 col-lg-3">
+            <div class="row">
+              <!--List of files-->
+              <div class="col-sm-12 container" *ngIf="fileList">
+                <label class="font-weight-bold">List of files</label>
+                <ul
+                  class="list-group"
+                  *ngFor="let file of fileList; let i = index"
+                >
+                  <li
+                    class="list-group-item list-group-item-action border-left-0 border-right-0 border-top-0"
+                    style="width: auto"
+                    (click)="setActive(file.file_fileId)"
+                  >
+                    {{ file.file_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <!--Comment function-->
+              <div class="col-sm-12" *ngIf="comments; else loading">
+                <div class="form-group row">
+                  <label class="col-sm-12 col-form-label font-weight-bold"
+                    >Comment</label
+                  >
+
+                  <div class="col-sm-12" *ngFor="let comment of comments">
+                    <div class="border bg-light mb-3">
+                      <p class="p-2">{{ comment.comment_content }}</p>
+                      <!--<small>{{ comment.comment_time | date }}</small>-->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!--Footer buttons-->
+              <div class="modal-footer col-sm-12">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>Loading...</ng-template>

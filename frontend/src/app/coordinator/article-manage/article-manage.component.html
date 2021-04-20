@@ -1,0 +1,474 @@
+<app-navbar-coor></app-navbar-coor>
+
+<!--Event name-->
+<h2 class="container text-center text-dark">Event (name)</h2>
+
+<div class="container">
+  <!--Tab list-->
+  <ul class="nav nav-tabs" id="myTab" role="tablist">
+    <!--All articles tab-->
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link active"
+        id="home-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#home"
+        type="button"
+        role="tab"
+        aria-controls="home"
+        aria-selected="true"
+        (click)="getPendingAtcl()"
+      >
+        All articles
+      </button>
+    </li>
+
+    <!--Selected articles tab-->
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link text-success"
+        id="profile-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#profile"
+        type="button"
+        role="tab"
+        aria-controls="profile"
+        aria-selected="false"
+        (click)="getSelectedAtcl()"
+      >
+        Selected articles
+      </button>
+    </li>
+
+    <!--Rejected articles tab-->
+    <li class="nav-item" role="presentation">
+      <button
+        class="nav-link text-danger"
+        id="contact-tab"
+        data-bs-toggle="tab"
+        data-bs-target="#contact"
+        type="button"
+        role="tab"
+        aria-controls="contact"
+        aria-selected="false"
+        (click)="getRejectedAtcl()"
+      >
+        Rejected articles
+      </button>
+    </li>
+  </ul>
+
+  <!--Articles list-->
+  <div class="tab-content" id="myTabContent">
+    <!--Content tab 1-->
+    <div
+      class="tab-pane fade show active"
+      id="home"
+      role="tabpanel"
+      aria-labelledby="home-tab"
+    >
+      <div class="container" *ngIf="articles; else loading">
+        <div class="row">
+          <div
+            *ngFor="let art of articles; let i = index"
+            class="col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-5"
+          >
+            <div class="card bg-light mx-auto" style="width: 12rem">
+              <div class="card-body">
+                <h5 class="card-title">Person {{ art.email }}</h5>
+                <p>ID {{ art.article_id }}</p>
+                <a
+                  href="#"
+                  class="card-link file-link text-center"
+                  style="text-decoration: none"
+                  data-toggle="modal"
+                  data-target="#pendingModal"
+                  (click)="chooseArticle(i)"
+                  ><i class="fas fa-file-pdf fa-4x ml-4 p-2"></i>
+                  <p class="p-2">
+                    {{ art.files.length }} attachment{{
+                      art.files.length > 1 ? "s" : ""
+                    }}
+                  </p>
+                </a>
+
+                <h6 class="card-subtitle mb-2 text-muted">
+                  {{ art.article_status | uppercase }}
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Content tab 2-->
+    <div
+      class="tab-pane fade"
+      id="profile"
+      role="tabpanel"
+      aria-labelledby="profile-tab"
+    >
+      <div class="container">
+        <div class="row">
+          <div
+            *ngFor="let art of articles; let i = index"
+            class="col-sm-2 mb-5"
+          >
+            <div class="card bg-light mx-auto" style="width: 12rem">
+              <div class="card-body">
+                <h5 class="card-title">Person {{ art.email }}</h5>
+                <p>ID {{ art.article_id }}</p>
+                <a
+                  href="#"
+                  class="card-link file-link text-center"
+                  style="text-decoration: none"
+                  data-toggle="modal"
+                  data-target="#modalStatus"
+                  (click)="chooseArticle(i)"
+                  (click)="getComments(art.article_id)"
+                  ><i class="fas fa-file-pdf fa-4x ml-4 p-2"></i>
+                  <p class="p-2">
+                    {{ art.files.length }} attachment{{
+                      art.files.length > 1 ? "s" : ""
+                    }}
+                  </p></a
+                >
+
+                <h6 class="card-subtitle mb-2 text-success">
+                  {{ art.article_status | uppercase }}
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--Content tab 3-->
+    <div
+      class="tab-pane fade"
+      id="contact"
+      role="tabpanel"
+      aria-labelledby="contact-tab"
+    >
+      <div class="container">
+        <div class="row">
+          <div
+            *ngFor="let art of articles; let i = index"
+            class="col-sm-2 mb-5"
+          >
+            <div class="card bg-light mx-auto" style="width: 12rem">
+              <div class="card-body">
+                <h5 class="card-title">Person {{ art.email }}</h5>
+                <p>ID {{ art.article_id }}</p>
+                <a
+                  href="#"
+                  class="card-link file-link text-center"
+                  style="text-decoration: none"
+                  data-toggle="modal"
+                  data-target="#modalStatus"
+                  (click)="chooseArticle(i)"
+                  ><i class="fas fa-file-pdf fa-4x ml-4 p-2"></i>
+                  <p class="p-2">
+                    {{ art.files.length }} attachment{{
+                      art.files.length > 1 ? "s" : ""
+                    }}
+                  </p></a
+                >
+
+                <h6 class="card-subtitle mb-2 text-danger">
+                  {{ art.article_status | uppercase }}
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal display accepted -->
+
+<div
+  class="modal fade"
+  id="modalStatus"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-full-width"
+    role="document"
+  >
+    <div class="modal-content modal-content-full-width">
+      <div class="modal-header modal-header-full-width">
+        <h5 class="modal-title" id="exampleModalLongTitle">
+          View comment submission
+        </h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="currentArticle">
+        <div class="row">
+          <!--Content review div-->
+          <div
+            class="embed-responsive embed-responsive-4by3 col-sm-12 col-md-12 col-lg-9"
+          >
+            <!--Iframe-->
+            <iframe
+              class="embed-responsive-item"
+              [src]="safeActiveLink"
+              height="800px"
+              width="1000px"
+            ></iframe>
+          </div>
+
+          <!--Function div (in the right)-->
+          <div class="col-sm-12 col-md-12 col-lg-3">
+            <div class="row">
+              <!--List of files-->
+              <div class="col-sm-12 container">
+                <label class="font-weight-bold">List of files</label>
+                <ul
+                  class="list-group"
+                  *ngFor="let file of currentArticle.files; let i = index"
+                >
+                  <li
+                    class="list-group-item list-group-item-action border-left-0 border-right-0 border-top-0"
+                    (click)="setActive(file.file_fileId)"
+                    style="width: auto"
+                  >
+                    {{ file.file_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <!--Approve function-->
+              <div class="col-sm-12 container">
+                <fieldset class="form-group">
+                  <div class="row">
+                    <legend
+                      class="col-form-label col-sm-2 col-lg-4 col-xl-3 pt-0 font-weight-bold"
+                    >
+                      Approve
+                    </legend>
+                    {{ currentArticle.article_status }}
+                  </div>
+                </fieldset>
+              </div>
+
+              <!--Comment function-->
+              <div class="col-sm-12" *ngIf="comments; else loading">
+                <div class="form-group row">
+                  <label
+                    for="inputComment"
+                    class="col-sm-12 col-form-label font-weight-bold"
+                    >Comment</label
+                  >
+
+                  <div class="col-sm-12" *ngFor="let comment of comments">
+                    <div class="border bg-light mb-3">
+                      <p class="p-2">{{ comment.comment_content }}</p>
+                      <!--<small>{{ comment.comment_time | date }}</small>-->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!--Footer buttons-->
+              <div class="modal-footer col-sm-12">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal to display article -->
+<div
+  class="modal fade"
+  id="pendingModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="exampleModalCenterTitle"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-dialog-full-width"
+    role="document"
+  >
+    <div class="modal-content modal-content-full-width">
+      <div class="modal-header modal-header-full-width">
+        <h5 class="modal-title" id="pendingHead">Comment submission</h5>
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+          (click)="resetChosen()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <!--Content review div-->
+          <div
+            class="embed-responsive embed-responsive-4by3 col-sm-12 col-md-12 col-lg-9"
+          >
+            <!--Iframe-->
+            <iframe
+              class="embed-responsive-item"
+              [src]="safeActiveLink"
+              height="800px"
+              width="1000px"
+            ></iframe>
+          </div>
+
+          <!--Function div (in the right)-->
+          <div class="col-sm-12 col-md-12 col-lg-3">
+            <div class="row">
+              <!--List of files-->
+              <div class="col-sm-12 container mb-4" *ngIf="currentArticle">
+                <label class="col-sm-12 col-form-label font-weight-bold"
+                  >List of files</label
+                >
+                <ul
+                  class="list-group"
+                  *ngFor="let file of currentArticle.files; let i = index"
+                >
+                  <li
+                    class="list-group-item list-group-item-action border-left-0 border-right-0 border-top-0"
+                    (click)="setActive(file.file_fileId)"
+                    style="width: auto"
+                  >
+                    {{ file.file_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <form [formGroup]="form">
+                <!--Approve function-->
+                <div class="col-sm-12">
+                  <fieldset class="form-group">
+                    <div class="row">
+                      <legend
+                        class="col-form-label col-sm-2 col-lg-4 col-xl-3 pt-0 font-weight-bold"
+                      >
+                        Approve
+                      </legend>
+                      <div class="col-sm-8 col-md-6 col-xl-9">
+                        <div class="row">
+                          <div
+                            class="form-check col-sm-3 col-lg-8 col-lg-12 col-xl-6"
+                          >
+                            <input
+                              type="radio"
+                              class="btn-check"
+                              name="options-outlined"
+                              id="success-outlined"
+                              autocomplete="off"
+                            />
+                            <label
+                              class="btn btn-outline-success"
+                              for="success-outlined"
+                              (click)="changeArticleStatus(true)"
+                            >
+                              Accept
+                            </label>
+                          </div>
+                          <div
+                            class="form-check col-sm-3 col-md-3 col-lg-12 col-xl-6"
+                          >
+                            <input
+                              type="radio"
+                              class="btn-check"
+                              name="options-outlined"
+                              id="danger-outlined"
+                              autocomplete="off"
+                            />
+                            <label
+                              class="btn btn-outline-danger"
+                              for="danger-outlined"
+                              (click)="changeArticleStatus(false)"
+                            >
+                              Decline
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+
+                <!--Comment function-->
+                <div class="col-sm-12">
+                  <div class="form-group row">
+                    <label
+                      for="inputComment"
+                      class="col-sm-12 col-form-label font-weight-bold"
+                    >
+                      Comment
+                    </label>
+                    <div class="col-sm-12">
+                      <textarea
+                        type="email"
+                        class="form-control"
+                        id="inputComment"
+                        placeholder="Enter comment here..."
+                        rows="10"
+                        formControlName="comment"
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+              <!--Footer buttons-->
+              <div class="modal-footer col-sm-12">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                  (click)="resetChosen()"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-dismiss="modal"
+                  [disabled]="form.invalid"
+                  (click)="onSubmit()"
+                >
+                  Save changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>Loading articles...</ng-template>
