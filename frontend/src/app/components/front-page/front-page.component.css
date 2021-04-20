@@ -1,0 +1,23 @@
+.container {
+  margin-top: 50px;
+}
+
+.carousel-inner {
+  height: 350px;
+}
+
+.article-card {
+  height: 250px;
+}
+
+.event-card {
+  position: sticky;
+  top: 480px;
+  margin-top: -1500px;
+}
+
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+  .event-box {
+    display: none !important;
+  }
+}

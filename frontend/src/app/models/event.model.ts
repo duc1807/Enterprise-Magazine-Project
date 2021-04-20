@@ -2,9 +2,26 @@ export class SchoolEvent {
   title: string;
   content: string;
   // imageData?: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
+  lastUpdateDate: string;
   facultyId?: number;
+
+  constructor(
+    title: string,
+    content: string,
+    start: string,
+    end: string,
+    update: string,
+    falId: number
+  ) {
+    this.title = title;
+    this.content = content;
+    this.startDate = start;
+    this.endDate = end;
+    this.lastUpdateDate = update;
+    this.facultyId = falId;
+  }
 }
 
 export interface TheEvent {

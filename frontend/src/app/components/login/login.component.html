@@ -1,89 +1,69 @@
-<app-navbar-login></app-navbar-login>
-
-<div class="limiter">
-  <div class="container-login100">
-    <div class="wrap-login100">
-      <div
-        class="login100-form-title"
-        style="background-image: url(../assets/image/student.jpg)"
-      >
-        <span class="login100-form-title-1"> Student Sign In </span>
-      </div>
-
-      <form class="login100-form validate-form">
+<div class="container-fluid">
+  <div class="row no-gutter">
+    <div class="d-none d-md-flex col-md-4 col-lg-6 bg-image"></div>
+    <div class="col-md-8 col-lg-6">
+      <div class="login d-flex align-items-center py-5">
         <div class="container">
-          <div class="btn-gm" *ngIf="isLoggedin === false">
-            <button
-              class="btn btn-lg btn-outline-primary btn-block"
-              type="button"
-              (click)="loginWithGoogle()"
-            >
-              <a
-                style="text-decoration: none; color: black"
+          <div class="row">
+            <div class="col-md-9 col-lg-8 mx-auto" id="login-btn">
+              <h3 class="login-heading mb-4">Welcome back!</h3>
+              <button
+                class="btn btn-lg btn-google btn-block text-uppercase mb-3"
+                type="submit"
+                (click)="loginWithGoogle()"
               >
-                <img
-                  width="20px"
-                  style="margin-bottom: 3px; margin-right: 5px"
-                  alt="Google sign-in"
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
-                />
-                Log in with Google
-              </a>
-            </button>
+                <i class="fab fa-google mr-2"></i>
+                &ensp; Login with Google
+              </button>
+              <button
+                class="btn btn-lg btn-dark btn-block text-uppercase"
+                type="submit"
+                (click)="showDiv()"
+              >
+                <i class="fas fa-user mr-2"></i> &ensp; Login as Guest
+              </button>
+            </div>
+            <div class="col-md-9 col-lg-8 mx-auto" id="login-input">
+              <a id="backLink" (click)="hideDiv()">Back</a>
+              <h3 class="login-heading mb-4">Login as Guest</h3>
+              <form>
+                <div class="form-label-group">
+                  <input
+                    #username
+                    type="text"
+                    id="inputEmail"
+                    class="form-control"
+                    placeholder="Email address"
+                    required
+                    autofocus
+                  />
+                  <label for="inputEmail">Username</label>
+                </div>
+
+                <div class="form-label-group">
+                  <input
+                    #password
+                    type="password"
+                    id="inputPassword"
+                    class="form-control"
+                    placeholder="Password"
+                    required
+                  />
+                  <label for="inputPassword">Password</label>
+                </div>
+
+                <button
+                  class="btn btn-lg btn-primary btn-block btn-login text-uppercase font-weight-bold mb-2"
+                  type="submit"
+                  (click)="guestLogin(username.value, password.value)"
+                >
+                  Sign in
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-
-        <h2><span>Or</span></h2>
-
-        <div
-          class="wrap-input100 validate-input m-b-26"
-          data-validate="Username is required"
-        >
-          <span class="label-input100">Username</span>
-          <input
-            class="input100"
-            type="text"
-            name="username"
-            placeholder="Enter username"
-          />
-          <span class="focus-input100"></span>
-        </div>
-
-        <div
-          class="wrap-input100 validate-input m-b-18"
-          data-validate="Password is required"
-        >
-          <span class="label-input100">Password</span>
-          <input
-            class="input100"
-            type="password"
-            name="pass"
-            placeholder="Enter password"
-          />
-          <span class="focus-input100"></span>
-        </div>
-
-        <div class="flex-sb-m w-full p-b-30">
-          <div>
-            <a href="#" class="txt1 login-a"> Login as Guest </a>
-          </div>
-
-          <div>
-            <a
-              href="https://accounts.google.com/signin/recovery?hl=en"
-              class="txt1 login-a"
-            >
-              Forgot Password?
-            </a>
-          </div>
-        </div>
-
-        <div class="container-login100-form-btn">
-          <button class="login100-form-btn" routerLink="/homepage">
-            Login
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 </div>

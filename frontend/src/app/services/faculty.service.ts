@@ -16,29 +16,30 @@ export class FacultyService {
 
   constructor(private http: HttpClient) {}
 
-  /** GET all faculty */
+  ////////// Service for Manager //////////
+
+  /** GET all faculties */
+  // done
   getAllFaculties(): Observable<any> {
     return this.http.get<any>(this.facultyUrl, this.httpOptions);
   }
 
+  ////////// Service for users //////////
+
   /** GET events of a faculty */
+  // done
   getEventsByFaculty(facultyId: number): Observable<any> {
     const url = `${this.facultyUrl}/${facultyId}`;
-    console.log(url);
+    console.log('Get events by faculty ', url);
 
     return this.http.get<any>(url, this.httpOptions);
   }
 
   /** GET information of an event */
+  //
   getAnEventInfo(facultyId: number, eventId: number): Observable<any> {
     const url = `${this.facultyUrl}/${facultyId}/events/${eventId}/posted-articles`;
 
     return this.http.get<any>(url, this.httpOptions);
   }
-
-  // ????
-  /** getting event information and its posted articles */
-
-  // ????
-  /** getting new submissions of a faculty */
 }

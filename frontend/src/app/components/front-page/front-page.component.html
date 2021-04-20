@@ -1,0 +1,137 @@
+<!-- Slideshow -->
+<div class="container">
+  <div
+    id="carouselExampleInterval"
+    class="carousel slide carousel-fade"
+    data-ride="carousel"
+  >
+    <div class="carousel-inner">
+      <div class="carousel-item active" data-interval="5000">
+        <img
+          src="../../../assets/image/school.jpg"
+          class="d-block w-100"
+          alt="..."
+        />
+      </div>
+      <div class="carousel-item" data-interval="5000">
+        <img
+          src="../../../assets/image/bg-01.jpg"
+          class="d-block w-100"
+          alt="..."
+        />
+      </div>
+      <div class="carousel-item" data-interval="5000">
+        <img
+          src="../../../assets/image/student.jpg"
+          class="d-block w-100"
+          alt="..."
+        />
+      </div>
+    </div>
+    <a
+      class="carousel-control-prev"
+      href="#carouselExampleInterval"
+      role="button"
+      data-slide="prev"
+    >
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+    </a>
+    <a
+      class="carousel-control-next"
+      href="#carouselExampleInterval"
+      role="button"
+      data-slide="next"
+    >
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+    </a>
+  </div>
+</div>
+
+<!-- Magazine content -->
+<div class="container">
+  <div class="row">
+    <!-- Article side -->
+    <div
+      *ngFor="let e of publishedEvents"
+      class="col-sm-12 col-md-12 col-lg-12 col-xl-9"
+    >
+      <h3 [attr.id]="e.event_id" class="pb-4 mb-4 fst-italic border-bottom">
+        {{ e.event_title }}
+      </h3>
+      <div class="row mb-2">
+        <div class="col-md-12">
+          <div
+            class="row article-card g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative"
+          >
+            <div class="col p-4 d-flex flex-column position-static col-sm-8">
+              <strong class="d-inline-block mb-2 text-primary">Event</strong>
+              <h3 class="mb-0">{{ e.event_title }}</h3>
+              <div class="mb-1 text-muted">
+                {{ e.event_createdAt | date: "dd/MM/yyyy" }}
+              </div>
+              <p class="card-text mb-auto">
+                {{ e.event_content }}
+              </p>
+            </div>
+
+            <div class="col-auto d-none d-lg-block col-sm-4">
+              <img
+                src="https://drive.google.com/uc?export=view&id={{
+                  e.event_image
+                }}"
+                alt=""
+                style="height: 100%; width: 100%"
+              />
+            </div>
+          </div>
+        </div>
+        <a
+          routerLink="more_articles/{{ e.event_id }}"
+          class="d-flex justify-content-end"
+        >
+          Read articles
+        </a>
+      </div>
+    </div>
+    <!-- Event side -->
+    <div
+      class="col-sm-12 col-md-12 col-lg-12 col-xl-3 d-none d-lg-block event-box"
+    >
+      <div class="p-4 bg-light rounded event-card">
+        <h4 class="fst-italic">Events</h4>
+        <ol class="list-unstyled mb-0" *ngFor="let e of publishedEvents">
+          <li>
+            {{ e.event_title }}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--Du lieu tu api-->
+<!--
+{
+    "status": 200,
+    "success": true,
+    "publishedEvents": [
+        {
+            "event_id": 41,
+            "event_title": "Alola 12",
+            "event_content": "The new ideas!!",
+            "event_image": "test",
+            "event_startDate": 1616000400000,
+            "event_endDate": 1616173200000,
+            "event_createdAt": 1616078750437,
+            "event_lastUpdate": 1616000400000,
+            "event_published": 1,
+            "event_folderId": "19a6-bk8YfmyLz2FoZgx1Xehm9HvtWzwg",
+            "folderId_selectedArticles": "1ZYQP18whPkPaeQK54rxYfsLiPIKlF9OC",
+            "folderId_allArticles": "1nsPWC4Pf85xNwkEl1JTvhET-uWtPW9Vd",
+            "FK_faculty_id": 1
+        }
+    ]
+}
+-->

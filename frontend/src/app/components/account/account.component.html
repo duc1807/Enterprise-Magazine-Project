@@ -1,0 +1,101 @@
+<section class="py-5 my-3">
+  <div class="container">
+    <h1 class="mb-5">Account Settings</h1>
+    <div class="bg-white shadow rounded-lg d-block d-sm-flex">
+      <div class="profile-tab-nav border-right">
+        <div class="p-4">
+          <div class="img-circle text-center mb-3">
+            <img
+              src="../../../assets/image/student.jpg"
+              alt="Image"
+              class="shadow"
+            />
+          </div>
+          <h4 class="text-center">Nhat Anh</h4>
+        </div>
+      </div>
+
+      <!-- Right div -->
+      <div class="tab-content p-4 p-md-5" id="v-pills-tabContent">
+        <h3 class="mb-4">Account Settings</h3>
+        <form [formGroup]="form">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Set your first name"
+                  formControl="firstName"
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Set your last name"
+                  formControl="lastName"
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Email</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  value="abc@gmail.com"
+                  readonly
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Phone number</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Have not been set"
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Role</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  value="Student"
+                  readonly
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Faculty</label>
+                <input type="text" class="form-control" value="IT" readonly />
+              </div>
+            </div>
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>Bio</label>
+                <textarea class="form-control" rows="4">
+                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore vero enim error similique quia numquam ullam corporis officia odio repellendus aperiam consequatur laudantium porro voluptatibus, itaque laboriosam veritatis voluptatum distinctio!</textarea
+                >
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div>
+          <button class="btn btn-primary" [disabled]="">Update</button>
+          <button class="btn btn-light ml-3" (click)="goBack()">Go back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

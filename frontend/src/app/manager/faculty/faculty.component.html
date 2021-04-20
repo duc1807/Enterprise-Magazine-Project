@@ -1,0 +1,27 @@
+<app-navbar-begin-manager></app-navbar-begin-manager>
+
+<h2 class="faculty-card text-center text-dark">Faculty options</h2>
+
+<div class="row faculty-card">
+  <div *ngFor="let fal of faculties; let i = index" class="col-sm-4">
+    <div *ngIf="fal.faculty_id !== 99">
+      <a
+        routerLink="/mevent/{{ fal.faculty_id }}"
+        style="text-decoration: none"
+      >
+        <div
+          class="card border-info mb-5 mx-auto text-center"
+          style="max-width: 20rem"
+        >
+          <div class="card-header text-dark">Faculty {{ i + 1 }}</div>
+          <div class="card-body text-info">
+            <h3 class="card-title">{{ fal.faculty_name }}</h3>
+            <p class="card-text text-dark">
+              Click here to go to the management page of {{ fal.faculty_name }}
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>

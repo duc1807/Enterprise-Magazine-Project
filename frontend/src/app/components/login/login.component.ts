@@ -1,63 +1,36 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  GoogleLoginProvider,
-  SocialAuthService,
-  SocialUser,
-} from 'angularx-social-login';
+import { GoogleLoginProvider, SocialAuthService } from 'angularx-social-login';
 import { Router } from '@angular/router';
 import { LoginService } from '../../services/login.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { SaveDataService } from '../../services/save-data.service';
+import { LoginContent } from '../../models/login-content.model';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css', './util.css'],
+  styleUrls: [
+    './login.component.css',
+    '../../shared/util.css',
+    '../../shared/login_style.css',
+  ],
 })
 export class LoginComponent implements OnInit {
-  socialUser: SocialUser;
   isLoggedin = false;
 
   constructor(
     private socialAuthService: SocialAuthService,
     private router: Router,
-    private loginService: LoginService,
-    private saveDataService: SaveDataService
+    private loginService: LoginService
   ) {}
 
   ngOnInit(): void {
     console.log('Is logged in ', this.isLoggedin);
-
-    // this.socialAuthService.authState.subscribe((user) => {
-    //   this.socialUser = user;
-    //   this.isLoggedin = user != null;
-    //   // console.log(this.socialUser);
-    //
-    //   // Send login idToken
-    //   this.loginService
-    //     .loginWithGoogleAccount({ id_token: user.idToken })
-    //     .subscribe(
-    //       (res) => {
-    //         this.router.navigate(['homepage']).then((r) => {
-    //           if (r) {
-    //             console.log('Navigation is successful, login success!');
-    //           } else {
-    //             console.log('Navigation has failed, login failed!');
-    //           }
-    //         });
-    //       },
-    //       (err: HttpErrorResponse) => {
-    //         console.log(err);
-    //       }
-    //     );
-    // });
   }
 
   loginWithGoogle(): void {
     this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
 
     this.socialAuthService.authState.subscribe((user) => {
-      // this.socialUser = user;
       this.isLoggedin = user != null;
 
       // Send login idToken
@@ -65,36 +38,30 @@ export class LoginComponent implements OnInit {
         .loginWithGoogleAccount({ id_token: user.idToken })
         .subscribe(
           (res) => {
-            // console.log(res.user.userInfo);
-            // console.log(
-            //   res.user.userInfo.role_id,
-            //   res.user.userInfo.faculty_id
-            // );
-            this.saveDataService.setUser(res.user.userInfo);
-
-            this.checkRole(
+            // console.log('Response of login function ', res);
+            this.routing(
               res.user.userInfo.role_id,
               res.user.userInfo.faculty_id
             );
-
-            this.routing(res.user.userInfo.role_id);
           },
           (err: HttpErrorResponse) => {
+            /* Log in false o day */
             console.log(err);
+            alert(err.message);
           }
         );
     });
   }
 
-  private routing(role: number): void {
+  private routing(role: number, faculty: number): void {
     if (role === 1) {
       this.router
-        .navigate(['homepage'])
+        .navigate(['homepage', faculty])
         .then((r) => console.log('Navigate successfully? ', r));
     }
     if (role === 2) {
       this.router
-        .navigate(['coor'])
+        .navigate(['coor', faculty])
         .then((r) => console.log('Navigate successfully? ', r));
     }
     if (role === 3) {
@@ -104,14 +71,30 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  private checkRole(role: number, faculty: number): void {
-    if (role === 1 || role === 2) {
-      this.saveDataService.setFaculty(faculty);
-    }
+  showDiv(): void {
+    document.getElementById('login-input').style.display = 'block';
+    document.getElementById('login-btn').style.display = 'none';
   }
 
-  // logOut(): void {
-  //   this.socialAuthService.signOut();
-  //   console.log('Is logged in: ', this.isLoggedin);
-  // }
+  hideDiv(): void {
+    document.getElementById('login-input').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
+  }
+
+  guestLogin(username: string, password: string): void {
+    const loginInput: LoginContent = { username, password };
+    console.log('Guest login input ', loginInput);
+
+    this.loginService.loginAsGuest(loginInput).subscribe(
+      (res) => {
+        console.log('Response from guest login ', res);
+        this.router.navigate(['guest', res.user.faculty_id]);
+      },
+      (err: HttpErrorResponse) => {
+        /* Log in false o day */
+        console.log(err);
+        alert(err.error.message);
+      }
+    );
+  }
 }
