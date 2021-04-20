@@ -1,5 +1,5 @@
 const { getDataBaseConnection } = require("./connection/dbConnection");
-
+const EVENT_PUBLISHED = 1;
 // Query for get overall stats includes (Received article, Publish,..)
 const getOverallStats = async () => {
   let db = getDataBaseConnection();
@@ -8,7 +8,9 @@ const getOverallStats = async () => {
     // Count total article are submitted to the system
     `SELECT COUNT(article_id) AS TotalReceived FROM Article;` +
     // Count total of posted article on the system
-    `SELECT COUNT(PA_id) AS TotalPublish FROM Posted_Article;`;
+    `SELECT COUNT(Article.article_id) AS TotalPublish FROM Article 
+    INNER JOIN Event ON Article.FK_event_id = Event.event_id 
+    WHERE Event.event_published = 1;`;
   return new Promise((resolve, reject) => {
     db.query(sql, (err, result) => {
       if (!!err) reject(err);
@@ -106,9 +108,14 @@ const getContributionEachMonthByYear = (year) => {
       // console.log("startDate: ", startDate);
       // console.log("endDate: ", endDate);
       // Sub query to count posted article following each month
-      const subSql = `SELECT COUNT(PA_id) AS PostedArticleInMonth${
+      // const subSql = `SELECT COUNT(PA_id) AS PostedArticleInMonth${
+      //   i + 1
+      // } FROM Posted_Article WHERE PA_posted_date BETWEEN ${startDate} AND ${endDate};`;
+      const subSql = `SELECT COUNT(Article.article_id) AS PostedArticleInMonth${
         i + 1
-      } FROM Posted_Article WHERE PA_posted_date BETWEEN ${startDate} AND ${endDate};`;
+      } FROM Article 
+        INNER JOIN Event ON Article.FK_event_id = Event.event_id
+        WHERE Event.event_published = ${EVENT_PUBLISHED} AND Article.article_submission_date BETWEEN ${startDate} AND ${endDate};`;
       // + string
       sql += subSql;
     }
@@ -135,17 +142,17 @@ const getContributionByFaculty = (facultyId) => {
     // WHERE Event.FK_faculty_id = ${facultyId}
     // GROUP BY Event.event_title;` +
     // Count total pending contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS pendingContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'pending'
     GROUP BY Event.event_title;` +
     // Count total selected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS selectedContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS selectedContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'accepted'
     GROUP BY Event.event_title;` +
     // Count total rejected contributions on each event by faculty -- Group by event_title
-    `SELECT COUNT(Article.article_id) AS rejectedContributions, Event.event_title AS eventTitle FROM Article 
+    `SELECT COUNT(Article.article_id) AS rejectedContributions, Event.event_title AS eventTitle, Event.event_id AS eventId FROM Article 
     INNER JOIN Event ON Article.FK_event_id = Event.event_id
     WHERE Event.FK_faculty_id = ${facultyId} AND Article.article_status = 'rejected'
     GROUP BY Event.event_title;` +

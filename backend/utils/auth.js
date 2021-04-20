@@ -1,9 +1,5 @@
 require("dotenv").config();
 
-const express = require("express");
-const router = express.Router();
-const bcrypt = require("bcrypt");
-const webToken = require("jsonwebtoken");
 const { google } = require("googleapis");
 
 const OAuth2Data = require("../credentials.json");
@@ -26,12 +22,11 @@ const getAuthUrl = () => {
   );
 
   const SCOPES =
-    "https://www.googleapis.com/auth/drive.file"
-    + " https://www.googleapis.com/auth/userinfo.profile"
-    + " https://www.googleapis.com/auth/drive.metadata.readonly"
-    + " https://www.googleapis.com/auth/userinfo.email"
-    // + " https://www.googleapis.com/auth/gmail.readonly"
-    // + "https://www.googleapis.com/auth/drive.metadata";
+    "https://www.googleapis.com/auth/drive.file" +
+    " https://www.googleapis.com/auth/userinfo.profile" +
+    " https://www.googleapis.com/auth/drive.metadata.readonly" +
+    " https://www.googleapis.com/auth/userinfo.email";
+
   var url = oAuth2Client.generateAuthUrl({
     access_type: "online",
     scope: SCOPES,
@@ -49,17 +44,16 @@ const getUserProfile = () => {
       auth: oAuth2Client,
       version: "v2",
     });
-  
+
     oauth2.userinfo.get((err, response) => {
-      if (err) throw err; // Send 404 err  
+      if (err) throw err;
       resolve(response.data);
     });
-  })
-  
+  });
 };
 
 module.exports = {
   getAuthClient: getAuthClient,
   getUserProfile: getUserProfile,
-  getAuthUrl: getAuthUrl
-}
+  getAuthUrl: getAuthUrl,
+};
